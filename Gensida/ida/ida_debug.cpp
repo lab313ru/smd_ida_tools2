@@ -295,32 +295,34 @@ static void finish_execution()
 // Initialize debugger
 // Returns true-success
 // This function is called from the main thread
-static bool idaapi init_debugger(const char *hostname,
-    int port_num,
-    const char *password)
+static drc_t idaapi init_debugger(const char* hostname, int portnum, const char* password, qstring *errbuf)
 {
     prepare_codemap();
     set_processor_type(ph.psnames[0], SETPROC_LOADER); // reset proc to "M68000"
-    return true;
+    return DRC_OK;
 }
 
 // Terminate debugger
 // Returns true-success
 // This function is called from the main thread
-static bool idaapi term_debugger(void)
+static drc_t idaapi term_debugger(void)
 {
     finish_execution();
     apply_codemap();
-    return true;
+    return DRC_OK;
 }
 
 // Return information about the n-th "compatible" running process.
 // If n is 0, the processes list is reinitialized.
 // 1-ok, 0-failed, -1-network error
 // This function is called from the main thread
-static int idaapi process_get_info(int n, process_info_t *info)
-{
-    return 0;
+static drc_t s_get_processes(procinfo_vec_t* procs, qstring* errbuf) {
+  process_info_t info;
+  info.name.sprnt("gpgx");
+  info.pid = 1;
+  procs->add(info);
+
+  return DRC_OK;
 }
 
 HINSTANCE GetHInstance()
@@ -368,12 +370,13 @@ static uint32 get_entry_point(const char *rom_path)
 // 1|CRC32_MISMATCH - ok, but the input file crc does not match
 // -1 - network error
 // This function is called from debthread
-static int idaapi start_process(const char *path,
-    const char *args,
-    const char *startdir,
-    int dbg_proc_flags,
-    const char *input_path,
-    uint32 input_file_crc32)
+static drc_t idaapi s_start_process(const char* path,
+  const char* args,
+  const char* startdir,
+  uint32 dbg_proc_flags,
+  const char* input_path,
+  uint32 input_file_crc32,
+  qstring* errbuf = NULL)
 {
     qsnprintf(cmdline, sizeof(cmdline), "-rom \"%s\"", path);
 
@@ -388,7 +391,7 @@ static int idaapi start_process(const char *path,
 
     gens_thread = qthread_create(gens_process, NULL);
 
-    return 1;
+    return DRC_OK;
 }
 
 // rebase database if the debugged program has been rebased by the system
@@ -406,11 +409,11 @@ static void idaapi rebase_if_required_to(ea_t new_base)
 // If this function is absent, then it won't be possible to pause the program
 // 1-ok, 0-failed, -1-network error
 // This function is called from debthread
-static int idaapi prepare_to_pause_process(void)
+static drc_t idaapi prepare_to_pause_process(qstring *errbuf)
 {
-    CHECK_FOR_START(1);
+    CHECK_FOR_START(DRC_OK);
     pause_execution();
-    return 1;
+    return DRC_OK;
 }
 
 // Stop the process.
@@ -420,9 +423,9 @@ static int idaapi prepare_to_pause_process(void)
 // In this mode, all other events will be automatically handled and process will be resumed.
 // 1-ok, 0-failed, -1-network error
 // This function is called from debthread
-static int idaapi gens_exit_process(void)
+static drc_t idaapi emul_exit_process(qstring *errbuf)
 {
-    CHECK_FOR_START(1);
+    CHECK_FOR_START(DRC_OK);
     allow0_breaks = allow1_breaks = 0;
 
     HWND hwndGens = FindWindowEx(NULL, NULL, "Gens", NULL);
@@ -431,7 +434,7 @@ static int idaapi gens_exit_process(void)
         SendMessage(hwndGens, WM_CLOSE, 0, 0);
     }
 
-    return 1;
+    return DRC_OK;
 }
 
 // Get a pending debug event and suspend the process
@@ -461,7 +464,7 @@ static gdecode_t idaapi get_debug_event(debug_event_t *event, int timeout_ms)
 // Continue after handling the event
 // 1-ok, 0-failed, -1-network error
 // This function is called from debthread
-static int idaapi continue_after_event(const debug_event_t *event)
+static drc_t idaapi continue_after_event(const debug_event_t *event)
 {
     switch (event->eid())
     {
@@ -476,7 +479,7 @@ static int idaapi continue_after_event(const debug_event_t *event)
         break;
     }
 
-    return 1;
+    return DRC_OK;
 }
 
 // The following function will be called by the kernel each time
@@ -499,17 +502,8 @@ static void idaapi stopped_at_debug_event(bool dlls_added)
 // The following functions manipulate threads.
 // 1-ok, 0-failed, -1-network error
 // These functions are called from debthread
-static int idaapi thread_suspend(thid_t tid) // Suspend a running thread
-{
-    return 0;
-}
 
-static int idaapi thread_continue(thid_t tid) // Resume a suspended thread
-{
-    return 0;
-}
-
-static int idaapi set_step_mode(thid_t tid, resume_mode_t resmod) // Run one instruction in the thread
+static drc_t idaapi s_set_resume_mode(thid_t tid, resume_mode_t resmod) // Run one instruction in the thread
 {
     switch (resmod)
     {
@@ -523,7 +517,7 @@ static int idaapi set_step_mode(thid_t tid, resume_mode_t resmod) // Run one ins
         break;
     }
 
-    return 1;
+    return DRC_OK;
 }
 
 // Read thread registers
@@ -533,7 +527,7 @@ static int idaapi set_step_mode(thid_t tid, resume_mode_t resmod) // Run one ins
 //			 regval is assumed to have debugger_t::registers_size elements
 // 1-ok, 0-failed, -1-network error
 // This function is called from debthread
-static int idaapi read_registers(thid_t tid, int clsmask, regval_t *values)
+static drc_t idaapi read_registers(thid_t tid, int clsmask, regval_t *values, qstring *errbuf)
 {
     if (clsmask & RC_GENERAL)
     {
@@ -546,14 +540,14 @@ static int idaapi read_registers(thid_t tid, int clsmask, regval_t *values)
         values[R_D6].ival = main68k_context.dreg[R_D6 - R_D0];
         values[R_D7].ival = main68k_context.dreg[R_D7 - R_D0];
 
-		values[R_A0].ival = main68k_context.areg[R_A0 - R_A0];
-		values[R_A1].ival = main68k_context.areg[R_A1 - R_A0];
-		values[R_A2].ival = main68k_context.areg[R_A2 - R_A0];
-		values[R_A3].ival = main68k_context.areg[R_A3 - R_A0];
-		values[R_A4].ival = main68k_context.areg[R_A4 - R_A0];
-		values[R_A5].ival = main68k_context.areg[R_A5 - R_A0];
-		values[R_A6].ival = main68k_context.areg[R_A6 - R_A0];
-		values[R_A7].ival = main68k_context.areg[R_A7 - R_A0];
+        values[R_A0].ival = main68k_context.areg[R_A0 - R_A0];
+        values[R_A1].ival = main68k_context.areg[R_A1 - R_A0];
+        values[R_A2].ival = main68k_context.areg[R_A2 - R_A0];
+        values[R_A3].ival = main68k_context.areg[R_A3 - R_A0];
+        values[R_A4].ival = main68k_context.areg[R_A4 - R_A0];
+        values[R_A5].ival = main68k_context.areg[R_A5 - R_A0];
+        values[R_A6].ival = main68k_context.areg[R_A6 - R_A0];
+        values[R_A7].ival = main68k_context.areg[R_A7 - R_A0];
 
         values[R_PC].ival = M68kDW.last_pc & 0xFFFFFF;
         values[R_SR].ival = main68k_context.sr;
@@ -599,7 +593,7 @@ static int idaapi read_registers(thid_t tid, int clsmask, regval_t *values)
         }
     }
 
-    return 1;
+    return DRC_OK;
 }
 
 // Write one thread register
@@ -608,7 +602,7 @@ static int idaapi read_registers(thid_t tid, int clsmask, regval_t *values)
 //	regval - new value of the register
 // 1-ok, 0-failed, -1-network error
 // This function is called from debthread
-static int idaapi write_register(thid_t tid, int regidx, const regval_t *value)
+static drc_t idaapi write_register(thid_t tid, int regidx, const regval_t *value, qstring *errbuf)
 {
     if (regidx >= R_D0 && regidx <= R_D7)
     {
@@ -643,7 +637,7 @@ static int idaapi write_register(thid_t tid, int regidx, const regval_t *value)
         break_regs[regidx - R_B00] = (uint32)value->ival;
     }
 
-    return 1;
+    return DRC_OK;
 }
 
 //
@@ -658,7 +652,7 @@ static int idaapi write_register(thid_t tid, int regidx, const regval_t *value)
 //	0: failed
 //	1: new memory layout is returned
 // This function is called from debthread
-static int idaapi get_memory_info(meminfo_vec_t &areas)
+static drc_t idaapi get_memory_info(meminfo_vec_t &areas, qstring *errbuf)
 {
     memory_info_t info;
 
@@ -702,7 +696,7 @@ static int idaapi get_memory_info(meminfo_vec_t &areas)
     info.bitness = 1;
     areas.push_back(info);
 
-    return 1;
+    return DRC_OK;
 }
 
 extern bool IsHardwareAddressValid(unsigned int address);
@@ -712,7 +706,7 @@ extern bool IsHardwareAddressValid(unsigned int address);
 // 0 means read error
 // -1 means that the process does not exist anymore
 // This function is called from debthread
-static ssize_t idaapi read_memory(ea_t ea, void *buffer, size_t size)
+static ssize_t idaapi read_memory(ea_t ea, void *buffer, size_t size, qstring *errbuf)
 {
     CHECK_FOR_START(0);
     for (size_t i = 0; i < size; ++i)
@@ -754,7 +748,7 @@ static ssize_t idaapi read_memory(ea_t ea, void *buffer, size_t size)
 // Write process memory
 // Returns number of written bytes, -1-fatal error
 // This function is called from debthread
-static ssize_t idaapi write_memory(ea_t ea, const void *buffer, size_t size)
+static ssize_t idaapi write_memory(ea_t ea, const void *buffer, size_t size, qstring *errbuf)
 {
     return 0;
 }
@@ -783,9 +777,9 @@ static int idaapi is_ok_bpt(bpttype_t type, ea_t ea, int len)
 // bpts array contains nadd bpts to add, followed by ndel bpts to del.
 // returns number of successfully modified bpts, -1-network error
 // This function is called from debthread
-static int idaapi update_bpts(update_bpt_info_t *bpts, int nadd, int ndel)
+static drc_t idaapi update_bpts(int* nbpts, update_bpt_info_t *bpts, int nadd, int ndel, qstring *errbuf)
 {
-    CHECK_FOR_START(0);
+    CHECK_FOR_START(DRC_FAILED);
 
     for (int i = 0; i < nadd; ++i)
     {
@@ -898,13 +892,14 @@ static int idaapi update_bpts(update_bpt_info_t *bpts, int nadd, int ndel)
         bpts[nadd + i].code = BPT_OK;
     }
 
-    return (ndel + nadd);
+    *nbpts = (ndel + nadd);
+    return DRC_OK;
 }
 
 // Update low-level (server side) breakpoint conditions
 // Returns nlowcnds. -1-network error
 // This function is called from debthread
-static int idaapi update_lowcnds(const lowcnd_t *lowcnds, int nlowcnds)
+static drc_t idaapi update_lowcnds(int* nupdated, const lowcnd_t *lowcnds, int nlowcnds, qstring* errbuf)
 {
     for (int i = 0; i < nlowcnds; ++i)
     {
@@ -967,7 +962,8 @@ static int idaapi update_lowcnds(const lowcnd_t *lowcnds, int nlowcnds)
         }
     }
 
-    return nlowcnds;
+    *nupdated = nlowcnds;
+    return DRC_OK;
 }
 
 // Calculate the call stack trace
@@ -995,6 +991,280 @@ static bool idaapi update_call_stack(thid_t tid, call_stack_t *trace)
     return true;
 }
 
+static ssize_t idaapi idd_notify(void*, int msgid, va_list va) {
+  drc_t retcode = DRC_NONE;
+  qstring* errbuf;
+
+  switch (msgid)
+  {
+  case debugger_t::ev_init_debugger:
+  {
+    const char* hostname = va_arg(va, const char*);
+
+    int portnum = va_arg(va, int);
+    const char* password = va_arg(va, const char*);
+    errbuf = va_arg(va, qstring*);
+    QASSERT(1522, errbuf != NULL);
+    retcode = init_debugger(hostname, portnum, password, errbuf);
+  }
+  break;
+
+  case debugger_t::ev_term_debugger:
+    retcode = term_debugger();
+    break;
+
+  case debugger_t::ev_get_processes:
+  {
+    procinfo_vec_t* procs = va_arg(va, procinfo_vec_t*);
+    errbuf = va_arg(va, qstring*);
+    retcode = s_get_processes(procs, errbuf);
+  }
+  break;
+
+  case debugger_t::ev_start_process:
+  {
+    const char* path = va_arg(va, const char*);
+    const char* args = va_arg(va, const char*);
+    const char* startdir = va_arg(va, const char*);
+    uint32 dbg_proc_flags = va_arg(va, uint32);
+    const char* input_path = va_arg(va, const char*);
+    uint32 input_file_crc32 = va_arg(va, uint32);
+    errbuf = va_arg(va, qstring*);
+    retcode = s_start_process(path,
+      args,
+      startdir,
+      dbg_proc_flags,
+      input_path,
+      input_file_crc32,
+      errbuf);
+  }
+  break;
+
+  //case debugger_t::ev_attach_process:
+  //{
+  //    pid_t pid = va_argi(va, pid_t);
+  //    int event_id = va_arg(va, int);
+  //    uint32 dbg_proc_flags = va_arg(va, uint32);
+  //    errbuf = va_arg(va, qstring*);
+  //    retcode = s_attach_process(pid, event_id, dbg_proc_flags, errbuf);
+  //}
+  //break;
+
+  //case debugger_t::ev_detach_process:
+  //    retcode = g_dbgmod.dbg_detach_process();
+  //    break;
+
+  case debugger_t::ev_get_debapp_attrs:
+  {
+    debapp_attrs_t* out_pattrs = va_arg(va, debapp_attrs_t*);
+    out_pattrs->addrsize = 4;
+    out_pattrs->is_be = true;
+    out_pattrs->platform = "sega_md";
+    out_pattrs->cbsize = sizeof(debapp_attrs_t);
+    retcode = DRC_OK;
+  }
+  break;
+
+  //case debugger_t::ev_rebase_if_required_to:
+  //{
+  //    ea_t new_base = va_arg(va, ea_t);
+  //    retcode = DRC_OK;
+  //}
+  //break;
+
+  case debugger_t::ev_request_pause:
+    errbuf = va_arg(va, qstring*);
+    retcode = prepare_to_pause_process(errbuf);
+    break;
+
+  case debugger_t::ev_exit_process:
+    errbuf = va_arg(va, qstring*);
+    retcode = emul_exit_process(errbuf);
+    break;
+
+  case debugger_t::ev_get_debug_event:
+  {
+    gdecode_t* code = va_arg(va, gdecode_t*);
+    debug_event_t* event = va_arg(va, debug_event_t*);
+    int timeout_ms = va_arg(va, int);
+    *code = get_debug_event(event, timeout_ms);
+    retcode = DRC_OK;
+  }
+  break;
+
+  case debugger_t::ev_resume:
+  {
+    debug_event_t* event = va_arg(va, debug_event_t*);
+    retcode = continue_after_event(event);
+  }
+  break;
+
+  //case debugger_t::ev_set_exception_info:
+  //{
+  //    exception_info_t* info = va_arg(va, exception_info_t*);
+  //    int qty = va_arg(va, int);
+  //    g_dbgmod.dbg_set_exception_info(info, qty);
+  //    retcode = DRC_OK;
+  //}
+  //break;
+
+  //case debugger_t::ev_suspended:
+  //{
+  //    bool dlls_added = va_argi(va, bool);
+  //    thread_name_vec_t* thr_names = va_arg(va, thread_name_vec_t*);
+  //    retcode = DRC_OK;
+  //}
+  //break;
+
+  case debugger_t::ev_thread_suspend:
+  {
+    thid_t tid = va_argi(va, thid_t);
+    CHECK_FOR_START(DRC_OK);
+    pause_execution();
+    retcode = DRC_OK;
+  }
+  break;
+
+  case debugger_t::ev_thread_continue:
+  {
+    thid_t tid = va_argi(va, thid_t);
+    continue_execution();
+    retcode = DRC_OK;
+  }
+  break;
+
+  case debugger_t::ev_set_resume_mode:
+  {
+    thid_t tid = va_argi(va, thid_t);
+    resume_mode_t resmod = va_argi(va, resume_mode_t);
+    retcode = s_set_resume_mode(tid, resmod);
+  }
+  break;
+
+  case debugger_t::ev_read_registers:
+  {
+    thid_t tid = va_argi(va, thid_t);
+    int clsmask = va_arg(va, int);
+    regval_t* values = va_arg(va, regval_t*);
+    errbuf = va_arg(va, qstring*);
+    retcode = read_registers(tid, clsmask, values, errbuf);
+  }
+  break;
+
+  case debugger_t::ev_write_register:
+  {
+    thid_t tid = va_argi(va, thid_t);
+    int regidx = va_arg(va, int);
+    const regval_t* value = va_arg(va, const regval_t*);
+    errbuf = va_arg(va, qstring*);
+    retcode = write_register(tid, regidx, value, errbuf);
+  }
+  break;
+
+  case debugger_t::ev_get_memory_info:
+  {
+    meminfo_vec_t* ranges = va_arg(va, meminfo_vec_t*);
+    errbuf = va_arg(va, qstring*);
+    retcode = get_memory_info(*ranges, errbuf);
+  }
+  break;
+
+  case debugger_t::ev_read_memory:
+  {
+    size_t* nbytes = va_arg(va, size_t*);
+    ea_t ea = va_arg(va, ea_t);
+    void* buffer = va_arg(va, void*);
+    size_t size = va_arg(va, size_t);
+    errbuf = va_arg(va, qstring*);
+    ssize_t code = read_memory(ea, buffer, size, errbuf);
+    *nbytes = code >= 0 ? code : 0;
+    retcode = code >= 0 ? DRC_OK : DRC_NOPROC;
+  }
+  break;
+
+  case debugger_t::ev_write_memory:
+  {
+    size_t* nbytes = va_arg(va, size_t*);
+    ea_t ea = va_arg(va, ea_t);
+    const void* buffer = va_arg(va, void*);
+    size_t size = va_arg(va, size_t);
+    errbuf = va_arg(va, qstring*);
+    ssize_t code = write_memory(ea, buffer, size, errbuf);
+    *nbytes = code >= 0 ? code : 0;
+    retcode = code >= 0 ? DRC_OK : DRC_NOPROC;
+  }
+  break;
+
+  case debugger_t::ev_check_bpt:
+  {
+    int* bptvc = va_arg(va, int*);
+    bpttype_t type = va_argi(va, bpttype_t);
+    ea_t ea = va_arg(va, ea_t);
+    int len = va_arg(va, int);
+    *bptvc = is_ok_bpt(type, ea, len);
+    retcode = DRC_OK;
+  }
+  break;
+
+  case debugger_t::ev_update_bpts:
+  {
+    int* nbpts = va_arg(va, int*);
+    update_bpt_info_t* bpts = va_arg(va, update_bpt_info_t*);
+    int nadd = va_arg(va, int);
+    int ndel = va_arg(va, int);
+    errbuf = va_arg(va, qstring*);
+    retcode = update_bpts(nbpts, bpts, nadd, ndel, errbuf);
+  }
+  break;
+
+  case debugger_t::ev_update_lowcnds:
+  {
+      int* nupdated = va_arg(va, int*);
+      const lowcnd_t* lowcnds = va_arg(va, const lowcnd_t*);
+      int nlowcnds = va_arg(va, int);
+      errbuf = va_arg(va, qstring*);
+      retcode = update_lowcnds(nupdated, lowcnds, nlowcnds, errbuf);
+  }
+  break;
+
+#ifdef HAVE_UPDATE_CALL_STACK
+  case debugger_t::ev_update_call_stack:
+  {
+    thid_t tid = va_argi(va, thid_t);
+    call_stack_t* trace = va_arg(va, call_stack_t*);
+    retcode = g_dbgmod.dbg_update_call_stack(tid, trace);
+  }
+  break;
+#endif
+
+  //case debugger_t::ev_eval_lowcnd:
+  //{
+  //    thid_t tid = va_argi(va, thid_t);
+  //    ea_t ea = va_arg(va, ea_t);
+  //    errbuf = va_arg(va, qstring*);
+  //    retcode = g_dbgmod.dbg_eval_lowcnd(tid, ea, errbuf);
+  //}
+  //break;
+
+  //case debugger_t::ev_bin_search:
+  //{
+  //    ea_t* ea = va_arg(va, ea_t*);
+  //    ea_t start_ea = va_arg(va, ea_t);
+  //    ea_t end_ea = va_arg(va, ea_t);
+  //    const compiled_binpat_vec_t* ptns = va_arg(va, const compiled_binpat_vec_t*);
+  //    int srch_flags = va_arg(va, int);
+  //    errbuf = va_arg(va, qstring*);
+  //    if (ptns != NULL)
+  //        retcode = g_dbgmod.dbg_bin_search(ea, start_ea, end_ea, *ptns, srch_flags, errbuf);
+  //}
+  //break;
+  default:
+    retcode = DRC_NONE;
+  }
+
+  return retcode;
+}
+
 //--------------------------------------------------------------------------
 //
 //	  DEBUGGER DESCRIPTION BLOCK
@@ -1004,75 +1274,25 @@ static bool idaapi update_call_stack(thid_t tid, call_stack_t *trace)
 debugger_t debugger =
 {
     IDD_INTERFACE_VERSION,
-    NAME, // Short debugger name
-    124, // Debugger API module id
-    "m68k", // Required processor name
-    DBG_FLAG_NOHOST | DBG_FLAG_CAN_CONT_BPT | DBG_FLAG_FAKE_ATTACH | DBG_FLAG_SAFE | DBG_FLAG_NOPASSWORD | DBG_FLAG_NOSTARTDIR | DBG_FLAG_LOWCNDS | DBG_FLAG_CONNSTRING | DBG_FLAG_ANYSIZE_HWBPT,
+    "GXIDA",
+    0x8000 + 1,
+    "m68k",
+    DBG_FLAG_NOHOST | DBG_FLAG_CAN_CONT_BPT | DBG_FLAG_FAKE_ATTACH | DBG_FLAG_SAFE | DBG_FLAG_NOPASSWORD | DBG_FLAG_NOSTARTDIR | DBG_FLAG_NOPARAMETERS | DBG_FLAG_ANYSIZE_HWBPT | DBG_FLAG_DEBTHREAD | DBG_FLAG_PREFER_SWBPTS,
+    DBG_HAS_GET_PROCESSES | DBG_HAS_REQUEST_PAUSE | DBG_HAS_SET_RESUME_MODE | DBG_HAS_CHECK_BPT | DBG_HAS_THREAD_SUSPEND | DBG_HAS_THREAD_CONTINUE | DBG_FLAG_LOWCNDS | DBG_FLAG_CONNSTRING,
 
-    register_classes, // Array of register class names
-    RC_GENERAL, // Mask of default printed register classes
-    registers, // Array of registers
-    qnumber(registers), // Number of registers
+    register_classes,
+    RC_GENERAL,
+    registers,
+    qnumber(registers),
 
-    0x1000, // Size of a memory page
+    0x1000,
 
-    NULL, // bpt_bytes, // Array of bytes for a breakpoint instruction
-    NULL, // bpt_size, // Size of this array
-    0, // for miniidbs: use this value for the file type after attaching
+    NULL,
+    0,
+    0,
 
-    DBG_RESMOD_STEP_INTO | DBG_RESMOD_STEP_OVER, // Resume modes
-
-    init_debugger,
-    term_debugger,
-
-    process_get_info,
-
-    start_process,
-    NULL, // attach_process,
-    NULL, // detach_process,
-    rebase_if_required_to,
-    prepare_to_pause_process,
-    gens_exit_process,
-
-    get_debug_event,
-    continue_after_event,
-
-    NULL, // set_exception_info
-    stopped_at_debug_event,
-
-    thread_suspend,
-    thread_continue,
-    set_step_mode,
-
-    read_registers,
-    write_register,
-
-    NULL, // thread_get_sreg_base
-
-    get_memory_info,
-    read_memory,
-    write_memory,
-
-    is_ok_bpt,
-    update_bpts,
-    update_lowcnds,
-
-    NULL, // open_file
-    NULL, // close_file
-    NULL, // read_file
-
-    NULL, // map_address,
+    DBG_RESMOD_STEP_INTO | DBG_RESMOD_STEP_OVER,
 
     NULL, // set_dbg_options
-    NULL, // get_debmod_extensions
-    update_call_stack,
-
-    NULL, // appcall
-    NULL, // cleanup_appcall
-
-    NULL, // eval_lowcnd
-
-    NULL, // write_file
-
-    NULL, // send_ioctl
+    idd_notify
 };
