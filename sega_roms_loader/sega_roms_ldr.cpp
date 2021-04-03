@@ -277,7 +277,7 @@ static void add_vdp_status_enum()
 
 static void print_version()
 {
-    static const char format[] = "Sega Genesis/Megadrive ROMs loader plugin v%s;\nAuthor: Dr. MefistO [Lab 313] <meffi@lab313.ru>.";
+    static const char format[] = "Sega Genesis/Megadrive ROMs loader plugin v%s;\nAuthor: DrMefistO [Lab 313] <newinferno@gmail.com>.";
     info(format, VERSION);
     msg(format, VERSION);
 }

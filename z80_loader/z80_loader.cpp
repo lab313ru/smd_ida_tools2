@@ -8,7 +8,7 @@
 #define VERSION "1.25"
 /*
 *      SEGA MEGA DRIVE/GENESIS Z80 Drivers Loader
-*      Author: Dr. MefistO [Lab 313] <meffi@lab313.ru>
+*      Author: DrMefistO [Lab 313] <newinferno@gmail.com>
 */
 
 #define _CRT_SECURE_NO_WARNINGS
@@ -80,7 +80,7 @@ static unsigned int READ_BE_UINT(unsigned char *addr)
 //------------------------------------------------------------------------
 static void add_sub(unsigned int addr, const char *name)
 {
-	ea_t e_addr = toEA(ask_selector(0), addr);
+	ea_t e_addr = to_ea(sel2para(0), addr);
 
 	auto_make_proc(e_addr);
 	set_name(e_addr, name);
@@ -91,27 +91,27 @@ static void add_offset_field(struc_t *st, segment_t *code_segm, const char *name
 {
 	opinfo_t info = { 0 };
 	info.ri.init(REF_OFF32, BADADDR);
-	add_struc_member(st, name, BADADDR, dwrdflag() | offflag(), &info, 4);
+	add_struc_member(st, name, BADADDR, dword_flag() | off_flag(), &info, 4);
 }
 
 //------------------------------------------------------------------------
 static void add_dword_field(struc_t *st, const char *name)
 {
-	add_struc_member(st, name, BADADDR, dwrdflag() | hexflag(), NULL, 4);
+	add_struc_member(st, name, BADADDR, dword_flag() | hex_flag(), NULL, 4);
 }
 
 //------------------------------------------------------------------------
 static void add_string_field(struc_t *st, const char *name, asize_t size)
 {
 	opinfo_t info = { 0 };
-	info.strtype = ASCSTR_C;
-	add_struc_member(st, name, BADADDR, asciflag(), &info, size);
+	info.strtype = STRTYPE_C;
+	add_struc_member(st, name, BADADDR, strlit_flag(), &info, size);
 }
 
 //------------------------------------------------------------------------
 static void add_byte_field(struc_t *st, const char *name, const char *cmt = NULL)
 {
-    add_struc_member(st, name, BADADDR, byteflag() | hexflag(), NULL, 1);
+    add_struc_member(st, name, BADADDR, byte_flag() | hex_flag(), NULL, 1);
     member_t *mm = get_member_by_name(st, name);
     set_member_cmt(mm, cmt, true);
 }
@@ -119,7 +119,7 @@ static void add_byte_field(struc_t *st, const char *name, const char *cmt = NULL
 //------------------------------------------------------------------------
 static void add_short_field(struc_t *st, const char *name, const char *cmt = NULL)
 {
-	add_struc_member(st, name, BADADDR, wordflag() | hexflag(), NULL, 2);
+	add_struc_member(st, name, BADADDR, word_flag() | hex_flag(), NULL, 2);
     member_t *mm = get_member_by_name(st, name);
     set_member_cmt(mm, cmt, true);
 }
@@ -127,7 +127,7 @@ static void add_short_field(struc_t *st, const char *name, const char *cmt = NUL
 //------------------------------------------------------------------------
 static void add_dword_array(struc_t *st, const char *name, asize_t length)
 {
-	add_struc_member(st, name, BADADDR, dwrdflag() | hexflag(), NULL, 4 * length);
+	add_struc_member(st, name, BADADDR, dword_flag() | hex_flag(), NULL, 4 * length);
 }
 
 //------------------------------------------------------------------------
@@ -135,8 +135,8 @@ static void add_segment(ea_t start, ea_t end, const char *name, const char *clas
 {
     segment_t s;
     s.sel = 0;
-    s.startEA = start;
-    s.endEA = end;
+    s.start_ea = start;
+    s.end_ea = end;
     s.align = saRelByte;
     s.comb = scPub;
     s.bitness = 1; // 32-bit
@@ -147,7 +147,7 @@ static void add_segment(ea_t start, ea_t end, const char *name, const char *clas
     if (!add_segm_ex(&s, name, class_name, flags)) loader_failure();
     segment_t *segm = getseg(start);
     set_segment_cmt(segm, cmnt, false);
-    doByte(start, 1);
+    create_byte(start, 1);
     segm->update();
 }
 
@@ -158,15 +158,15 @@ static void set_spec_register_names()
 	{
 		if (spec_regs[i].size == 2)
 		{
-			doWord(spec_regs[i].addr, 2);
+			create_word(spec_regs[i].addr, 2);
 		}
 		else if (spec_regs[i].size == 4)
 		{
-			doDwrd(spec_regs[i].addr, 4);
+			create_dword(spec_regs[i].addr, 4);
 		}
 		else
 		{
-			doByte(spec_regs[i].addr, spec_regs[i].size);
+			create_byte(spec_regs[i].addr, spec_regs[i].size);
 		}
 		set_name(spec_regs[i].addr, spec_regs[i].name);
 	}
@@ -195,20 +195,19 @@ static void make_segments()
 //--------------------------------------------------------------------------
 static void print_version()
 {
-	static const char format[] = "Sega Genesis/Megadrive Z80 drivers loader v%s;\nAuthor: Dr. MefistO [Lab 313] <meffi@lab313.ru>.";
+	static const char format[] = "Sega Genesis/Megadrive Z80 drivers loader v%s;\nAuthor: DrMefistO [Lab 313] <newinferno@gmail.com>.";
 	info(format, VERSION);
 	msg(format, VERSION);
 }
 
 //--------------------------------------------------------------------------
-int idaapi accept_file(linput_t *li, char fileformatname[MAX_FILE_FORMAT_NAME], int n)
+static int idaapi accept_file(qstring* fileformatname, qstring* processor, linput_t* li, const char* filename)
 {
-	if (n != 0) return 0;
 	qlseek(li, 0, SEEK_SET);
 
-    if (qlsize(li) > 0x2000) return 0;
+  if (qlsize(li) > 0x2000) return 0;
 
-	qstrncpy(fileformatname, "Z80 drivers loader v1", MAX_FILE_FORMAT_NAME);
+	fileformatname->sprnt("%s", "Z80 drivers loader v1");
 
 	return 1;
 }
@@ -217,7 +216,7 @@ int idaapi accept_file(linput_t *li, char fileformatname[MAX_FILE_FORMAT_NAME], 
 void idaapi load_file(linput_t *li, ushort neflags, const char *fileformatname)
 {
 	if (ph.id != PLFM_Z80) {
-		set_processor_type(Z80, SETPROC_ALL | SETPROC_FATAL); // Z80
+		set_processor_type(Z80, SETPROC_LOADER); // Z80
 	}
 
 	inf.af = 0
@@ -237,23 +236,23 @@ void idaapi load_file(linput_t *li, ushort neflags, const char *fileformatname)
 		| AF_IMMOFF //       0x2000          // Convert 32bit instruction operand to offset
 		//AF_DREFOFF //      0x4000          // Create offset if data xref to seg32 exists
 		//| AF_FINAL //       0x8000          // Final pass of analysis
+		| AF_JUMPTBL  //    0x0001          // Locate and create jump tables
+    | AF_STKARG  //     0x0008          // Propagate stack argument information
+    | AF_REGARG  //     0x0010          // Propagate register argument information
+    | AF_SIGMLT  //     0x0080          // Allow recognition of several copies of the same function
+    | AF_FTAIL  //      0x0100          // Create function tails
+    | AF_DATOFF  //     0x0200          // Automatically convert data to offsets
+    | AF_TRFUNC  //     0x2000          // Truncate functions upon code deletion
+    | AF_PURDAT  //     0x4000          // Control flow to data segment is ignored
 		;
 	inf.af2 = 0
-		| AF2_JUMPTBL  //    0x0001          // Locate and create jump tables
 		//| AF2_DODATA  //     0x0002          // Coagulate data segs at the final pass
 		//| AF2_HFLIRT  //     0x0004          // Automatically hide library functions
-		| AF2_STKARG  //     0x0008          // Propagate stack argument information
-		| AF2_REGARG  //     0x0010          // Propagate register argument information
 		//| AF2_CHKUNI  //     0x0020          // Check for unicode strings
 		//| AF2_SIGCMT  //     0x0040          // Append a signature name comment for recognized anonymous library functions
-		| AF2_SIGMLT  //     0x0080          // Allow recognition of several copies of the same function
-		| AF2_FTAIL  //      0x0100          // Create function tails
-		| AF2_DATOFF  //     0x0200          // Automatically convert data to offsets
 		//| AF2_ANORET  //     0x0400          // Perform 'no-return' analysis
 		//| AF2_VERSP  //      0x0800          // Perform full SP-analysis (ph.verify_sp)
 		//| AF2_DOCODE  //     0x1000          // Coagulate code segs at the final pass
-		| AF2_TRFUNC  //     0x2000          // Truncate functions upon code deletion
-		| AF2_PURDAT  //     0x4000          // Control flow to data segment is ignored
 		//| AF2_MEMFUNC //    0x8000          // Try to guess member function types
 		;
 
@@ -266,10 +265,10 @@ void idaapi load_file(linput_t *li, ushort neflags, const char *fileformatname)
 	make_segments(); // create segments
 	set_spec_register_names(); // apply names for special addresses of registers
 
-	do_unknown(0x0000, DOUNK_SIMPLE);
-    add_sub(0x0000, "start");
+	del_items(0x0000, DELIT_SIMPLE);
+  add_sub(0x0000, "start");
 
-	inf.beginEA = 0;
+	inf.start_ea = inf.start_ip = 0;
 
 	print_version();
 }

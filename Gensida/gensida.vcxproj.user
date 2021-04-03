@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug7|x64'">
-    <LocalDebuggerCommand>$(IDA_DIR68)\idaq.exe</LocalDebuggerCommand>
-    <LocalDebuggerWorkingDirectory>$(OutDir)</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerCommand>c:\Program Files\IDA Pro 7.6\ida.exe</LocalDebuggerCommand>
+    <LocalDebuggerWorkingDirectory>c:\Program Files\IDA Pro 7.6\</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release7|x64'">

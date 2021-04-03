@@ -1,4 +1,4 @@
-// Copyright (C) 2015 Dr. MefistO
+// Copyright (C) 2021 DrMefistO
 //
 // This program is free software : you can redistribute it and / or modify
 // it under the terms of the GNU General Public License as published by
@@ -14,6 +14,7 @@
 
 //#include <Windows.h>
 
+#include <Windows.h>
 #include <ida.hpp>
 #include <dbg.hpp>
 #include <idd.hpp>
@@ -22,9 +23,6 @@
 #include <offset.hpp>
 
 #include "ida_plugin.h"
-
-#include "m68k_debugwindow.h"
-#include "resource.h"
 
 #include "ida_debmod.h"
 #include "ida_registers.h"
@@ -67,7 +65,7 @@ static int idaapi idp_to_dbg_reg(int idp_reg)
     {
         char buf[MAXSTR];
         ::qsnprintf(buf, MAXSTR, "reg: %d\n", idp_reg);
-        warning("SEND THIS MESSAGE TO meffi@lab313.ru:\n%s\n", buf);
+        warning("SEND THIS MESSAGE TO newinferno@gmail.com:\n%s\n", buf);
         return 0;
     }
     return reg_idx;
@@ -1029,7 +1027,7 @@ static void do_cmt_z80_bus_command(ea_t ea, ea_t addr, uint32 val)
 //--------------------------------------------------------------------------
 static void print_version()
 {
-    static const char format[] = NAME " debugger plugin v%s;\nAuthor: Dr. MefistO [Lab 313] <meffi@lab313.ru>.";
+    static const char format[] = NAME " debugger plugin v%s;\nAuthor: DrMefistO [Lab 313] <newinferno@gmail.com>.";
     info(format, VERSION);
     msg(format, VERSION);
 }

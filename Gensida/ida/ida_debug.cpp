@@ -1,3 +1,18 @@
+#include "gen-cpp/DbgClient.h"
+#include "gen-cpp/DbgServer.h"
+#include <thrift/protocol/TBinaryProtocol.h>
+#include <thrift/transport/TSocket.h>
+#include <thrift/transport/TBufferTransports.h>
+#include <thrift/server/TNonblockingServer.h>
+#include <thrift/transport/TNonblockingServerSocket.h>
+#include <thrift/concurrency/ThreadFactory.h>
+
+using namespace ::apache::thrift;
+using namespace ::apache::thrift::protocol;
+using namespace ::apache::thrift::transport;
+using namespace ::apache::thrift::server;
+using namespace ::apache::thrift::concurrency;
+
 #include <Windows.h>
 #include <algorithm>
 #include <ida.hpp>
@@ -7,15 +22,6 @@
 #include <auto.hpp>
 #include <funcs.hpp>
 
-#include "g_main.h"
-#include "g_ddraw.h"
-#include "g_dsound.h"
-#include "star_68k.h"
-#include "m68k_debugwindow.h"
-#include "vdp_io.h"
-#include "ram_search.h"
-#include "resource.h"
-
 #include "ida_debmod.h"
 
 #include "ida_registers.h"
@@ -23,22 +29,16 @@
 #include "ida_plugin.h"
 
 #include <vector>
+#include <iostream>
 
-int PASCAL WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nCmdShow);
+::std::shared_ptr<DbgServerClient> client;
+::std::shared_ptr<TNonblockingServer> srv;
+::std::shared_ptr<TTransport> cli_transport;
 
-codemap_t g_codemap;
-eventlist_t g_events;
-
-extern int Gens_Running;
-qthread_t gens_thread = NULL;
-
-uint16 allow0_breaks = 0;
-uint32 allow1_breaks = 0;
-uint32 break_regs[16 + 24] = { 0 };
+::std::mutex list_mutex;
+static eventlist_t events;
 
 #define BREAKPOINTS_BASE 0x00D00000
-
-#define CHECK_FOR_START(x) {if (!Gens_Running) return x;}
 
 static const char *const SRReg[] =
 {
@@ -60,55 +60,6 @@ static const char *const SRReg[] =
     "T"
 };
 
-static const char *const ALLOW_FLAGS_DA[] =
-{
-    "_A07",
-    "_A06",
-    "_A05",
-    "_A04",
-    "_A03",
-    "_A02",
-    "_A01",
-    "_A00",
-
-    "_D07",
-    "_D06",
-    "_D05",
-    "_D04",
-    "_D03",
-    "_D02",
-    "_D01",
-    "_D00",
-};
-
-static const char *const ALLOW_FLAGS_V[] =
-{
-    "_V23",
-    "_V22",
-    "_V21",
-    "_V20",
-    "_V19",
-    "_V18",
-    "_V17",
-    "_V16",
-    "_V15",
-    "_V14",
-    "_V13",
-    "_V12",
-    "_V11",
-    "_V10",
-    "_V09",
-    "_V08",
-    "_V07",
-    "_V06",
-    "_V05",
-    "_V04",
-    "_V03",
-    "_V02",
-    "_V01",
-    "_V00",
-};
-
 register_info_t registers[] =
 {
     { "D0", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
@@ -127,61 +78,15 @@ register_info_t registers[] =
     { "A4", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
     { "A5", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
     { "A6", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
-    { "A7", REGISTER_ADDRESS | REGISTER_SP, RC_GENERAL, dt_dword, NULL, 0 },
+    { "A7", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
 
     { "PC", REGISTER_ADDRESS | REGISTER_IP, RC_GENERAL, dt_dword, NULL, 0 },
-
+    { "SP", REGISTER_ADDRESS | REGISTER_SP, RC_GENERAL, dt_dword, NULL, 0 },
     { "SR", NULL, RC_GENERAL, dt_word, SRReg, 0xFFFF },
 
     { "DMA_LEN", REGISTER_READONLY, RC_GENERAL, dt_word, NULL, 0 },
     { "DMA_SRC", REGISTER_ADDRESS | REGISTER_READONLY, RC_GENERAL, dt_dword, NULL, 0 },
     { "VDP_DST", REGISTER_ADDRESS | REGISTER_READONLY, RC_GENERAL, dt_dword, NULL, 0 },
-
-    // Register Breakpoints
-    { "D00", REGISTER_ADDRESS, RC_BREAK, dt_dword, NULL, 0 },
-    { "D01", REGISTER_ADDRESS, RC_BREAK, dt_dword, NULL, 0 },
-    { "D02", REGISTER_ADDRESS, RC_BREAK, dt_dword, NULL, 0 },
-    { "D03", REGISTER_ADDRESS, RC_BREAK, dt_dword, NULL, 0 },
-    { "D04", REGISTER_ADDRESS, RC_BREAK, dt_dword, NULL, 0 },
-    { "D05", REGISTER_ADDRESS, RC_BREAK, dt_dword, NULL, 0 },
-    { "D06", REGISTER_ADDRESS, RC_BREAK, dt_dword, NULL, 0 },
-    { "D07", REGISTER_ADDRESS, RC_BREAK, dt_dword, NULL, 0 },
-
-    { "A00", REGISTER_ADDRESS, RC_BREAK, dt_dword, NULL, 0 },
-    { "A01", REGISTER_ADDRESS, RC_BREAK, dt_dword, NULL, 0 },
-    { "A02", REGISTER_ADDRESS, RC_BREAK, dt_dword, NULL, 0 },
-    { "A03", REGISTER_ADDRESS, RC_BREAK, dt_dword, NULL, 0 },
-    { "A04", REGISTER_ADDRESS, RC_BREAK, dt_dword, NULL, 0 },
-    { "A05", REGISTER_ADDRESS, RC_BREAK, dt_dword, NULL, 0 },
-    { "A06", REGISTER_ADDRESS, RC_BREAK, dt_dword, NULL, 0 },
-    { "A07", REGISTER_ADDRESS, RC_BREAK, dt_dword, NULL, 0 },
-
-    { "V00", NULL, RC_BREAK, dt_byte, NULL, 0 },
-    { "V01", NULL, RC_BREAK, dt_byte, NULL, 0 },
-    { "V02", NULL, RC_BREAK, dt_byte, NULL, 0 },
-    { "V03", NULL, RC_BREAK, dt_byte, NULL, 0 },
-    { "V04", NULL, RC_BREAK, dt_byte, NULL, 0 },
-    { "V05", NULL, RC_BREAK, dt_byte, NULL, 0 },
-    { "V06", NULL, RC_BREAK, dt_byte, NULL, 0 },
-    { "V07", NULL, RC_BREAK, dt_byte, NULL, 0 },
-    { "V08", NULL, RC_BREAK, dt_byte, NULL, 0 },
-    { "V09", NULL, RC_BREAK, dt_byte, NULL, 0 },
-    { "V10", NULL, RC_BREAK, dt_byte, NULL, 0 },
-    { "V11", NULL, RC_BREAK, dt_byte, NULL, 0 },
-    { "V12", NULL, RC_BREAK, dt_byte, NULL, 0 },
-    { "V13", NULL, RC_BREAK, dt_byte, NULL, 0 },
-    { "V14", NULL, RC_BREAK, dt_byte, NULL, 0 },
-    { "V15", NULL, RC_BREAK, dt_byte, NULL, 0 },
-    { "V16", NULL, RC_BREAK, dt_byte, NULL, 0 },
-    { "V17", NULL, RC_BREAK, dt_byte, NULL, 0 },
-    { "V18", NULL, RC_BREAK, dt_byte, NULL, 0 },
-    { "V19", NULL, RC_BREAK, dt_byte, NULL, 0 },
-    { "V20", NULL, RC_BREAK, dt_byte, NULL, 0 },
-    { "V21", NULL, RC_BREAK, dt_byte, NULL, 0 },
-    { "V22", NULL, RC_BREAK, dt_byte, NULL, 0 },
-    { "V23", NULL, RC_BREAK, dt_byte, NULL, 0 },
-    { "ALLOW0", NULL, RC_BREAK, dt_word, ALLOW_FLAGS_DA, 0xFFFF },
-    { "ALLOW1", NULL, RC_BREAK, dt_tbyte, ALLOW_FLAGS_V, 0xFFFFFF },
 
     // VDP Registers
     { "Set1", NULL, RC_VDP, dt_byte, NULL, 0 },
@@ -214,82 +119,162 @@ static const char *register_classes[] =
 {
     "General Registers",
     "VDP Registers",
-    "Register Breakpoints",
     NULL
 };
 
-static void prepare_codemap()
-{
-    g_codemap.resize(MAX_ROM_SIZE);
-    for (size_t i = 0; i < MAX_ROM_SIZE; ++i)
-    {
-        g_codemap[i] = std::pair<uint32, bool>(BADADDR, false);
-    }
-}
-
-static void apply_codemap()
-{
-    if (g_codemap.empty()) return;
-
-    msg("Applying codemap...\n");
-    for (size_t i = 0; i < MAX_ROM_SIZE; ++i)
-    {
-        if (g_codemap[i].second && g_codemap[i].first)
-        {
-            auto_make_code((ea_t)i);
-            plan_ea((ea_t)i);
-        }
-        show_addr((ea_t)i);
-    }
-    plan_range(0, MAX_ROM_SIZE);
-
-    for (size_t i = 0; i < MAX_ROM_SIZE; ++i)
-    {
-        if (g_codemap[i].second && g_codemap[i].first && !get_func((ea_t)i))
-        {
-            if (add_func(i, BADADDR))
-                add_cref(g_codemap[i].first, i, fl_CN);
-            plan_ea((ea_t)i);
-        }
-        show_addr((ea_t)i);
-    }
-    plan_range(0, MAX_ROM_SIZE);
-    msg("Codemap applied.\n");
-}
-
-inline static void toggle_pause()
-{
-    HWND hwndGens = FindWindowEx(NULL, NULL, "Gens", NULL);
-
-    if (hwndGens != NULL)
-        SendMessage(hwndGens, WM_COMMAND, ID_EMULATION_PAUSED, 0);
-}
-
 static void pause_execution()
 {
-    M68kDW.DebugStop = true;
+    try {
+      if (client) {
+        client->pause();
+      }
+    } catch (TException& ex) {
 
-    if (Paused) return;
-    toggle_pause();
+    }
 }
 
 static void continue_execution()
 {
-    M68kDW.DebugStop = false;
+    try {
+      if (client) {
+        client->resume();
+      }
+    }
+    catch (TException& ex) {
 
-    if (!Paused) return;
-    toggle_pause();
+    }
 }
 
 static void finish_execution()
 {
-    if (gens_thread != NULL)
-    {
-        qthread_join(gens_thread);
-        qthread_free(gens_thread);
-        qthread_kill(gens_thread);
-        gens_thread = NULL;
+    try {
+      if (client) {
+        client->exit_emulation();
+      }
     }
+    catch (TException& ex) {
+
+    }
+}
+
+void stop_server() {
+  srv->stop();
+}
+
+class DbgClientHandler : virtual public DbgClientIf {
+public:
+  DbgClientHandler() {
+    // Your initialization goes here
+  }
+
+  void start_event() {
+    ::std::lock_guard<::std::mutex> lock(list_mutex);
+    
+    debug_event_t ev;
+    ev.pid = 1;
+    ev.tid = 1;
+    ev.ea = BADADDR;
+    ev.handled = true;
+
+    ev.set_modinfo(PROCESS_STARTED).name.sprnt("GPGX");
+    ev.set_modinfo(PROCESS_STARTED).base = 0;
+    ev.set_modinfo(PROCESS_STARTED).size = 0;
+    ev.set_modinfo(PROCESS_STARTED).rebase_to = BADADDR;
+
+    events.enqueue(ev, IN_BACK);
+  }
+
+  void pause_event(const int32_t address) {
+    ::std::lock_guard<::std::mutex> lock(list_mutex);
+
+    debug_event_t ev;
+    ev.pid = 1;
+    ev.tid = 1;
+    ev.ea = address;
+    ev.handled = true;
+    ev.set_eid(PROCESS_SUSPENDED);
+    events.enqueue(ev, IN_BACK);
+  }
+
+  void break_event(const int32_t address) {
+    ::std::lock_guard<::std::mutex> lock(list_mutex);
+
+    debug_event_t ev;
+    ev.pid = 1;
+    ev.tid = 1;
+    ev.ea = address;
+    ev.handled = true;
+    ev.set_eid(BREAKPOINT);
+    ev.set_bpt().hea = ev.set_bpt().kea = ev.ea;
+    events.enqueue(ev, IN_BACK);
+  }
+
+  void step_event(const int32_t address) {
+    ::std::lock_guard<::std::mutex> lock(list_mutex);
+
+    debug_event_t ev;
+    ev.pid = 1;
+    ev.tid = 1;
+    ev.ea = address;
+    ev.handled = true;
+    ev.set_eid(STEP);
+    events.enqueue(ev, IN_BACK);
+  }
+
+  void stop_event() {
+    ::std::lock_guard<::std::mutex> lock(list_mutex);
+
+    debug_event_t ev;
+    ev.pid = 1;
+    ev.handled = true;
+    ev.set_exit_code(PROCESS_EXITED, 0);
+
+    events.enqueue(ev, IN_BACK);
+  }
+
+  void update_map(const int32_t prev, const int32_t curr, const bool visited) {
+    auto_make_code((ea_t)curr);
+    //plan_ea((ea_t)curr);
+  }
+
+};
+
+static void init_ida_server() {
+  ::std::shared_ptr<DbgClientHandler> handler(new DbgClientHandler());
+  ::std::shared_ptr<TProcessor> processor(new DbgClientProcessor(handler));
+  ::std::shared_ptr<TNonblockingServerTransport> serverTransport(new TNonblockingServerSocket(9091));
+  ::std::shared_ptr<TFramedTransportFactory> transportFactory(new TFramedTransportFactory());
+  ::std::shared_ptr<TProtocolFactory> protocolFactory(new TBinaryProtocolFactory());
+
+  srv = ::std::shared_ptr<TNonblockingServer>(new TNonblockingServer(processor, protocolFactory, serverTransport));
+  ::std::shared_ptr<ThreadFactory> tf(new ThreadFactory());
+  ::std::shared_ptr<Thread> thread = tf->newThread(srv);
+  thread->start();
+}
+
+static void init_emu_client() {
+  ::std::shared_ptr<TTransport> socket(new TSocket("127.0.0.1", 9090));
+  cli_transport = ::std::shared_ptr<TTransport>(new TFramedTransport(socket));
+  ::std::shared_ptr<TBinaryProtocol> protocol(new TBinaryProtocol(cli_transport));
+  client = ::std::shared_ptr<DbgServerClient>(new DbgServerClient(protocol));
+
+  show_wait_box("Waiting for GENS emulation...");
+
+  while (true) {
+    if (user_cancelled()) {
+      break;
+    }
+
+    try {
+      cli_transport->open();
+      break;
+    }
+    catch (TException& tx) {
+      
+    }
+  }
+
+  hide_wait_box();
 }
 
 // Initialize debugger
@@ -297,7 +282,6 @@ static void finish_execution()
 // This function is called from the main thread
 static drc_t idaapi init_debugger(const char* hostname, int portnum, const char* password, qstring *errbuf)
 {
-    prepare_codemap();
     set_processor_type(ph.psnames[0], SETPROC_LOADER); // reset proc to "M68000"
     return DRC_OK;
 }
@@ -308,7 +292,6 @@ static drc_t idaapi init_debugger(const char* hostname, int portnum, const char*
 static drc_t idaapi term_debugger(void)
 {
     finish_execution();
-    apply_codemap();
     return DRC_OK;
 }
 
@@ -325,46 +308,6 @@ static drc_t s_get_processes(procinfo_vec_t* procs, qstring* errbuf) {
   return DRC_OK;
 }
 
-HINSTANCE GetHInstance()
-{
-    MEMORY_BASIC_INFORMATION mbi;
-    SetLastError(ERROR_SUCCESS);
-    VirtualQuery(GetHInstance, &mbi, sizeof(mbi));
-
-    return (HINSTANCE)mbi.AllocationBase;
-}
-
-char cmdline[2048];
-static int idaapi gens_process(void *ud)
-{
-    int rc;
-
-    rc = WinMain(GetHInstance(), (HINSTANCE)NULL, cmdline, SW_NORMAL);
-
-    debug_event_t ev;
-    ev.set_eid(PROCESS_EXITED);
-    ev.pid = 1;
-    ev.handled = true;
-    ev.set_exit_code(PROCESS_EXITED, rc);
-
-    g_events.enqueue(ev, IN_BACK);
-
-    return rc;
-}
-
-static uint32 get_entry_point(const char *rom_path)
-{
-    FILE *fp = fopenRB(rom_path);
-    if (fp == NULL) return 0;
-
-    uint32 addr = 0;
-    eseek(fp, 4);
-    eread(fp, &addr, sizeof(addr));
-    eclose(fp);
-
-    return swap32(addr);
-}
-
 // Start an executable to debug
 // 1 - ok, 0 - failed, -2 - file not found (ask for process options)
 // 1|CRC32_MISMATCH - ok, but the input file crc does not match
@@ -378,18 +321,13 @@ static drc_t idaapi s_start_process(const char* path,
   uint32 input_file_crc32,
   qstring* errbuf = NULL)
 {
-    qsnprintf(cmdline, sizeof(cmdline), "-rom \"%s\"", path);
+    ::std::lock_guard<::std::mutex> lock(list_mutex);
+    events.clear();
 
-    uint32 start = get_entry_point(path);
+    init_ida_server();
+    init_emu_client();
 
-    M68kDW.Breakpoints.clear();
-    Breakpoint b(bp_type::BP_PC, start & 0xFFFFFF, start & 0xFFFFFF, true, false, false);
-    M68kDW.Breakpoints.push_back(b);
-
-    allow0_breaks = allow1_breaks = 0;
-    g_events.clear();
-
-    gens_thread = qthread_create(gens_process, NULL);
+    client->start_emulation();
 
     return DRC_OK;
 }
@@ -411,7 +349,6 @@ static void idaapi rebase_if_required_to(ea_t new_base)
 // This function is called from debthread
 static drc_t idaapi prepare_to_pause_process(qstring *errbuf)
 {
-    CHECK_FOR_START(DRC_OK);
     pause_execution();
     return DRC_OK;
 }
@@ -425,14 +362,7 @@ static drc_t idaapi prepare_to_pause_process(qstring *errbuf)
 // This function is called from debthread
 static drc_t idaapi emul_exit_process(qstring *errbuf)
 {
-    CHECK_FOR_START(DRC_OK);
-    allow0_breaks = allow1_breaks = 0;
-
-    HWND hwndGens = FindWindowEx(NULL, NULL, "Gens", NULL);
-    if (hwndGens != NULL)
-    {
-        SendMessage(hwndGens, WM_CLOSE, 0, 0);
-    }
+    finish_execution();
 
     return DRC_OK;
 }
@@ -444,18 +374,20 @@ static gdecode_t idaapi get_debug_event(debug_event_t *event, int timeout_ms)
 {
     while (true)
     {
+        ::std::lock_guard<::std::mutex> lock(list_mutex);
+
         // are there any pending events?
-        if (g_events.retrieve(event))
+        if (events.retrieve(event))
         {
             switch (event->eid())
             {
             case PROCESS_SUSPENDED:
-                apply_codemap();
+                //apply_codemap();
                 break;
             }
-            return g_events.empty() ? GDE_ONE_EVENT : GDE_MANY_EVENTS;
+            return events.empty() ? GDE_ONE_EVENT : GDE_MANY_EVENTS;
         }
-        if (g_events.empty())
+        if (events.empty())
             break;
     }
     return GDE_NO_EVENT;
@@ -466,16 +398,17 @@ static gdecode_t idaapi get_debug_event(debug_event_t *event, int timeout_ms)
 // This function is called from debthread
 static drc_t idaapi continue_after_event(const debug_event_t *event)
 {
+    dbg_notification_t req = get_running_notification();
     switch (event->eid())
     {
     case STEP:
     case PROCESS_SUSPENDED:
-        continue_execution();
+        if (req == dbg_null || req == dbg_run_to) {
+          continue_execution();
+        }
         break;
     case PROCESS_EXITED:
-        continue_execution();
-        finish_execution();
-        apply_codemap();
+        stop_server();
         break;
     }
 
@@ -508,12 +441,10 @@ static drc_t idaapi s_set_resume_mode(thid_t tid, resume_mode_t resmod) // Run o
     switch (resmod)
     {
     case RESMOD_INTO:    ///< step into call (the most typical single stepping)
-        M68kDW.StepInto = 1;
-        M68kDW.DebugStop = false;
+        client->step_into();
         break;
     case RESMOD_OVER:    ///< step over call
-        M68kDW.DoStepOver();
-        M68kDW.DebugStop = false;
+        client->step_over();
         break;
     }
 
@@ -531,66 +462,61 @@ static drc_t idaapi read_registers(thid_t tid, int clsmask, regval_t *values, qs
 {
     if (clsmask & RC_GENERAL)
     {
-        values[R_D0].ival = main68k_context.dreg[R_D0 - R_D0];
-        values[R_D1].ival = main68k_context.dreg[R_D1 - R_D0];
-        values[R_D2].ival = main68k_context.dreg[R_D2 - R_D0];
-        values[R_D3].ival = main68k_context.dreg[R_D3 - R_D0];
-        values[R_D4].ival = main68k_context.dreg[R_D4 - R_D0];
-        values[R_D5].ival = main68k_context.dreg[R_D5 - R_D0];
-        values[R_D6].ival = main68k_context.dreg[R_D6 - R_D0];
-        values[R_D7].ival = main68k_context.dreg[R_D7 - R_D0];
+        GpRegisters regs;
+        client->get_gp_regs(regs);
 
-        values[R_A0].ival = main68k_context.areg[R_A0 - R_A0];
-        values[R_A1].ival = main68k_context.areg[R_A1 - R_A0];
-        values[R_A2].ival = main68k_context.areg[R_A2 - R_A0];
-        values[R_A3].ival = main68k_context.areg[R_A3 - R_A0];
-        values[R_A4].ival = main68k_context.areg[R_A4 - R_A0];
-        values[R_A5].ival = main68k_context.areg[R_A5 - R_A0];
-        values[R_A6].ival = main68k_context.areg[R_A6 - R_A0];
-        values[R_A7].ival = main68k_context.areg[R_A7 - R_A0];
+        values[R_D0].ival = regs.D0;
+        values[R_D1].ival = regs.D1;
+        values[R_D2].ival = regs.D2;
+        values[R_D3].ival = regs.D3;
+        values[R_D4].ival = regs.D4;
+        values[R_D5].ival = regs.D5;
+        values[R_D6].ival = regs.D6;
+        values[R_D7].ival = regs.D7;
 
-        values[R_PC].ival = M68kDW.last_pc & 0xFFFFFF;
-        values[R_SR].ival = main68k_context.sr;
+        values[R_A0].ival = regs.A0;
+        values[R_A1].ival = regs.A1;
+        values[R_A2].ival = regs.A2;
+        values[R_A3].ival = regs.A3;
+        values[R_A4].ival = regs.A4;
+        values[R_A5].ival = regs.A5;
+        values[R_A6].ival = regs.A6;
+        values[R_A7].ival = regs.A7;
 
-        values[R_VDP_DMA_LEN].ival = (BYTE)(VDP_Reg.regs[R_DR19 - R_DR00]) | ((BYTE)(VDP_Reg.regs[R_DR20 - R_DR00]) << 8);
-
-        values[R_VDP_DMA_SRC].ival = (BYTE)(VDP_Reg.regs[R_DR21 - R_DR00]) | ((BYTE)(VDP_Reg.regs[R_DR22 - R_DR00]) << 8);
-        UINT16 dma_high = VDP_Reg.regs[R_DR23 - R_DR00];
-        if (!(dma_high & 0x80))
-            values[R_VDP_DMA_SRC].ival |= ((BYTE)(VDP_Reg.regs[R_DR23 - R_DR00] & mask(0, 7)) << 16);
-        else
-            values[R_VDP_DMA_SRC].ival |= ((BYTE)(VDP_Reg.regs[R_DR23 - R_DR00] & mask(0, 6)) << 16);
-        values[R_VDP_DMA_SRC].ival <<= 1;
-
-        values[R_VDP_DMA_SRC].ival &= 0xFFFFFF;
-
-        values[R_VDP_WRITE_ADDR].ival = BREAKPOINTS_BASE;
-        switch (Ctrl.Access)
-        {
-        case 0x09: // VRAM
-        case 0x0A: // CRAM
-        case 0x0B: // VSRAM
-            values[R_VDP_WRITE_ADDR].ival = (BREAKPOINTS_BASE + 0x10000 * (Ctrl.Access - 0x09)) + (Ctrl.Address & 0xFFFF);
-            break;
-        }
+        values[R_PC].ival = regs.PC;
+        values[R_SP].ival = regs.SP;
+        values[R_SR].ival = regs.SR;
     }
 
     if (clsmask & RC_VDP)
     {
-        for (int i = 0; i < 24; ++i)
-        {
-            values[R_DR00 + i].ival = VDP_Reg.regs[i];
-        }
-    }
+        VdpRegisters regs;
+        client->get_vdp_regs(regs);
 
-    if (clsmask & RC_BREAK)
-    {
-        values[R_B_ALLOW0].ival = allow0_breaks;
-        values[R_B_ALLOW1].ival = allow1_breaks;
-        for (int i = 0; i < (16 + 24); ++i)
-        {
-            values[R_B00 + i].ival = break_regs[i];
-        }
+        values[R_V00].ival = regs.V00;
+        values[R_V01].ival = regs.V01;
+        values[R_V02].ival = regs.V02;
+        values[R_V03].ival = regs.V03;
+        values[R_V04].ival = regs.V04;
+        values[R_V05].ival = regs.V05;
+        values[R_V06].ival = regs.V06;
+        values[R_V07].ival = regs.V07;
+        values[R_V08].ival = regs.V08;
+        values[R_V09].ival = regs.V09;
+        values[R_V10].ival = regs.V0A;
+        values[R_V11].ival = regs.V0B;
+        values[R_V12].ival = regs.V0C;
+        values[R_V13].ival = regs.V0D;
+        values[R_V14].ival = regs.V0E;
+        values[R_V15].ival = regs.V0F;
+        values[R_V16].ival = regs.V10;
+        values[R_V17].ival = regs.V11;
+        values[R_V18].ival = regs.V12;
+        values[R_V19].ival = regs.V13;
+        values[R_V20].ival = regs.V14;
+        values[R_V21].ival = regs.V15;
+        values[R_V22].ival = regs.V16;
+        values[R_V23].ival = regs.V17;
     }
 
     return DRC_OK;
@@ -604,38 +530,10 @@ static drc_t idaapi read_registers(thid_t tid, int clsmask, regval_t *values, qs
 // This function is called from debthread
 static drc_t idaapi write_register(thid_t tid, int regidx, const regval_t *value, qstring *errbuf)
 {
-    if (regidx >= R_D0 && regidx <= R_D7)
-    {
-        main68k_context.dreg[regidx - R_D0] = (uint32)value->ival;
-    }
-    else if (regidx >= R_A0 && regidx <= R_A7)
-    {
-        main68k_context.areg[regidx - R_A0] = (uint32)value->ival;
-    }
-    else if (regidx == R_PC)
-    {
-        main68k_context.pc = (uint32)value->ival & 0xFFFFFF;
-    }
-    else if (regidx == R_SR)
-    {
-        main68k_context.sr = (uint16)value->ival;
-    }
-    else if (regidx >= R_DR00 && regidx <= R_DR23)
-    {
-        VDP_Reg.regs[regidx - R_DR00] = (uint32)value->ival;
-    }
-    else if (regidx == R_B_ALLOW0)
-    {
-        allow0_breaks = (uint16)value->ival;
-    }
-    else if (regidx == R_B_ALLOW1)
-    {
-        allow1_breaks = (uint32)value->ival;
-    }
-    else if (regidx >= R_B00 && regidx <= R_B39)
-    {
-        break_regs[regidx - R_B00] = (uint32)value->ival;
-    }
+    GpRegister reg;
+    reg.index = (GpRegsEnum::type)regidx;
+    reg.value = value->ival & 0xFFFFFFFF;
+    client->set_gp_reg(reg);
 
     return DRC_OK;
 }
@@ -699,8 +597,6 @@ static drc_t idaapi get_memory_info(meminfo_vec_t &areas, qstring *errbuf)
     return DRC_OK;
 }
 
-extern bool IsHardwareAddressValid(unsigned int address);
-
 // Read process memory
 // Returns number of read bytes
 // 0 means read error
@@ -708,40 +604,10 @@ extern bool IsHardwareAddressValid(unsigned int address);
 // This function is called from debthread
 static ssize_t idaapi read_memory(ea_t ea, void *buffer, size_t size, qstring *errbuf)
 {
-    CHECK_FOR_START(0);
-    for (size_t i = 0; i < size; ++i)
-    {
-        if ((ea + i >= 0xA00000 && ea + i < 0xA10000) && IsHardwareAddressValid((uint32)(ea + i)))
-        {
-            // Z80
-            unsigned char value = (unsigned char)(ReadValueAtHardwareAddress((uint32)((ea + i) ^ 1), 1) & 0xFF);
-            ((UINT8*)buffer)[i] = value;
-        }
-        else if (IsHardwareAddressValid((uint32)(ea + i)))
-        {
-            unsigned char value = (unsigned char)(ReadValueAtHardwareAddress((uint32)(ea + i), 1) & 0xFF);
-            ((UINT8*)buffer)[i] = value;
-        }
-        else if (ea + i >= (BREAKPOINTS_BASE + 0x00000) && ea + i < (BREAKPOINTS_BASE + 0x10000))
-        {
-            // VRAM
-            ea_t addr = ea + i - (BREAKPOINTS_BASE + 0x00000);
-            ((UINT8*)buffer)[i] = VRam[(addr ^ 1) & 0xFFFF];
-        }
-        else if (ea + i >= (BREAKPOINTS_BASE + 0x10000) && ea + i < (BREAKPOINTS_BASE + 0x20000))
-        {
-            // CRAM
-            ea_t addr = ea + i - (BREAKPOINTS_BASE + 0x10000);
-            ((UINT8*)buffer)[i] = ((UINT8*)CRam)[(addr ^ 1) & 0x1FF];
-        }
-        else if (ea + i >= (BREAKPOINTS_BASE + 0x20000) && ea + i < (BREAKPOINTS_BASE + 0x30000))
-        {
-            // VSRAM
-            ea_t addr = ea + i - (BREAKPOINTS_BASE + 0x20000);
-            ((UINT8*)buffer)[i] = ((UINT8*)VSRam)[(addr ^ 1) & 0xFF];
-        }
-        // else leave the value nil
-    }
+    std::string mem;
+    client->read_memory(mem, (int32_t)ea, (int32_t)size);
+
+    memcpy(buffer, mem.c_str(), size);
 
     return size;
 }
@@ -750,7 +616,9 @@ static ssize_t idaapi read_memory(ea_t ea, void *buffer, size_t size, qstring *e
 // This function is called from debthread
 static ssize_t idaapi write_memory(ea_t ea, const void *buffer, size_t size, qstring *errbuf)
 {
-    return 0;
+    std::string mem((const char*)buffer);
+    client->write_memory((int32_t)ea, mem);
+    return size;
 }
 
 // Is it possible to set breakpoint?
@@ -779,30 +647,29 @@ static int idaapi is_ok_bpt(bpttype_t type, ea_t ea, int len)
 // This function is called from debthread
 static drc_t idaapi update_bpts(int* nbpts, update_bpt_info_t *bpts, int nadd, int ndel, qstring *errbuf)
 {
-    CHECK_FOR_START(DRC_FAILED);
-
     for (int i = 0; i < nadd; ++i)
     {
         ea_t start = bpts[i].ea;
         ea_t end = bpts[i].ea + bpts[i].size - 1;
-        bp_type type1;
+
+        BpType::type type1;
         int type2 = 0;
         bool is_vdp = false;
 
         switch (bpts[i].type)
         {
         case BPT_EXEC:
-            type1 = bp_type::BP_PC;
+            type1 = BpType::BP_PC;
             break;
         case BPT_READ:
-            type1 = bp_type::BP_READ;
+            type1 = BpType::BP_READ;
             break;
         case BPT_WRITE:
-            type1 = bp_type::BP_WRITE;
+            type1 = BpType::BP_WRITE;
             break;
         case BPT_RDWR:
-            type1 = bp_type::BP_READ;
-            type2 = (int)bp_type::BP_WRITE;
+            type1 = BpType::BP_READ;
+            type2 = (int)BpType::BP_WRITE;
             break;
         }
 
@@ -813,13 +680,21 @@ static drc_t idaapi update_bpts(int* nbpts, update_bpt_info_t *bpts, int nadd, i
             is_vdp = true;
         }
 
-        Breakpoint b(type1, start & 0xFFFFFF, end & 0xFFFFFF, true, is_vdp, false);
-        M68kDW.Breakpoints.push_back(b);
+        DbgBreakpoint bp;
+        bp.bstart = start & 0xFFFFFF;
+        bp.bend = end & 0xFFFFFF;
+        bp.type = type1;
+
+        bp.enabled = true;
+        bp.is_vdp = is_vdp;
+        bp.is_forbid = false;
+
+        client->add_breakpoint(bp);
 
         if (type2 != 0)
         {
-            Breakpoint b((bp_type)type2, start & 0xFFFFFF, end & 0xFFFFFF, true, is_vdp, false);
-            M68kDW.Breakpoints.push_back(b);
+            bp.type = (BpType::type)type2;
+            client->add_breakpoint(bp);
         }
 
         bpts[i].code = BPT_OK;
@@ -829,24 +704,24 @@ static drc_t idaapi update_bpts(int* nbpts, update_bpt_info_t *bpts, int nadd, i
     {
         ea_t start = bpts[nadd + i].ea;
         ea_t end = bpts[nadd + i].ea + bpts[nadd + i].size - 1;
-        bp_type type1;
+        BpType::type type1;
         int type2 = 0;
         bool is_vdp = false;
 
         switch (bpts[nadd + i].type)
         {
         case BPT_EXEC:
-            type1 = bp_type::BP_PC;
+            type1 = BpType::BP_PC;
             break;
         case BPT_READ:
-            type1 = bp_type::BP_READ;
+            type1 = BpType::BP_READ;
             break;
         case BPT_WRITE:
-            type1 = bp_type::BP_WRITE;
+            type1 = BpType::BP_WRITE;
             break;
         case BPT_RDWR:
-            type1 = bp_type::BP_READ;
-            type2 = (int)bp_type::BP_WRITE;
+            type1 = BpType::BP_READ;
+            type2 = (int)BpType::BP_WRITE;
             break;
         }
 
@@ -857,36 +732,21 @@ static drc_t idaapi update_bpts(int* nbpts, update_bpt_info_t *bpts, int nadd, i
             is_vdp = true;
         }
 
-        start &= 0xFFFFFF;
-        end &= 0xFFFFFF;
+        DbgBreakpoint bp;
+        bp.bstart = start & 0xFFFFFF;
+        bp.bend = end & 0xFFFFFF;
+        bp.type = type1;
 
-        for (auto j = M68kDW.Breakpoints.begin(); j != M68kDW.Breakpoints.end(); )
-        {
-            if (j->type != type1 ||
-                !(start <= j->end && end >= j->start && is_vdp == j->is_vdp))
-            {
-                ++j;
-            }
-            else
-            {
-                j = M68kDW.Breakpoints.erase(j);
-            }
-        }
+        bp.enabled = true;
+        bp.is_vdp = is_vdp;
+        bp.is_forbid = false;
+
+        client->del_breakpoint(bp);
 
         if (type2 != 0)
         {
-            for (auto j = M68kDW.Breakpoints.begin(); j != M68kDW.Breakpoints.end(); )
-            {
-                if (j->type != (bp_type)type2 ||
-                    !(start <= j->end && end >= j->start && is_vdp == j->is_vdp))
-                {
-                    ++j;
-                }
-                else
-                {
-                    j = M68kDW.Breakpoints.erase(j);
-                }
-            }
+            bp.type = (BpType::type)type2;
+            client->del_breakpoint(bp);
         }
 
         bpts[nadd + i].code = BPT_OK;
@@ -905,24 +765,24 @@ static drc_t idaapi update_lowcnds(int* nupdated, const lowcnd_t *lowcnds, int n
     {
         ea_t start = lowcnds[i].ea;
         ea_t end = lowcnds[i].ea + lowcnds[i].size - 1;
-        bp_type type1;
+        BpType::type type1;
         int type2 = 0;
         bool is_vdp = false;
 
         switch (lowcnds[i].type)
         {
         case BPT_EXEC:
-            type1 = bp_type::BP_PC;
+            type1 = BpType::BP_PC;
             break;
         case BPT_READ:
-            type1 = bp_type::BP_READ;
+            type1 = BpType::BP_READ;
             break;
         case BPT_WRITE:
-            type1 = bp_type::BP_WRITE;
+            type1 = BpType::BP_WRITE;
             break;
         case BPT_RDWR:
-            type1 = bp_type::BP_READ;
-            type2 = (int)bp_type::BP_WRITE;
+            type1 = BpType::BP_READ;
+            type2 = (int)BpType::BP_WRITE;
             break;
         }
 
@@ -933,32 +793,21 @@ static drc_t idaapi update_lowcnds(int* nupdated, const lowcnd_t *lowcnds, int n
             is_vdp = true;
         }
 
-        start &= 0xFFFFFF;
-        end &= 0xFFFFFF;
+        DbgBreakpoint bp;
+        bp.bstart = start & 0xFFFFFF;
+        bp.bend = end & 0xFFFFFF;
+        bp.type = type1;
 
-        for (auto j = M68kDW.Breakpoints.begin(); j != M68kDW.Breakpoints.end(); ++j)
-        {
-            if (j->type != type1) continue;
+        bp.enabled = true;
+        bp.is_vdp = is_vdp;
+        bp.is_forbid = (lowcnds[i].cndbody.empty() ? false : ((lowcnds[i].cndbody[0] == '1') ? true : false));
 
-            if (start <= j->end && end >= j->start &&
-                j->is_vdp == is_vdp)
-            {
-                j->is_forbid = (lowcnds[i].cndbody.empty() ? false : ((lowcnds[i].cndbody[0] == '1') ? true : false));
-            }
-        }
+        client->update_breakpoint(bp);
 
         if (type2 != 0)
         {
-            for (auto j = M68kDW.Breakpoints.begin(); j != M68kDW.Breakpoints.end(); ++j)
-            {
-                if (j->type != (bp_type)type2) continue;
-
-                if (start <= j->end && end >= j->start &&
-                    j->is_vdp == is_vdp)
-                {
-                    j->is_forbid = (lowcnds[i].cndbody.empty() ? false : ((lowcnds[i].cndbody[0] == '1') ? true : false));
-                }
-            }
+            bp.type = (BpType::type)type2;
+            client->update_breakpoint(bp);
         }
     }
 
@@ -975,14 +824,15 @@ static drc_t idaapi update_lowcnds(int* nupdated, const lowcnd_t *lowcnds, int n
 // This function is called from the main thread
 static bool idaapi update_call_stack(thid_t tid, call_stack_t *trace)
 {
-    CHECK_FOR_START(0);
+    std::vector<int32_t> cs;
+    client->get_callstack(cs);
 
-    size_t n = M68kDW.callstack.size();
-    trace->resize(n);
-    for (size_t i = 0; i < n; i++)
+    trace->resize(cs.size());
+
+    for (size_t i = 0; i < cs.size(); i++)
     {
         call_stack_info_t &ci = (*trace)[i];
-        ci.callea = M68kDW.callstack[i];
+        ci.callea = cs[i];
         ci.funcea = BADADDR;
         ci.fp = BADADDR;
         ci.funcok = true;
@@ -1119,7 +969,6 @@ static ssize_t idaapi idd_notify(void*, int msgid, va_list va) {
   case debugger_t::ev_thread_suspend:
   {
     thid_t tid = va_argi(va, thid_t);
-    CHECK_FOR_START(DRC_OK);
     pause_execution();
     retcode = DRC_OK;
   }
