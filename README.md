@@ -1,4 +1,4 @@
-# smd_ida_tools
+# smd_ida_tools2
 The IDA Pro tools for the Sega Genesis/MegaDrive romhackers.
 
 ## Contains
