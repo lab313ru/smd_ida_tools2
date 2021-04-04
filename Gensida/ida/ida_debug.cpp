@@ -324,7 +324,14 @@ static drc_t idaapi s_start_process(const char* path,
     init_ida_server();
     init_emu_client();
 
-    client->start_emulation();
+    try {
+      if (client) {
+        client->start_emulation();
+      }
+    }
+    catch (TException&) {
+
+    }
 
     return DRC_OK;
 }
@@ -432,10 +439,25 @@ static drc_t idaapi s_set_resume_mode(thid_t tid, resume_mode_t resmod) // Run o
     switch (resmod)
     {
     case RESMOD_INTO:    ///< step into call (the most typical single stepping)
-        client->step_into();
+        try {
+          if (client) {
+            client->step_into();
+          }
+        }
+        catch (TException&) {
+
+        }
+
         break;
     case RESMOD_OVER:    ///< step over call
-        client->step_over();
+        try {
+          if (client) {
+            client->step_over();
+          }
+        }
+        catch (TException&) {
+
+        }
         break;
     }
 
@@ -454,7 +476,15 @@ static drc_t idaapi read_registers(thid_t tid, int clsmask, regval_t *values, qs
     if (clsmask & RC_GENERAL)
     {
         GpRegisters regs;
-        client->get_gp_regs(regs);
+
+        try {
+          if (client) {
+            client->get_gp_regs(regs);
+          }
+        }
+        catch (TException&) {
+
+        }
 
         values[R_D0].ival = regs.D0;
         values[R_D1].ival = regs.D1;
@@ -477,12 +507,35 @@ static drc_t idaapi read_registers(thid_t tid, int clsmask, regval_t *values, qs
         values[R_PC].ival = regs.PC;
         values[R_SP].ival = regs.SP;
         values[R_SR].ival = regs.SR;
+
+        DmaInfo dma;
+
+        try {
+          if (client) {
+            client->get_dma_info(dma);
+          }
+        }
+        catch (TException&) {
+
+        }
+
+        values[R_VDP_DMA_LEN].ival = dma.Len;
+        values[R_VDP_DMA_SRC].ival = dma.Src;
+        values[R_VDP_WRITE_ADDR].ival = dma.Dst;
     }
 
     if (clsmask & RC_VDP)
     {
         VdpRegisters regs;
-        client->get_vdp_regs(regs);
+
+        try {
+          if (client) {
+            client->get_vdp_regs(regs);
+          }
+        }
+        catch (TException&) {
+
+        }
 
         values[R_V00].ival = regs.V00;
         values[R_V01].ival = regs.V01;
@@ -521,10 +574,33 @@ static drc_t idaapi read_registers(thid_t tid, int clsmask, regval_t *values, qs
 // This function is called from debthread
 static drc_t idaapi write_register(thid_t tid, int regidx, const regval_t *value, qstring *errbuf)
 {
-    GpRegister reg;
-    reg.index = (GpRegsEnum::type)regidx;
-    reg.value = value->ival & 0xFFFFFFFF;
-    client->set_gp_reg(reg);
+    if (regidx >= R_D0 && regidx <= R_SR) {
+      GpRegister reg;
+      reg.index = (GpRegsEnum::type)regidx;
+      reg.value = value->ival & 0xFFFFFFFF;
+
+      try {
+        if (client) {
+          client->set_gp_reg(reg);
+        }
+      }
+      catch (TException&) {
+
+      }
+    } else if (regidx >= R_V00 && regidx <= R_V23) {
+      VdpRegister reg;
+      reg.index = (VdpRegsEnum::type)(regidx - R_V00);
+      reg.value = value->ival & 0xFF;
+
+      try {
+        if (client) {
+          client->set_vdp_reg(reg);
+        }
+      }
+      catch (TException&) {
+
+      }
+    }
 
     return DRC_OK;
 }
@@ -596,9 +672,17 @@ static drc_t idaapi get_memory_info(meminfo_vec_t &areas, qstring *errbuf)
 static ssize_t idaapi read_memory(ea_t ea, void *buffer, size_t size, qstring *errbuf)
 {
     std::string mem;
-    client->read_memory(mem, (int32_t)ea, (int32_t)size);
 
-    memcpy(buffer, mem.c_str(), size);
+    try {
+      if (client) {
+        client->read_memory(mem, (int32_t)ea, (int32_t)size);
+      }
+    }
+    catch (TException&) {
+
+    }
+
+    memcpy(&((unsigned char*)buffer)[0], mem.c_str(), size);
 
     return size;
 }
@@ -608,7 +692,16 @@ static ssize_t idaapi read_memory(ea_t ea, void *buffer, size_t size, qstring *e
 static ssize_t idaapi write_memory(ea_t ea, const void *buffer, size_t size, qstring *errbuf)
 {
     std::string mem((const char*)buffer);
-    client->write_memory((int32_t)ea, mem);
+
+    try {
+      if (client) {
+        client->write_memory((int32_t)ea, mem);
+      }
+    }
+    catch (TException&) {
+
+    }
+
     return size;
 }
 
@@ -680,12 +773,27 @@ static drc_t idaapi update_bpts(int* nbpts, update_bpt_info_t *bpts, int nadd, i
         bp.is_vdp = is_vdp;
         bp.is_forbid = false;
 
-        client->add_breakpoint(bp);
+        try {
+          if (client) {
+            client->add_breakpoint(bp);
+          }
+        }
+        catch (TException&) {
+
+        }
 
         if (type2 != 0)
         {
             bp.type = (BpType::type)type2;
-            client->add_breakpoint(bp);
+
+            try {
+              if (client) {
+                client->add_breakpoint(bp);
+              }
+            }
+            catch (TException&) {
+
+            }
         }
 
         bpts[i].code = BPT_OK;
@@ -732,12 +840,27 @@ static drc_t idaapi update_bpts(int* nbpts, update_bpt_info_t *bpts, int nadd, i
         bp.is_vdp = is_vdp;
         bp.is_forbid = false;
 
-        client->del_breakpoint(bp);
+        try {
+          if (client) {
+            client->del_breakpoint(bp);
+          }
+        }
+        catch (TException&) {
+
+        }
 
         if (type2 != 0)
         {
             bp.type = (BpType::type)type2;
-            client->del_breakpoint(bp);
+
+            try {
+              if (client) {
+                client->del_breakpoint(bp);
+              }
+            }
+            catch (TException&) {
+
+            }
         }
 
         bpts[nadd + i].code = BPT_OK;
@@ -793,12 +916,27 @@ static drc_t idaapi update_lowcnds(int* nupdated, const lowcnd_t *lowcnds, int n
         bp.is_vdp = is_vdp;
         bp.is_forbid = (lowcnds[i].cndbody.empty() ? false : ((lowcnds[i].cndbody[0] == '1') ? true : false));
 
-        client->update_breakpoint(bp);
+        try {
+          if (client) {
+            client->update_breakpoint(bp);
+          }
+        }
+        catch (TException&) {
+
+        }
 
         if (type2 != 0)
         {
             bp.type = (BpType::type)type2;
-            client->update_breakpoint(bp);
+
+            try {
+              if (client) {
+                client->update_breakpoint(bp);
+              }
+            }
+            catch (TException&) {
+
+            }
         }
     }
 
@@ -816,7 +954,15 @@ static drc_t idaapi update_lowcnds(int* nupdated, const lowcnd_t *lowcnds, int n
 static bool idaapi update_call_stack(thid_t tid, call_stack_t *trace)
 {
     std::vector<int32_t> cs;
-    client->get_callstack(cs);
+
+    try {
+      if (client) {
+        client->get_callstack(cs);
+      }
+    }
+    catch (TException&) {
+
+    }
 
     trace->resize(cs.size());
 

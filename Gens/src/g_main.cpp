@@ -1816,6 +1816,8 @@ public:
 
     _return.PC = M68kDW.last_pc & 0xFFFFFF;
     _return.SR = main68k_context.sr;
+
+
   }
 
   void set_gp_reg(const GpRegister& reg) {
@@ -1906,6 +1908,8 @@ public:
   }
 
   void read_memory(std::string& _return, const int32_t address, const int32_t size) {
+    _return.clear();
+
     for (int32_t i = 0; i < size; ++i)
     {
       if ((address + i >= 0xA00000 && address + i < 0xA10000) && IsHardwareAddressValid((uint32)(address + i)))
@@ -2077,11 +2081,13 @@ public:
   }
 
   void step_into() {
+    Paused = 0;
     M68kDW.StepInto = 1;
     M68kDW.DebugStop = false;
   }
 
   void step_over() {
+    Paused = 0;
     M68kDW.DoStepOver();
     M68kDW.DebugStop = false;
   }
