@@ -100,6 +100,29 @@ uint32_t DbgClient_pause_event_args::read(::apache::thrift::protocol::TProtocol*
           xfer += iprot->skip(ftype);
         }
         break;
+      case 2:
+        if (ftype == ::apache::thrift::protocol::T_MAP) {
+          {
+            this->changed.clear();
+            uint32_t _size39;
+            ::apache::thrift::protocol::TType _ktype40;
+            ::apache::thrift::protocol::TType _vtype41;
+            xfer += iprot->readMapBegin(_ktype40, _vtype41, _size39);
+            uint32_t _i43;
+            for (_i43 = 0; _i43 < _size39; ++_i43)
+            {
+              int32_t _key44;
+              xfer += iprot->readI32(_key44);
+              int32_t& _val45 = this->changed[_key44];
+              xfer += iprot->readI32(_val45);
+            }
+            xfer += iprot->readMapEnd();
+          }
+          this->__isset.changed = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
       default:
         xfer += iprot->skip(ftype);
         break;
@@ -121,6 +144,19 @@ uint32_t DbgClient_pause_event_args::write(::apache::thrift::protocol::TProtocol
   xfer += oprot->writeI32(this->address);
   xfer += oprot->writeFieldEnd();
 
+  xfer += oprot->writeFieldBegin("changed", ::apache::thrift::protocol::T_MAP, 2);
+  {
+    xfer += oprot->writeMapBegin(::apache::thrift::protocol::T_I32, ::apache::thrift::protocol::T_I32, static_cast<uint32_t>(this->changed.size()));
+    std::map<int32_t, int32_t> ::const_iterator _iter46;
+    for (_iter46 = this->changed.begin(); _iter46 != this->changed.end(); ++_iter46)
+    {
+      xfer += oprot->writeI32(_iter46->first);
+      xfer += oprot->writeI32(_iter46->second);
+    }
+    xfer += oprot->writeMapEnd();
+  }
+  xfer += oprot->writeFieldEnd();
+
   xfer += oprot->writeFieldStop();
   xfer += oprot->writeStructEnd();
   return xfer;
@@ -140,162 +176,17 @@ uint32_t DbgClient_pause_event_pargs::write(::apache::thrift::protocol::TProtoco
   xfer += oprot->writeI32((*(this->address)));
   xfer += oprot->writeFieldEnd();
 
-  xfer += oprot->writeFieldStop();
-  xfer += oprot->writeStructEnd();
-  return xfer;
-}
-
-
-DbgClient_break_event_args::~DbgClient_break_event_args() noexcept {
-}
-
-
-uint32_t DbgClient_break_event_args::read(::apache::thrift::protocol::TProtocol* iprot) {
-
-  ::apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
-  uint32_t xfer = 0;
-  std::string fname;
-  ::apache::thrift::protocol::TType ftype;
-  int16_t fid;
-
-  xfer += iprot->readStructBegin(fname);
-
-  using ::apache::thrift::protocol::TProtocolException;
-
-
-  while (true)
+  xfer += oprot->writeFieldBegin("changed", ::apache::thrift::protocol::T_MAP, 2);
   {
-    xfer += iprot->readFieldBegin(fname, ftype, fid);
-    if (ftype == ::apache::thrift::protocol::T_STOP) {
-      break;
-    }
-    switch (fid)
+    xfer += oprot->writeMapBegin(::apache::thrift::protocol::T_I32, ::apache::thrift::protocol::T_I32, static_cast<uint32_t>((*(this->changed)).size()));
+    std::map<int32_t, int32_t> ::const_iterator _iter47;
+    for (_iter47 = (*(this->changed)).begin(); _iter47 != (*(this->changed)).end(); ++_iter47)
     {
-      case 1:
-        if (ftype == ::apache::thrift::protocol::T_I32) {
-          xfer += iprot->readI32(this->address);
-          this->__isset.address = true;
-        } else {
-          xfer += iprot->skip(ftype);
-        }
-        break;
-      default:
-        xfer += iprot->skip(ftype);
-        break;
+      xfer += oprot->writeI32(_iter47->first);
+      xfer += oprot->writeI32(_iter47->second);
     }
-    xfer += iprot->readFieldEnd();
+    xfer += oprot->writeMapEnd();
   }
-
-  xfer += iprot->readStructEnd();
-
-  return xfer;
-}
-
-uint32_t DbgClient_break_event_args::write(::apache::thrift::protocol::TProtocol* oprot) const {
-  uint32_t xfer = 0;
-  ::apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
-  xfer += oprot->writeStructBegin("DbgClient_break_event_args");
-
-  xfer += oprot->writeFieldBegin("address", ::apache::thrift::protocol::T_I32, 1);
-  xfer += oprot->writeI32(this->address);
-  xfer += oprot->writeFieldEnd();
-
-  xfer += oprot->writeFieldStop();
-  xfer += oprot->writeStructEnd();
-  return xfer;
-}
-
-
-DbgClient_break_event_pargs::~DbgClient_break_event_pargs() noexcept {
-}
-
-
-uint32_t DbgClient_break_event_pargs::write(::apache::thrift::protocol::TProtocol* oprot) const {
-  uint32_t xfer = 0;
-  ::apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
-  xfer += oprot->writeStructBegin("DbgClient_break_event_pargs");
-
-  xfer += oprot->writeFieldBegin("address", ::apache::thrift::protocol::T_I32, 1);
-  xfer += oprot->writeI32((*(this->address)));
-  xfer += oprot->writeFieldEnd();
-
-  xfer += oprot->writeFieldStop();
-  xfer += oprot->writeStructEnd();
-  return xfer;
-}
-
-
-DbgClient_step_event_args::~DbgClient_step_event_args() noexcept {
-}
-
-
-uint32_t DbgClient_step_event_args::read(::apache::thrift::protocol::TProtocol* iprot) {
-
-  ::apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
-  uint32_t xfer = 0;
-  std::string fname;
-  ::apache::thrift::protocol::TType ftype;
-  int16_t fid;
-
-  xfer += iprot->readStructBegin(fname);
-
-  using ::apache::thrift::protocol::TProtocolException;
-
-
-  while (true)
-  {
-    xfer += iprot->readFieldBegin(fname, ftype, fid);
-    if (ftype == ::apache::thrift::protocol::T_STOP) {
-      break;
-    }
-    switch (fid)
-    {
-      case 1:
-        if (ftype == ::apache::thrift::protocol::T_I32) {
-          xfer += iprot->readI32(this->address);
-          this->__isset.address = true;
-        } else {
-          xfer += iprot->skip(ftype);
-        }
-        break;
-      default:
-        xfer += iprot->skip(ftype);
-        break;
-    }
-    xfer += iprot->readFieldEnd();
-  }
-
-  xfer += iprot->readStructEnd();
-
-  return xfer;
-}
-
-uint32_t DbgClient_step_event_args::write(::apache::thrift::protocol::TProtocol* oprot) const {
-  uint32_t xfer = 0;
-  ::apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
-  xfer += oprot->writeStructBegin("DbgClient_step_event_args");
-
-  xfer += oprot->writeFieldBegin("address", ::apache::thrift::protocol::T_I32, 1);
-  xfer += oprot->writeI32(this->address);
-  xfer += oprot->writeFieldEnd();
-
-  xfer += oprot->writeFieldStop();
-  xfer += oprot->writeStructEnd();
-  return xfer;
-}
-
-
-DbgClient_step_event_pargs::~DbgClient_step_event_pargs() noexcept {
-}
-
-
-uint32_t DbgClient_step_event_pargs::write(::apache::thrift::protocol::TProtocol* oprot) const {
-  uint32_t xfer = 0;
-  ::apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
-  xfer += oprot->writeStructBegin("DbgClient_step_event_pargs");
-
-  xfer += oprot->writeFieldBegin("address", ::apache::thrift::protocol::T_I32, 1);
-  xfer += oprot->writeI32((*(this->address)));
   xfer += oprot->writeFieldEnd();
 
   xfer += oprot->writeFieldStop();
@@ -327,86 +218,27 @@ uint32_t DbgClient_stop_event_args::read(::apache::thrift::protocol::TProtocol* 
     if (ftype == ::apache::thrift::protocol::T_STOP) {
       break;
     }
-    xfer += iprot->skip(ftype);
-    xfer += iprot->readFieldEnd();
-  }
-
-  xfer += iprot->readStructEnd();
-
-  return xfer;
-}
-
-uint32_t DbgClient_stop_event_args::write(::apache::thrift::protocol::TProtocol* oprot) const {
-  uint32_t xfer = 0;
-  ::apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
-  xfer += oprot->writeStructBegin("DbgClient_stop_event_args");
-
-  xfer += oprot->writeFieldStop();
-  xfer += oprot->writeStructEnd();
-  return xfer;
-}
-
-
-DbgClient_stop_event_pargs::~DbgClient_stop_event_pargs() noexcept {
-}
-
-
-uint32_t DbgClient_stop_event_pargs::write(::apache::thrift::protocol::TProtocol* oprot) const {
-  uint32_t xfer = 0;
-  ::apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
-  xfer += oprot->writeStructBegin("DbgClient_stop_event_pargs");
-
-  xfer += oprot->writeFieldStop();
-  xfer += oprot->writeStructEnd();
-  return xfer;
-}
-
-
-DbgClient_update_map_args::~DbgClient_update_map_args() noexcept {
-}
-
-
-uint32_t DbgClient_update_map_args::read(::apache::thrift::protocol::TProtocol* iprot) {
-
-  ::apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
-  uint32_t xfer = 0;
-  std::string fname;
-  ::apache::thrift::protocol::TType ftype;
-  int16_t fid;
-
-  xfer += iprot->readStructBegin(fname);
-
-  using ::apache::thrift::protocol::TProtocolException;
-
-
-  while (true)
-  {
-    xfer += iprot->readFieldBegin(fname, ftype, fid);
-    if (ftype == ::apache::thrift::protocol::T_STOP) {
-      break;
-    }
     switch (fid)
     {
       case 1:
-        if (ftype == ::apache::thrift::protocol::T_I32) {
-          xfer += iprot->readI32(this->prev);
-          this->__isset.prev = true;
-        } else {
-          xfer += iprot->skip(ftype);
-        }
-        break;
-      case 2:
-        if (ftype == ::apache::thrift::protocol::T_I32) {
-          xfer += iprot->readI32(this->curr);
-          this->__isset.curr = true;
-        } else {
-          xfer += iprot->skip(ftype);
-        }
-        break;
-      case 3:
-        if (ftype == ::apache::thrift::protocol::T_BOOL) {
-          xfer += iprot->readBool(this->visited);
-          this->__isset.visited = true;
+        if (ftype == ::apache::thrift::protocol::T_MAP) {
+          {
+            this->changed.clear();
+            uint32_t _size48;
+            ::apache::thrift::protocol::TType _ktype49;
+            ::apache::thrift::protocol::TType _vtype50;
+            xfer += iprot->readMapBegin(_ktype49, _vtype50, _size48);
+            uint32_t _i52;
+            for (_i52 = 0; _i52 < _size48; ++_i52)
+            {
+              int32_t _key53;
+              xfer += iprot->readI32(_key53);
+              int32_t& _val54 = this->changed[_key53];
+              xfer += iprot->readI32(_val54);
+            }
+            xfer += iprot->readMapEnd();
+          }
+          this->__isset.changed = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -423,21 +255,22 @@ uint32_t DbgClient_update_map_args::read(::apache::thrift::protocol::TProtocol* 
   return xfer;
 }
 
-uint32_t DbgClient_update_map_args::write(::apache::thrift::protocol::TProtocol* oprot) const {
+uint32_t DbgClient_stop_event_args::write(::apache::thrift::protocol::TProtocol* oprot) const {
   uint32_t xfer = 0;
   ::apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
-  xfer += oprot->writeStructBegin("DbgClient_update_map_args");
+  xfer += oprot->writeStructBegin("DbgClient_stop_event_args");
 
-  xfer += oprot->writeFieldBegin("prev", ::apache::thrift::protocol::T_I32, 1);
-  xfer += oprot->writeI32(this->prev);
-  xfer += oprot->writeFieldEnd();
-
-  xfer += oprot->writeFieldBegin("curr", ::apache::thrift::protocol::T_I32, 2);
-  xfer += oprot->writeI32(this->curr);
-  xfer += oprot->writeFieldEnd();
-
-  xfer += oprot->writeFieldBegin("visited", ::apache::thrift::protocol::T_BOOL, 3);
-  xfer += oprot->writeBool(this->visited);
+  xfer += oprot->writeFieldBegin("changed", ::apache::thrift::protocol::T_MAP, 1);
+  {
+    xfer += oprot->writeMapBegin(::apache::thrift::protocol::T_I32, ::apache::thrift::protocol::T_I32, static_cast<uint32_t>(this->changed.size()));
+    std::map<int32_t, int32_t> ::const_iterator _iter55;
+    for (_iter55 = this->changed.begin(); _iter55 != this->changed.end(); ++_iter55)
+    {
+      xfer += oprot->writeI32(_iter55->first);
+      xfer += oprot->writeI32(_iter55->second);
+    }
+    xfer += oprot->writeMapEnd();
+  }
   xfer += oprot->writeFieldEnd();
 
   xfer += oprot->writeFieldStop();
@@ -446,25 +279,26 @@ uint32_t DbgClient_update_map_args::write(::apache::thrift::protocol::TProtocol*
 }
 
 
-DbgClient_update_map_pargs::~DbgClient_update_map_pargs() noexcept {
+DbgClient_stop_event_pargs::~DbgClient_stop_event_pargs() noexcept {
 }
 
 
-uint32_t DbgClient_update_map_pargs::write(::apache::thrift::protocol::TProtocol* oprot) const {
+uint32_t DbgClient_stop_event_pargs::write(::apache::thrift::protocol::TProtocol* oprot) const {
   uint32_t xfer = 0;
   ::apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
-  xfer += oprot->writeStructBegin("DbgClient_update_map_pargs");
+  xfer += oprot->writeStructBegin("DbgClient_stop_event_pargs");
 
-  xfer += oprot->writeFieldBegin("prev", ::apache::thrift::protocol::T_I32, 1);
-  xfer += oprot->writeI32((*(this->prev)));
-  xfer += oprot->writeFieldEnd();
-
-  xfer += oprot->writeFieldBegin("curr", ::apache::thrift::protocol::T_I32, 2);
-  xfer += oprot->writeI32((*(this->curr)));
-  xfer += oprot->writeFieldEnd();
-
-  xfer += oprot->writeFieldBegin("visited", ::apache::thrift::protocol::T_BOOL, 3);
-  xfer += oprot->writeBool((*(this->visited)));
+  xfer += oprot->writeFieldBegin("changed", ::apache::thrift::protocol::T_MAP, 1);
+  {
+    xfer += oprot->writeMapBegin(::apache::thrift::protocol::T_I32, ::apache::thrift::protocol::T_I32, static_cast<uint32_t>((*(this->changed)).size()));
+    std::map<int32_t, int32_t> ::const_iterator _iter56;
+    for (_iter56 = (*(this->changed)).begin(); _iter56 != (*(this->changed)).end(); ++_iter56)
+    {
+      xfer += oprot->writeI32(_iter56->first);
+      xfer += oprot->writeI32(_iter56->second);
+    }
+    xfer += oprot->writeMapEnd();
+  }
   xfer += oprot->writeFieldEnd();
 
   xfer += oprot->writeFieldStop();
@@ -490,18 +324,19 @@ void DbgClientClient::send_start_event()
   oprot_->getTransport()->flush();
 }
 
-void DbgClientClient::pause_event(const int32_t address)
+void DbgClientClient::pause_event(const int32_t address, const std::map<int32_t, int32_t> & changed)
 {
-  send_pause_event(address);
+  send_pause_event(address, changed);
 }
 
-void DbgClientClient::send_pause_event(const int32_t address)
+void DbgClientClient::send_pause_event(const int32_t address, const std::map<int32_t, int32_t> & changed)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("pause_event", ::apache::thrift::protocol::T_ONEWAY, cseqid);
 
   DbgClient_pause_event_pargs args;
   args.address = &address;
+  args.changed = &changed;
   args.write(oprot_);
 
   oprot_->writeMessageEnd();
@@ -509,76 +344,18 @@ void DbgClientClient::send_pause_event(const int32_t address)
   oprot_->getTransport()->flush();
 }
 
-void DbgClientClient::break_event(const int32_t address)
+void DbgClientClient::stop_event(const std::map<int32_t, int32_t> & changed)
 {
-  send_break_event(address);
+  send_stop_event(changed);
 }
 
-void DbgClientClient::send_break_event(const int32_t address)
-{
-  int32_t cseqid = 0;
-  oprot_->writeMessageBegin("break_event", ::apache::thrift::protocol::T_ONEWAY, cseqid);
-
-  DbgClient_break_event_pargs args;
-  args.address = &address;
-  args.write(oprot_);
-
-  oprot_->writeMessageEnd();
-  oprot_->getTransport()->writeEnd();
-  oprot_->getTransport()->flush();
-}
-
-void DbgClientClient::step_event(const int32_t address)
-{
-  send_step_event(address);
-}
-
-void DbgClientClient::send_step_event(const int32_t address)
-{
-  int32_t cseqid = 0;
-  oprot_->writeMessageBegin("step_event", ::apache::thrift::protocol::T_ONEWAY, cseqid);
-
-  DbgClient_step_event_pargs args;
-  args.address = &address;
-  args.write(oprot_);
-
-  oprot_->writeMessageEnd();
-  oprot_->getTransport()->writeEnd();
-  oprot_->getTransport()->flush();
-}
-
-void DbgClientClient::stop_event()
-{
-  send_stop_event();
-}
-
-void DbgClientClient::send_stop_event()
+void DbgClientClient::send_stop_event(const std::map<int32_t, int32_t> & changed)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("stop_event", ::apache::thrift::protocol::T_ONEWAY, cseqid);
 
   DbgClient_stop_event_pargs args;
-  args.write(oprot_);
-
-  oprot_->writeMessageEnd();
-  oprot_->getTransport()->writeEnd();
-  oprot_->getTransport()->flush();
-}
-
-void DbgClientClient::update_map(const int32_t prev, const int32_t curr, const bool visited)
-{
-  send_update_map(prev, curr, visited);
-}
-
-void DbgClientClient::send_update_map(const int32_t prev, const int32_t curr, const bool visited)
-{
-  int32_t cseqid = 0;
-  oprot_->writeMessageBegin("update_map", ::apache::thrift::protocol::T_ONEWAY, cseqid);
-
-  DbgClient_update_map_pargs args;
-  args.prev = &prev;
-  args.curr = &curr;
-  args.visited = &visited;
+  args.changed = &changed;
   args.write(oprot_);
 
   oprot_->writeMessageEnd();
@@ -664,7 +441,7 @@ void DbgClientProcessor::process_pause_event(int32_t, ::apache::thrift::protocol
   }
 
   try {
-    iface_->pause_event(args.address);
+    iface_->pause_event(args.address, args.changed);
   } catch (const std::exception&) {
     if (this->eventHandler_.get() != nullptr) {
       this->eventHandler_->handlerError(ctx, "DbgClient.pause_event");
@@ -674,80 +451,6 @@ void DbgClientProcessor::process_pause_event(int32_t, ::apache::thrift::protocol
 
   if (this->eventHandler_.get() != nullptr) {
     this->eventHandler_->asyncComplete(ctx, "DbgClient.pause_event");
-  }
-
-  return;
-}
-
-void DbgClientProcessor::process_break_event(int32_t, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol*, void* callContext)
-{
-  void* ctx = nullptr;
-  if (this->eventHandler_.get() != nullptr) {
-    ctx = this->eventHandler_->getContext("DbgClient.break_event", callContext);
-  }
-  ::apache::thrift::TProcessorContextFreer freer(this->eventHandler_.get(), ctx, "DbgClient.break_event");
-
-  if (this->eventHandler_.get() != nullptr) {
-    this->eventHandler_->preRead(ctx, "DbgClient.break_event");
-  }
-
-  DbgClient_break_event_args args;
-  args.read(iprot);
-  iprot->readMessageEnd();
-  uint32_t bytes = iprot->getTransport()->readEnd();
-
-  if (this->eventHandler_.get() != nullptr) {
-    this->eventHandler_->postRead(ctx, "DbgClient.break_event", bytes);
-  }
-
-  try {
-    iface_->break_event(args.address);
-  } catch (const std::exception&) {
-    if (this->eventHandler_.get() != nullptr) {
-      this->eventHandler_->handlerError(ctx, "DbgClient.break_event");
-    }
-    return;
-  }
-
-  if (this->eventHandler_.get() != nullptr) {
-    this->eventHandler_->asyncComplete(ctx, "DbgClient.break_event");
-  }
-
-  return;
-}
-
-void DbgClientProcessor::process_step_event(int32_t, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol*, void* callContext)
-{
-  void* ctx = nullptr;
-  if (this->eventHandler_.get() != nullptr) {
-    ctx = this->eventHandler_->getContext("DbgClient.step_event", callContext);
-  }
-  ::apache::thrift::TProcessorContextFreer freer(this->eventHandler_.get(), ctx, "DbgClient.step_event");
-
-  if (this->eventHandler_.get() != nullptr) {
-    this->eventHandler_->preRead(ctx, "DbgClient.step_event");
-  }
-
-  DbgClient_step_event_args args;
-  args.read(iprot);
-  iprot->readMessageEnd();
-  uint32_t bytes = iprot->getTransport()->readEnd();
-
-  if (this->eventHandler_.get() != nullptr) {
-    this->eventHandler_->postRead(ctx, "DbgClient.step_event", bytes);
-  }
-
-  try {
-    iface_->step_event(args.address);
-  } catch (const std::exception&) {
-    if (this->eventHandler_.get() != nullptr) {
-      this->eventHandler_->handlerError(ctx, "DbgClient.step_event");
-    }
-    return;
-  }
-
-  if (this->eventHandler_.get() != nullptr) {
-    this->eventHandler_->asyncComplete(ctx, "DbgClient.step_event");
   }
 
   return;
@@ -775,7 +478,7 @@ void DbgClientProcessor::process_stop_event(int32_t, ::apache::thrift::protocol:
   }
 
   try {
-    iface_->stop_event();
+    iface_->stop_event(args.changed);
   } catch (const std::exception&) {
     if (this->eventHandler_.get() != nullptr) {
       this->eventHandler_->handlerError(ctx, "DbgClient.stop_event");
@@ -785,43 +488,6 @@ void DbgClientProcessor::process_stop_event(int32_t, ::apache::thrift::protocol:
 
   if (this->eventHandler_.get() != nullptr) {
     this->eventHandler_->asyncComplete(ctx, "DbgClient.stop_event");
-  }
-
-  return;
-}
-
-void DbgClientProcessor::process_update_map(int32_t, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol*, void* callContext)
-{
-  void* ctx = nullptr;
-  if (this->eventHandler_.get() != nullptr) {
-    ctx = this->eventHandler_->getContext("DbgClient.update_map", callContext);
-  }
-  ::apache::thrift::TProcessorContextFreer freer(this->eventHandler_.get(), ctx, "DbgClient.update_map");
-
-  if (this->eventHandler_.get() != nullptr) {
-    this->eventHandler_->preRead(ctx, "DbgClient.update_map");
-  }
-
-  DbgClient_update_map_args args;
-  args.read(iprot);
-  iprot->readMessageEnd();
-  uint32_t bytes = iprot->getTransport()->readEnd();
-
-  if (this->eventHandler_.get() != nullptr) {
-    this->eventHandler_->postRead(ctx, "DbgClient.update_map", bytes);
-  }
-
-  try {
-    iface_->update_map(args.prev, args.curr, args.visited);
-  } catch (const std::exception&) {
-    if (this->eventHandler_.get() != nullptr) {
-      this->eventHandler_->handlerError(ctx, "DbgClient.update_map");
-    }
-    return;
-  }
-
-  if (this->eventHandler_.get() != nullptr) {
-    this->eventHandler_->asyncComplete(ctx, "DbgClient.update_map");
   }
 
   return;
@@ -855,12 +521,12 @@ void DbgClientConcurrentClient::send_start_event()
   sentry.commit();
 }
 
-void DbgClientConcurrentClient::pause_event(const int32_t address)
+void DbgClientConcurrentClient::pause_event(const int32_t address, const std::map<int32_t, int32_t> & changed)
 {
-  send_pause_event(address);
+  send_pause_event(address, changed);
 }
 
-void DbgClientConcurrentClient::send_pause_event(const int32_t address)
+void DbgClientConcurrentClient::send_pause_event(const int32_t address, const std::map<int32_t, int32_t> & changed)
 {
   int32_t cseqid = 0;
   ::apache::thrift::async::TConcurrentSendSentry sentry(this->sync_.get());
@@ -868,6 +534,7 @@ void DbgClientConcurrentClient::send_pause_event(const int32_t address)
 
   DbgClient_pause_event_pargs args;
   args.address = &address;
+  args.changed = &changed;
   args.write(oprot_);
 
   oprot_->writeMessageEnd();
@@ -877,86 +544,19 @@ void DbgClientConcurrentClient::send_pause_event(const int32_t address)
   sentry.commit();
 }
 
-void DbgClientConcurrentClient::break_event(const int32_t address)
+void DbgClientConcurrentClient::stop_event(const std::map<int32_t, int32_t> & changed)
 {
-  send_break_event(address);
+  send_stop_event(changed);
 }
 
-void DbgClientConcurrentClient::send_break_event(const int32_t address)
-{
-  int32_t cseqid = 0;
-  ::apache::thrift::async::TConcurrentSendSentry sentry(this->sync_.get());
-  oprot_->writeMessageBegin("break_event", ::apache::thrift::protocol::T_ONEWAY, cseqid);
-
-  DbgClient_break_event_pargs args;
-  args.address = &address;
-  args.write(oprot_);
-
-  oprot_->writeMessageEnd();
-  oprot_->getTransport()->writeEnd();
-  oprot_->getTransport()->flush();
-
-  sentry.commit();
-}
-
-void DbgClientConcurrentClient::step_event(const int32_t address)
-{
-  send_step_event(address);
-}
-
-void DbgClientConcurrentClient::send_step_event(const int32_t address)
-{
-  int32_t cseqid = 0;
-  ::apache::thrift::async::TConcurrentSendSentry sentry(this->sync_.get());
-  oprot_->writeMessageBegin("step_event", ::apache::thrift::protocol::T_ONEWAY, cseqid);
-
-  DbgClient_step_event_pargs args;
-  args.address = &address;
-  args.write(oprot_);
-
-  oprot_->writeMessageEnd();
-  oprot_->getTransport()->writeEnd();
-  oprot_->getTransport()->flush();
-
-  sentry.commit();
-}
-
-void DbgClientConcurrentClient::stop_event()
-{
-  send_stop_event();
-}
-
-void DbgClientConcurrentClient::send_stop_event()
+void DbgClientConcurrentClient::send_stop_event(const std::map<int32_t, int32_t> & changed)
 {
   int32_t cseqid = 0;
   ::apache::thrift::async::TConcurrentSendSentry sentry(this->sync_.get());
   oprot_->writeMessageBegin("stop_event", ::apache::thrift::protocol::T_ONEWAY, cseqid);
 
   DbgClient_stop_event_pargs args;
-  args.write(oprot_);
-
-  oprot_->writeMessageEnd();
-  oprot_->getTransport()->writeEnd();
-  oprot_->getTransport()->flush();
-
-  sentry.commit();
-}
-
-void DbgClientConcurrentClient::update_map(const int32_t prev, const int32_t curr, const bool visited)
-{
-  send_update_map(prev, curr, visited);
-}
-
-void DbgClientConcurrentClient::send_update_map(const int32_t prev, const int32_t curr, const bool visited)
-{
-  int32_t cseqid = 0;
-  ::apache::thrift::async::TConcurrentSendSentry sentry(this->sync_.get());
-  oprot_->writeMessageBegin("update_map", ::apache::thrift::protocol::T_ONEWAY, cseqid);
-
-  DbgClient_update_map_pargs args;
-  args.prev = &prev;
-  args.curr = &curr;
-  args.visited = &visited;
+  args.changed = &changed;
   args.write(oprot_);
 
   oprot_->writeMessageEnd();

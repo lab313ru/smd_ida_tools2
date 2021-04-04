@@ -21,10 +21,6 @@ using namespace ::apache::thrift::transport;
 
 extern ::std::shared_ptr<DbgClientClient> client;
 
-//#include <dbg.hpp>
-//#include "ida_debmod.h"
-//#include "ida_debug.h"
-//extern eventlist_t g_events;
 bool handled_ida_event;
 
 void Handle_Gens_Messages();
@@ -57,7 +53,8 @@ void DebugWindow::Breakpoint(int pc)
     {
         try {
           if (client) {
-            client->pause_event(pc);
+            client->pause_event(pc, changed);
+            changed.clear();
           }
         }
         catch (TException& ex) {

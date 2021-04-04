@@ -163,9 +163,6 @@ service DbgServer {
 
 service DbgClient {
   oneway void start_event(),
-  oneway void pause_event(1:i32 address),
-  oneway void break_event(1:i32 address),
-  oneway void step_event(1:i32 address),
-  oneway void stop_event(),
-  oneway void update_map(1:i32 prev, 2:i32 curr, 3:bool visited),
+  oneway void pause_event(1:i32 address, 2:map<i32,i32> changed),
+  oneway void stop_event(1:map<i32,i32> changed),
 }

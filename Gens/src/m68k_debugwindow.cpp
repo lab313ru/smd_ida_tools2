@@ -15,11 +15,6 @@ using namespace ::apache::thrift::transport;
 
 extern ::std::shared_ptr<DbgClientClient> client;
 
-#define MAX_ROM_SIZE 0x800000
-
-//#include "ida_debmod.h"
-//extern codemap_t g_codemap;
-//extern eventlist_t g_events;
 extern bool handled_ida_event;
 
 M68kDebugWindow M68kDW;
@@ -37,14 +32,7 @@ void M68kDebugWindow::TracePC(int pc)
     handled_ida_event = false;
 
     if (last_pc != 0 && pc != 0 && pc < MAX_ROM_SIZE) {
-      try {
-        if (client) {
-          client->update_map(last_pc, pc, true);
-        }
-      }
-      catch (TException& ex) {
-
-      }
+      changed[pc] = last_pc;
     }
 
     last_pc = pc;
@@ -56,7 +44,8 @@ void M68kDebugWindow::TracePC(int pc)
 
         try {
           if (client) {
-            client->pause_event(pc);
+            client->pause_event(pc, changed);
+            changed.clear();
           }
         }
         catch (TException& ex) {

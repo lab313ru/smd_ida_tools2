@@ -1716,11 +1716,12 @@ extern bool WriteValueAtHardwareAddress(unsigned int address, unsigned int value
 void stop_client() {
   try {
     if (client) {
-      client->stop_event();
+      client->stop_event(M68kDW.changed);
+      M68kDW.changed.clear();
     }
     cli_transport->close();
   }
-  catch (TException& ex) {
+  catch (TException&) {
 
   }
 }
@@ -1736,7 +1737,7 @@ static void init_ida_client() {
       cli_transport->open();
       break;
     }
-    catch (TException& tx) {
+    catch (TException&) {
       Sleep(10);
     }
   }
@@ -1763,10 +1764,11 @@ private:
 
       try {
         if (client) {
-          client->pause_event(M68kDW.last_pc);
+          client->pause_event(M68kDW.last_pc, M68kDW.changed);
+          M68kDW.changed.clear();
         }
       }
-      catch (TException& ex) {
+      catch (TException&) {
 
       }
     }
@@ -1904,7 +1906,7 @@ public:
   }
 
   void read_memory(std::string& _return, const int32_t address, const int32_t size) {
-    for (size_t i = 0; i < size; ++i)
+    for (int32_t i = 0; i < size; ++i)
     {
       if ((address + i >= 0xA00000 && address + i < 0xA10000) && IsHardwareAddressValid((uint32)(address + i)))
       {
@@ -2051,10 +2053,11 @@ public:
     try {
       if (client) {
         client->start_event();
-        client->pause_event(main68k_context.pc);
+        M68kDW.changed.clear();
+        client->pause_event(main68k_context.pc, M68kDW.changed);
       }
     }
-    catch (TException& ex) {
+    catch (TException&) {
 
     }
   }
@@ -2062,10 +2065,11 @@ public:
   void exit_emulation() {
     try {
       if (client) {
-        client->stop_event();
+        client->stop_event(M68kDW.changed);
+        M68kDW.changed.clear();
       }
     }
-    catch (TException& ex) {
+    catch (TException&) {
 
     }
 
@@ -4198,10 +4202,11 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
                 try {
                   if (client) {
-                    client->pause_event(M68kDW.last_pc);
+                    client->pause_event(M68kDW.last_pc, M68kDW.changed);
+                    M68kDW.changed.clear();
                   }
                 }
-                catch (TException& ex) {
+                catch (TException&) {
 
                 }
             }

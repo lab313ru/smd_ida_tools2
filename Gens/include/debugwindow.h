@@ -1,8 +1,10 @@
 #ifndef DEBUG_WINDOW_H
 #define DEBUG_WINDOW_H
+
 #include <windows.h>
 #include <vector>
 #include <string>
+#include <map>
 
 /*#define WM_DEBUG_DUMMY_EXIT (WM_USER+1000)
 
@@ -38,10 +40,13 @@ struct Breakpoint
 
 typedef std::vector<Breakpoint> bp_list;
 
+#define MAX_ROM_SIZE 0x800000
+
 struct DebugWindow
 {
     DebugWindow();
     std::vector<uint32> callstack;
+    std::map<int32_t, int32_t> changed;
     bp_list Breakpoints;
 
     bool DebugStop;
@@ -62,5 +67,6 @@ struct DebugWindow
     virtual void TraceWrite(uint32 start, uint32 stop);
     virtual ~DebugWindow();
 };
+
 
 #endif

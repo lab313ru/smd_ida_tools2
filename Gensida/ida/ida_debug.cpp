@@ -35,6 +35,8 @@ using namespace ::apache::thrift::concurrency;
 ::std::shared_ptr<TNonblockingServer> srv;
 ::std::shared_ptr<TTransport> cli_transport;
 
+typedef qvector<std::pair<uint32, bool>> codemap_t;
+
 ::std::mutex list_mutex;
 static eventlist_t events;
 
@@ -122,13 +124,36 @@ static const char *register_classes[] =
     NULL
 };
 
+static void apply_codemap(const std::map<int32_t, int32_t>& changed)
+{
+  if (changed.empty()) return;
+
+  for (auto i = changed.cbegin(); i != changed.cend(); ++i) {
+    auto_make_code((ea_t)i->first);
+    plan_ea((ea_t)i->first);
+    show_addr((ea_t)i->first);
+  }
+
+  for (auto i = changed.cbegin(); i != changed.cend(); ++i) {
+    if (!get_func((ea_t)i->first))
+    {
+      if (add_func(i->first, BADADDR))
+        add_cref(i->second, i->first, fl_CN);
+      plan_ea((ea_t)i->first);
+    }
+    show_addr((ea_t)i->first);
+  }
+}
+
+
+
 static void pause_execution()
 {
     try {
       if (client) {
         client->pause();
       }
-    } catch (TException& ex) {
+    } catch (TException&) {
 
     }
 }
@@ -140,7 +165,7 @@ static void continue_execution()
         client->resume();
       }
     }
-    catch (TException& ex) {
+    catch (TException&) {
 
     }
 }
@@ -152,7 +177,7 @@ static void finish_execution()
         client->exit_emulation();
       }
     }
-    catch (TException& ex) {
+    catch (TException&) {
 
     }
 }
@@ -184,7 +209,7 @@ public:
     events.enqueue(ev, IN_BACK);
   }
 
-  void pause_event(const int32_t address) {
+  void pause_event(const int32_t address, const std::map<int32_t, int32_t>& changed) {
     ::std::lock_guard<::std::mutex> lock(list_mutex);
 
     debug_event_t ev;
@@ -194,34 +219,11 @@ public:
     ev.handled = true;
     ev.set_eid(PROCESS_SUSPENDED);
     events.enqueue(ev, IN_BACK);
+
+    apply_codemap(changed);
   }
 
-  void break_event(const int32_t address) {
-    ::std::lock_guard<::std::mutex> lock(list_mutex);
-
-    debug_event_t ev;
-    ev.pid = 1;
-    ev.tid = 1;
-    ev.ea = address;
-    ev.handled = true;
-    ev.set_eid(BREAKPOINT);
-    ev.set_bpt().hea = ev.set_bpt().kea = ev.ea;
-    events.enqueue(ev, IN_BACK);
-  }
-
-  void step_event(const int32_t address) {
-    ::std::lock_guard<::std::mutex> lock(list_mutex);
-
-    debug_event_t ev;
-    ev.pid = 1;
-    ev.tid = 1;
-    ev.ea = address;
-    ev.handled = true;
-    ev.set_eid(STEP);
-    events.enqueue(ev, IN_BACK);
-  }
-
-  void stop_event() {
+  void stop_event(const std::map<int32_t, int32_t>& changed) {
     ::std::lock_guard<::std::mutex> lock(list_mutex);
 
     debug_event_t ev;
@@ -230,11 +232,8 @@ public:
     ev.set_exit_code(PROCESS_EXITED, 0);
 
     events.enqueue(ev, IN_BACK);
-  }
 
-  void update_map(const int32_t prev, const int32_t curr, const bool visited) {
-    auto_make_code((ea_t)curr);
-    //plan_ea((ea_t)curr);
+    apply_codemap(changed);
   }
 
 };
@@ -269,7 +268,7 @@ static void init_emu_client() {
       cli_transport->open();
       break;
     }
-    catch (TException& tx) {
+    catch (TException&) {
       
     }
   }
@@ -379,12 +378,6 @@ static gdecode_t idaapi get_debug_event(debug_event_t *event, int timeout_ms)
         // are there any pending events?
         if (events.retrieve(event))
         {
-            switch (event->eid())
-            {
-            case PROCESS_SUSPENDED:
-                //apply_codemap();
-                break;
-            }
             return events.empty() ? GDE_ONE_EVENT : GDE_MANY_EVENTS;
         }
         if (events.empty())
