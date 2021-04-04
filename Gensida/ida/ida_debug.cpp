@@ -133,16 +133,6 @@ static void apply_codemap(const std::map<int32_t, int32_t>& changed)
     plan_ea((ea_t)i->first);
     show_addr((ea_t)i->first);
   }
-
-  for (auto i = changed.cbegin(); i != changed.cend(); ++i) {
-    if (!get_func((ea_t)i->first))
-    {
-      if (add_func(i->first, BADADDR))
-        add_cref(i->second, i->first, fl_CN);
-      plan_ea((ea_t)i->first);
-    }
-    show_addr((ea_t)i->first);
-  }
 }
 
 
@@ -183,7 +173,15 @@ static void finish_execution()
 }
 
 void stop_server() {
-  srv->stop();
+  try {
+    srv->stop();
+  }
+  catch (TException&) {
+
+  }
+  catch (...) {
+    
+  }
 }
 
 class DbgClientHandler : virtual public DbgClientIf {
@@ -231,9 +229,9 @@ public:
     ev.handled = true;
     ev.set_exit_code(PROCESS_EXITED, 0);
 
-    events.enqueue(ev, IN_BACK);
-
     apply_codemap(changed);
+
+    events.enqueue(ev, IN_BACK);
   }
 
 };

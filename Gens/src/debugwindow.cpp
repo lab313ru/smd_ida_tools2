@@ -57,7 +57,7 @@ void DebugWindow::Breakpoint(int pc)
             changed.clear();
           }
         }
-        catch (TException& ex) {
+        catch (TException&) {
 
         }
     }
