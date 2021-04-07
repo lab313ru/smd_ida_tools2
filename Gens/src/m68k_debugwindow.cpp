@@ -48,7 +48,7 @@ void M68kDebugWindow::TracePC(int pc)
             changed.clear();
           }
         }
-        catch (TException& ex) {
+        catch (TException&) {
 
         }
 
