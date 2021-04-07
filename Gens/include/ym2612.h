@@ -65,6 +65,7 @@ extern "C" {
         int FMS;				// Fréquency Modulation Sensitivity of channel = degré de modulation de la fréquence sur la voie par le LFO
         int AMS;				// Amplitude Modulation Sensitivity of channel = degré de modulation de l'amplitude sur la voie par le LFO
         int FNUM[4];			// hauteur fréquence de la voie (+ 3 pour le mode spécial)
+        int FNumH;
         int FOCT[4];			// octave de la voie (+ 3 pour le mode spécial)
         int KC[4];				// Key Code = valeur fonction de la fréquence (voir KSR pour les slots, KSR = KC >> KSR_S)
         struct slot__ SLOT[4];	// four slot.operators = les 4 slots de la voie
@@ -95,6 +96,7 @@ extern "C" {
         unsigned int Inter_Cnt;			// Interpolation Counter
         unsigned int Inter_Step;		// Interpolation Step
         struct channel__ CHANNEL[6];	// Les 6 voies du YM2612
+        int FNumCH3H;
         int REG[2][0x100];	// Sauvegardes des valeurs de tout les registres, c'est facultatif
         // cela nous rend le débuggage plus facile
     } ym2612_;
@@ -115,7 +117,7 @@ extern "C" {
     int YM2612_Init(int clock, int rate, int interpolation);
     int YM2612_End(void);
     int YM2612_Reset(void);
-    int YM2612_Read(void);
+    int YM2612_Read(unsigned int address);
     int YM2612_Write(unsigned char adr, unsigned char data);
     void YM2612_Update(int **buf, int length);
     int YM2612_Save_Full(unsigned char SAVE[0x14d0]);
@@ -125,47 +127,10 @@ extern "C" {
 
     /* Gens */
 
-    void YM2612_DacAndTimers_Update(int **buffer, int length);
+    //void YM2612_DacAndTimers_Update(int **buffer, int length);
     void YM2612_Special_Update(void);
 
     /* end */
-
-    // used for foward...
-    void Update_Chan_Algo0(channel_ *CH, int **buf, int length);
-    void Update_Chan_Algo1(channel_ *CH, int **buf, int length);
-    void Update_Chan_Algo2(channel_ *CH, int **buf, int length);
-    void Update_Chan_Algo3(channel_ *CH, int **buf, int length);
-    void Update_Chan_Algo4(channel_ *CH, int **buf, int length);
-    void Update_Chan_Algo5(channel_ *CH, int **buf, int length);
-    void Update_Chan_Algo6(channel_ *CH, int **buf, int length);
-    void Update_Chan_Algo7(channel_ *CH, int **buf, int length);
-
-    void Update_Chan_Algo0_LFO(channel_ *CH, int **buf, int length);
-    void Update_Chan_Algo1_LFO(channel_ *CH, int **buf, int length);
-    void Update_Chan_Algo2_LFO(channel_ *CH, int **buf, int length);
-    void Update_Chan_Algo3_LFO(channel_ *CH, int **buf, int length);
-    void Update_Chan_Algo4_LFO(channel_ *CH, int **buf, int length);
-    void Update_Chan_Algo5_LFO(channel_ *CH, int **buf, int length);
-    void Update_Chan_Algo6_LFO(channel_ *CH, int **buf, int length);
-    void Update_Chan_Algo7_LFO(channel_ *CH, int **buf, int length);
-
-    void Update_Chan_Algo0_Int(channel_ *CH, int **buf, int length);
-    void Update_Chan_Algo1_Int(channel_ *CH, int **buf, int length);
-    void Update_Chan_Algo2_Int(channel_ *CH, int **buf, int length);
-    void Update_Chan_Algo3_Int(channel_ *CH, int **buf, int length);
-    void Update_Chan_Algo4_Int(channel_ *CH, int **buf, int length);
-    void Update_Chan_Algo5_Int(channel_ *CH, int **buf, int length);
-    void Update_Chan_Algo6_Int(channel_ *CH, int **buf, int length);
-    void Update_Chan_Algo7_Int(channel_ *CH, int **buf, int length);
-
-    void Update_Chan_Algo0_LFO_Int(channel_ *CH, int **buf, int length);
-    void Update_Chan_Algo1_LFO_Int(channel_ *CH, int **buf, int length);
-    void Update_Chan_Algo2_LFO_Int(channel_ *CH, int **buf, int length);
-    void Update_Chan_Algo3_LFO_Int(channel_ *CH, int **buf, int length);
-    void Update_Chan_Algo4_LFO_Int(channel_ *CH, int **buf, int length);
-    void Update_Chan_Algo5_LFO_Int(channel_ *CH, int **buf, int length);
-    void Update_Chan_Algo6_LFO_Int(channel_ *CH, int **buf, int length);
-    void Update_Chan_Algo7_LFO_Int(channel_ *CH, int **buf, int length);
 
     // used for foward...
     void Env_Attack_Next(slot_ *SL);

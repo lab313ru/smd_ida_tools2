@@ -1215,7 +1215,7 @@ int Do_Genesis_Frame(bool fast)
         {
             buf[0] = LeftAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
             buf[1] = RightAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
-            YM2612_DacAndTimers_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
+            YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
             YM_Len += Sound_Extrapol[VDP_Current_Line][1];
             PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
         }
@@ -1254,7 +1254,7 @@ int Do_Genesis_Frame(bool fast)
     {
         buf[0] = LeftAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
         buf[1] = RightAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
-        YM2612_DacAndTimers_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
+        YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
         YM_Len += Sound_Extrapol[VDP_Current_Line][1];
         PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
     }
@@ -1291,7 +1291,7 @@ int Do_Genesis_Frame(bool fast)
         {
             buf[0] = LeftAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
             buf[1] = RightAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
-            YM2612_DacAndTimers_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
+            YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
             YM_Len += Sound_Extrapol[VDP_Current_Line][1];
             PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
         }
@@ -1728,7 +1728,7 @@ int Do_32X_Frame(bool fast)
         {
             buf[0] = LeftAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
             buf[1] = RightAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
-            YM2612_DacAndTimers_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
+            YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
             PWM_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
             YM_Len += Sound_Extrapol[VDP_Current_Line][1];
             PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
@@ -1817,7 +1817,7 @@ int Do_32X_Frame(bool fast)
     {
         buf[0] = LeftAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
         buf[1] = RightAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
-        YM2612_DacAndTimers_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
+        YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
         PWM_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
         YM_Len += Sound_Extrapol[VDP_Current_Line][1];
         PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
@@ -1907,7 +1907,7 @@ int Do_32X_Frame(bool fast)
         {
             buf[0] = LeftAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
             buf[1] = RightAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
-            YM2612_DacAndTimers_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
+            YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
             PWM_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
             YM_Len += Sound_Extrapol[VDP_Current_Line][1];
             PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
@@ -2289,7 +2289,7 @@ int Do_SegaCD_Frame(bool fast)
             buf[0] = LeftAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
             buf[1] = RightAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
             if (PCM_Enable) Update_PCM(buf, Sound_Extrapol[VDP_Current_Line][1]);
-            YM2612_DacAndTimers_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
+            YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
             YM_Len += Sound_Extrapol[VDP_Current_Line][1];
             PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
         }
@@ -2333,7 +2333,7 @@ int Do_SegaCD_Frame(bool fast)
         buf[0] = LeftAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
         buf[1] = RightAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
         if (PCM_Enable) Update_PCM(buf, Sound_Extrapol[VDP_Current_Line][1]);
-        YM2612_DacAndTimers_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
+        YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
         YM_Len += Sound_Extrapol[VDP_Current_Line][1];
         PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
     }
@@ -2376,7 +2376,7 @@ int Do_SegaCD_Frame(bool fast)
             buf[0] = LeftAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
             buf[1] = RightAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
             if (PCM_Enable) Update_PCM(buf, Sound_Extrapol[VDP_Current_Line][1]);
-            YM2612_DacAndTimers_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
+            YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
             YM_Len += Sound_Extrapol[VDP_Current_Line][1];
             PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
         }
@@ -2471,7 +2471,7 @@ int Do_SegaCD_Frame_Cycle_Accurate(bool fast)
             buf[0] = LeftAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
             buf[1] = RightAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
             if (PCM_Enable) Update_PCM(buf, Sound_Extrapol[VDP_Current_Line][1]);
-            YM2612_DacAndTimers_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
+            YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
             YM_Len += Sound_Extrapol[VDP_Current_Line][1];
             PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
         }
@@ -2554,7 +2554,7 @@ int Do_SegaCD_Frame_Cycle_Accurate(bool fast)
         buf[0] = LeftAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
         buf[1] = RightAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
         if (PCM_Enable) Update_PCM(buf, Sound_Extrapol[VDP_Current_Line][1]);
-        YM2612_DacAndTimers_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
+        YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
         YM_Len += Sound_Extrapol[VDP_Current_Line][1];
         PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
     }
@@ -2635,7 +2635,7 @@ int Do_SegaCD_Frame_Cycle_Accurate(bool fast)
             buf[0] = LeftAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
             buf[1] = RightAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
             if (PCM_Enable) Update_PCM(buf, Sound_Extrapol[VDP_Current_Line][1]);
-            YM2612_DacAndTimers_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
+            YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
             YM_Len += Sound_Extrapol[VDP_Current_Line][1];
             PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
         }
