@@ -23,8 +23,6 @@ extern "C" {
 
     /* Gens */
 
-    extern int PSG_Enable;
-    extern int PSG_Improv;
     extern int *PSG_Buf[2];
     extern int PSG_Len;
     extern unsigned short PSGVol;

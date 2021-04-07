@@ -36,7 +36,7 @@ extern bool WriteValueAtHardwareROMAddress(unsigned int address, unsigned int va
 extern bool IsHardwareAddressValid(unsigned int address);
 extern bool IsHardwareRAMAddressValid(unsigned int address);
 extern bool IsHardwareROMAddressValid(unsigned int address);
-extern "C" int disableSound2, disableRamSearchUpdate;
+extern "C" int disableRamSearchUpdate;
 extern "C" int Clear_Sound_Buffer(void);
 extern long long GetCurrentInputCondensed();
 extern long long PeekInputCondensed();
@@ -1822,16 +1822,13 @@ DEFINE_LUA_FUNCTION(gens_emulateframeinvisible, "")
     if (FailVerifyAtFrameBoundary(L, "gens.emulateframeinvisible", 0, 1))
         return 0;
 
-    int oldDisableSound2 = disableSound2;
     int oldDisableRamSearchUpdate = disableRamSearchUpdate;
-    disableSound2 = true;
     disableRamSearchUpdate = true;
 
     Update_Emulation_One_Before_Minimal();
     Update_Frame_Fast();
     UpdateLagCount();
 
-    disableSound2 = oldDisableSound2;
     disableRamSearchUpdate = oldDisableRamSearchUpdate;
 
     // disable video latency compensation for a few frames

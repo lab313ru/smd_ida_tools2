@@ -29,7 +29,6 @@ int Last_Seg_L[882] = { 0 }, Last_Seg_R[882] = { 0 };
 int Seg_Length, SBuffer_Length;
 int Sound_Rate = 44100, Sound_Segs = 8; //Sound defaults to 44100, instead of 22050, nitsuja did this, I agree
 int Bytes_Per_Unit;
-int Sound_Enable;
 int Sound_Stereo = 1;
 int Sound_Soften = 0; // Modif N.
 int Sound_Is_Playing = 0;

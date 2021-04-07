@@ -938,15 +938,10 @@ int CDD_Def(void)
  *   Others CD functions   *
  **************************/
 
-extern int disableSound; // Gens.cpp
-
 void Write_CD_Audio(short *Buf, int rate, int channel, int _length)
 {
     unsigned int _length_src, _length_dst;
     unsigned int pos_src, pas_src;
-
-    if (disableSound)
-        return;
 
     if (rate == 0) return;
     if (Sound_Rate == 0) return;

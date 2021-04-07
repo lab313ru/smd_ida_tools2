@@ -14,7 +14,6 @@ extern "C" {
 
     extern int Sound_Rate;
     extern int Sound_Segs;
-    extern int Sound_Enable;
     extern int Sound_Stereo;
     extern int Sound_Soften; // Modif N.
     extern int Sound_Is_Playing;

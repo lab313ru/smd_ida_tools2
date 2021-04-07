@@ -107,17 +107,6 @@
 extern unsigned int Sound_Extrapol[312][2];
 extern int Seg_L[882], Seg_R[882];
 extern int VDP_Current_Line;
-extern int YM2612_Enable;
-extern int DAC_Enable;
-extern int disableSound2, Seg_Junk[882];
-static int* LeftAudioBuffer() { return disableSound2 ? Seg_Junk : Seg_L; }
-static int* RightAudioBuffer() { return disableSound2 ? Seg_Junk : Seg_R; }
-
-int YM2612_Enable;
-int YM2612_Improv;
-int DAC_Enable;
-int* YM_Buf[2];
-int YM_Len = 0;
 
 /* end */
 
@@ -1042,30 +1031,25 @@ DO_LIMIT
 
 
 #define DO_OUTPUT           \
-*d++ += out & CH->LEFT;     \
-*d++ += out & CH->RIGHT;
+buf[0][i] += out & CH->LEFT;     \
+buf[1][i] += out & CH->RIGHT;
 
 
 static void Update_Chan_Algo0(channel_ *CH, int **buf, int lenght)
 {
-    int i;
-    int **d;
-
     if (CH->SLOT[S3].Ecnt == ENV_END) return;
 
 #if YM_DEBUG_LEVEL > 1
     fprintf(debug_file, "\n\nAlgo 0 len = %d\n\n", lenght);
 #endif
 
-    d = buf;
-    i = lenght;
-    while(i--)
+    for (int i = 0; i < lenght; ++i)
     {
-        int in0, in1, in2, in3;     // current phase calculation
-        int en0, en1, en2, en3;     // current enveloppe calculation
-        int out;                    // output
+      int in0, in1, in2, in3;     // current phase calculation
+      int en0, en1, en2, en3;     // current enveloppe calculation
+      int out;                    // output
 
-        GET_CURRENT_PHASE
+      GET_CURRENT_PHASE
         UPDATE_PHASE
         GET_CURRENT_ENV
         UPDATE_ENV
@@ -1077,18 +1061,13 @@ static void Update_Chan_Algo0(channel_ *CH, int **buf, int lenght)
 
 static void Update_Chan_Algo1(channel_ *CH, int **buf, int lenght)
 {
-    int i;
-    int **d;
-
     if (CH->SLOT[S3].Ecnt == ENV_END) return;
 
 #if YM_DEBUG_LEVEL > 1
     fprintf(debug_file, "\n\nAlgo 1 len = %d\n\n", lenght);
 #endif
 
-    d = buf;
-    i = lenght;
-    while(i--)
+    for (int i = 0; i < lenght; ++i)
     {
         int in0, in1, in2, in3;     // current phase calculation
         int en0, en1, en2, en3;     // current enveloppe calculation
@@ -1106,18 +1085,13 @@ static void Update_Chan_Algo1(channel_ *CH, int **buf, int lenght)
 
 static void Update_Chan_Algo2(channel_ *CH, int **buf, int lenght)
 {
-    int i;
-    int **d;
-
     if (CH->SLOT[S3].Ecnt == ENV_END) return;
 
 #if YM_DEBUG_LEVEL > 1
     fprintf(debug_file, "\n\nAlgo 2 len = %d\n\n", lenght);
 #endif
 
-    d = buf;
-    i = lenght;
-    while(i--)
+    for (int i = 0; i < lenght; ++i)
     {
         int in0, in1, in2, in3;     // current phase calculation
         int en0, en1, en2, en3;     // current enveloppe calculation
@@ -1135,18 +1109,13 @@ static void Update_Chan_Algo2(channel_ *CH, int **buf, int lenght)
 
 static void Update_Chan_Algo3(channel_ *CH, int **buf, int lenght)
 {
-    int i;
-    int **d;
-
     if (CH->SLOT[S3].Ecnt == ENV_END) return;
 
 #if YM_DEBUG_LEVEL > 1
     fprintf(debug_file, "\n\nAlgo 3 len = %d\n\n", lenght);
 #endif
 
-    d = buf;
-    i = lenght;
-    while(i--)
+    for (int i = 0; i < lenght; ++i)
     {
         int in0, in1, in2, in3;     // current phase calculation
         int en0, en1, en2, en3;     // current enveloppe calculation
@@ -1164,18 +1133,13 @@ static void Update_Chan_Algo3(channel_ *CH, int **buf, int lenght)
 
 static void Update_Chan_Algo4(channel_ *CH, int **buf, int lenght)
 {
-    int i;
-    int **d;
-
     if ((CH->SLOT[S1].Ecnt == ENV_END) && (CH->SLOT[S3].Ecnt == ENV_END)) return;
 
 #if YM_DEBUG_LEVEL > 1
     fprintf(debug_file, "\n\nAlgo 4 len = %d\n\n", lenght);
 #endif
 
-    d = buf;
-    i = lenght;
-    while(i--)
+    for (int i = 0; i < lenght; ++i)
     {
         int in0, in1, in2, in3;     // current phase calculation
         int en0, en1, en2, en3;     // current enveloppe calculation
@@ -1193,18 +1157,13 @@ static void Update_Chan_Algo4(channel_ *CH, int **buf, int lenght)
 
 static void Update_Chan_Algo5(channel_ *CH, int **buf, int lenght)
 {
-    int i;
-    int **d;
-
     if ((CH->SLOT[S1].Ecnt == ENV_END) && (CH->SLOT[S2].Ecnt == ENV_END) && (CH->SLOT[S3].Ecnt == ENV_END)) return;
 
 #if YM_DEBUG_LEVEL > 1
     fprintf(debug_file, "\n\nAlgo 5 len = %d\n\n", lenght);
 #endif
 
-    d = buf;
-    i = lenght;
-    while(i--)
+    for (int i = 0; i < lenght; ++i)
     {
         int in0, in1, in2, in3;     // current phase calculation
         int en0, en1, en2, en3;     // current enveloppe calculation
@@ -1222,18 +1181,13 @@ static void Update_Chan_Algo5(channel_ *CH, int **buf, int lenght)
 
 static void Update_Chan_Algo6(channel_ *CH, int **buf, int lenght)
 {
-    int i;
-    int **d;
-
     if ((CH->SLOT[S1].Ecnt == ENV_END) && (CH->SLOT[S2].Ecnt == ENV_END) && (CH->SLOT[S3].Ecnt == ENV_END)) return;
 
 #if YM_DEBUG_LEVEL > 1
     fprintf(debug_file, "\n\nAlgo 6 len = %d\n\n", lenght);
 #endif
 
-    d = buf;
-    i = lenght;
-    while(i--)
+    for (int i = 0; i < lenght; ++i)
     {
         int in0, in1, in2, in3;     // current phase calculation
         int en0, en1, en2, en3;     // current enveloppe calculation
@@ -1251,18 +1205,13 @@ static void Update_Chan_Algo6(channel_ *CH, int **buf, int lenght)
 
 static void Update_Chan_Algo7(channel_ *CH, int **buf, int lenght)
 {
-    int i;
-    int **d;
-
     if ((CH->SLOT[S0].Ecnt == ENV_END) && (CH->SLOT[S1].Ecnt == ENV_END) && (CH->SLOT[S2].Ecnt == ENV_END) && (CH->SLOT[S3].Ecnt == ENV_END)) return;
 
 #if YM_DEBUG_LEVEL > 1
     fprintf(debug_file, "\n\nAlgo 7 len = %d\n\n", lenght);
 #endif
 
-    d = buf;
-    i = lenght;
-    while(i--)
+    for (int i = 0; i < lenght; ++i)
     {
         int in0, in1, in2, in3;     // current phase calculation
         int en0, en1, en2, en3;     // current enveloppe calculation
@@ -1280,8 +1229,7 @@ static void Update_Chan_Algo7(channel_ *CH, int **buf, int lenght)
 
 static void Update_Chan_Algo0_LFO(channel_ *CH, int **buf, int lenght)
 {
-    int i, env_LFO, freq_LFO;
-    int **d;
+    int env_LFO, freq_LFO;
 
     if (CH->SLOT[S3].Ecnt == ENV_END) return;
 
@@ -1289,9 +1237,7 @@ static void Update_Chan_Algo0_LFO(channel_ *CH, int **buf, int lenght)
     fprintf(debug_file, "\n\nAlgo 0 LFO len = %d\n\n", lenght);
 #endif
 
-    d = buf;
-    i = lenght;
-    while(i--)
+    for (int i = 0; i < lenght; ++i)
     {
         int in0, in1, in2, in3;     // current phase calculation
         int en0, en1, en2, en3;     // current enveloppe calculation
@@ -1309,8 +1255,7 @@ static void Update_Chan_Algo0_LFO(channel_ *CH, int **buf, int lenght)
 
 static void Update_Chan_Algo1_LFO(channel_ *CH, int **buf, int lenght)
 {
-    int i, env_LFO, freq_LFO;
-    int **d;
+    int env_LFO, freq_LFO;
 
     if (CH->SLOT[S3].Ecnt == ENV_END) return;
 
@@ -1318,9 +1263,7 @@ static void Update_Chan_Algo1_LFO(channel_ *CH, int **buf, int lenght)
     fprintf(debug_file, "\n\nAlgo 1 LFO len = %d\n\n", lenght);
 #endif
 
-    d = buf;
-    i = lenght;
-    while(i--)
+    for (int i = 0; i < lenght; ++i)
     {
         int in0, in1, in2, in3;     // current phase calculation
         int en0, en1, en2, en3;     // current enveloppe calculation
@@ -1338,8 +1281,7 @@ static void Update_Chan_Algo1_LFO(channel_ *CH, int **buf, int lenght)
 
 static void Update_Chan_Algo2_LFO(channel_ *CH, int **buf, int lenght)
 {
-    int i, env_LFO, freq_LFO;
-    int **d;
+    int env_LFO, freq_LFO;
 
     if (CH->SLOT[S3].Ecnt == ENV_END) return;
 
@@ -1347,9 +1289,7 @@ static void Update_Chan_Algo2_LFO(channel_ *CH, int **buf, int lenght)
     fprintf(debug_file, "\n\nAlgo 2 LFO len = %d\n\n", lenght);
 #endif
 
-    d = buf;
-    i = lenght;
-    while(i--)
+    for (int i = 0; i < lenght; ++i)
     {
         int in0, in1, in2, in3;     // current phase calculation
         int en0, en1, en2, en3;     // current enveloppe calculation
@@ -1367,8 +1307,7 @@ static void Update_Chan_Algo2_LFO(channel_ *CH, int **buf, int lenght)
 
 static void Update_Chan_Algo3_LFO(channel_ *CH, int **buf, int lenght)
 {
-    int i, env_LFO, freq_LFO;
-    int **d;
+    int env_LFO, freq_LFO;
 
     if (CH->SLOT[S3].Ecnt == ENV_END) return;
 
@@ -1376,9 +1315,7 @@ static void Update_Chan_Algo3_LFO(channel_ *CH, int **buf, int lenght)
     fprintf(debug_file, "\n\nAlgo 3 LFO len = %d\n\n", lenght);
 #endif
 
-    d = buf;
-    i = lenght;
-    while(i--)
+    for (int i = 0; i < lenght; ++i)
     {
         int in0, in1, in2, in3;     // current phase calculation
         int en0, en1, en2, en3;     // current enveloppe calculation
@@ -1396,8 +1333,7 @@ static void Update_Chan_Algo3_LFO(channel_ *CH, int **buf, int lenght)
 
 static void Update_Chan_Algo4_LFO(channel_ *CH, int **buf, int lenght)
 {
-    int i, env_LFO, freq_LFO;
-    int **d;
+    int env_LFO, freq_LFO;
 
     if ((CH->SLOT[S1].Ecnt == ENV_END) && (CH->SLOT[S3].Ecnt == ENV_END)) return;
 
@@ -1405,9 +1341,7 @@ static void Update_Chan_Algo4_LFO(channel_ *CH, int **buf, int lenght)
     fprintf(debug_file, "\n\nAlgo 4 LFO len = %d\n\n", lenght);
 #endif
 
-    d = buf;
-    i = lenght;
-    while(i--)
+    for (int i = 0; i < lenght; ++i)
     {
         int in0, in1, in2, in3;     // current phase calculation
         int en0, en1, en2, en3;     // current enveloppe calculation
@@ -1425,8 +1359,7 @@ static void Update_Chan_Algo4_LFO(channel_ *CH, int **buf, int lenght)
 
 static void Update_Chan_Algo5_LFO(channel_ *CH, int **buf, int lenght)
 {
-    int i, env_LFO, freq_LFO;
-    int **d;
+    int env_LFO, freq_LFO;
 
     if ((CH->SLOT[S1].Ecnt == ENV_END) && (CH->SLOT[S2].Ecnt == ENV_END) && (CH->SLOT[S3].Ecnt == ENV_END)) return;
 
@@ -1434,9 +1367,7 @@ static void Update_Chan_Algo5_LFO(channel_ *CH, int **buf, int lenght)
     fprintf(debug_file, "\n\nAlgo 5 LFO len = %d\n\n", lenght);
 #endif
 
-    d = buf;
-    i = lenght;
-    while(i--)
+    for (int i = 0; i < lenght; ++i)
     {
         int in0, in1, in2, in3;     // current phase calculation
         int en0, en1, en2, en3;     // current enveloppe calculation
@@ -1454,8 +1385,7 @@ static void Update_Chan_Algo5_LFO(channel_ *CH, int **buf, int lenght)
 
 static void Update_Chan_Algo6_LFO(channel_ *CH, int **buf, int lenght)
 {
-    int i, env_LFO, freq_LFO;
-    int **d;
+    int env_LFO, freq_LFO;
 
     if ((CH->SLOT[S1].Ecnt == ENV_END) && (CH->SLOT[S2].Ecnt == ENV_END) && (CH->SLOT[S3].Ecnt == ENV_END)) return;
 
@@ -1463,9 +1393,7 @@ static void Update_Chan_Algo6_LFO(channel_ *CH, int **buf, int lenght)
     fprintf(debug_file, "\n\nAlgo 6 LFO len = %d\n\n", lenght);
 #endif
 
-    d = buf;
-    i = lenght;
-    while(i--)
+    for (int i = 0; i < lenght; ++i)
     {
         int in0, in1, in2, in3;     // current phase calculation
         int en0, en1, en2, en3;     // current enveloppe calculation
@@ -1483,8 +1411,7 @@ static void Update_Chan_Algo6_LFO(channel_ *CH, int **buf, int lenght)
 
 static void Update_Chan_Algo7_LFO(channel_ *CH, int **buf, int lenght)
 {
-    int i, env_LFO, freq_LFO;
-    int **d;
+    int env_LFO, freq_LFO;
 
     if ((CH->SLOT[S0].Ecnt == ENV_END) && (CH->SLOT[S1].Ecnt == ENV_END) && (CH->SLOT[S2].Ecnt == ENV_END) && (CH->SLOT[S3].Ecnt == ENV_END)) return;
 
@@ -1492,9 +1419,7 @@ static void Update_Chan_Algo7_LFO(channel_ *CH, int **buf, int lenght)
     fprintf(debug_file, "\n\nAlgo 7 LFO len = %d\n\n", lenght);
 #endif
 
-    d = buf;
-    i = lenght;
-    while(i--)
+    for (int i = 0; i < lenght; ++i)
     {
         int in0, in1, in2, in3;     // current phase calculation
         int en0, en1, en2, en3;     // current enveloppe calculation
@@ -1924,7 +1849,6 @@ int YM2612_Write(unsigned char adr, unsigned char data)
 void YM2612_Update(int **buf, int length)
 {
     int i, j, algo_type;
-    int **d;
 
 #if YM_DEBUG_LEVEL > 1
     fprintf(debug_file, "\n\nStarting generating sound...\n\n");
@@ -1973,13 +1897,10 @@ void YM2612_Update(int **buf, int length)
     }
     else algo_type = 0;
 
-    // clear buffer first
-    d = buf;
-    i = length;
-    while(i--)
+    for (int i = 0; i < length; ++i)
     {
-        *d++ = 0;
-        *d++ = 0;
+      buf[0][i] = 0;
+      buf[1][i] = 0;
     }
 
     UPDATE_CHAN[YM2612.CHANNEL[0].ALGO + algo_type](&(YM2612.CHANNEL[0]), buf, length);
@@ -1987,21 +1908,17 @@ void YM2612_Update(int **buf, int length)
     UPDATE_CHAN[YM2612.CHANNEL[2].ALGO + algo_type](&(YM2612.CHANNEL[2]), buf, length);
     UPDATE_CHAN[YM2612.CHANNEL[3].ALGO + algo_type](&(YM2612.CHANNEL[3]), buf, length);
     UPDATE_CHAN[YM2612.CHANNEL[4].ALGO + algo_type](&(YM2612.CHANNEL[4]), buf, length);
-    if (YM2612.DAC)
-    {
-        if (YM2612.DACdata)
-        {
-            int dl = YM2612.DACdata & YM2612.CHANNEL[5].LEFT;
-            int dr = YM2612.DACdata & YM2612.CHANNEL[5].RIGHT;
 
-            d = buf;
-            i = length;
-            while(i--)
-            {
-                *d++ += dl;
-                *d++ += dr;
-            }
-        }
+    if (YM2612.DAC && YM2612.DACdata)
+    {
+      int dl = ((YM2612.DACdata & YM2612.CHANNEL[5].LEFT));
+      int dr = ((YM2612.DACdata & YM2612.CHANNEL[5].RIGHT));
+
+      for (int i = 0; i < length; ++i)
+      {
+        buf[0][i] += dl;
+        buf[1][i] += dr;
+      }
     }
     else UPDATE_CHAN[YM2612.CHANNEL[5].ALGO + algo_type](&(YM2612.CHANNEL[5]), buf, length);
 
@@ -2127,17 +2044,68 @@ int YM2612_Restore(unsigned char SAVE[0x200])
 }
 
 
-// we need to change that by a callback
+/* Gens */
+
+//void YM2612_DacAndTimers_Update(int** buffer, int length)
+//{
+//  int* bufL, * bufR;
+//  int i;
+//
+//  if (YM2612.DAC && YM2612.DACdata && DAC_Enable)
+//  {
+//    bufL = buffer[0];
+//    bufR = buffer[1];
+//
+//    for (i = 0; i < length; i++)
+//    {
+//      bufL[i] += (int)(((YM2612.DACdata & YM2612.CHANNEL[5].LEFT) * DACVol) >> 8);
+//      bufR[i] += (int)(((YM2612.DACdata & YM2612.CHANNEL[5].RIGHT) * DACVol) >> 8);
+//    }
+//  }
+//
+//  i = YM2612.TimerBase * length;
+//
+//  if (YM2612.Mode & 1)							// Timer A ON ?
+//  {
+//    //		if ((YM2612.TimerAcnt -= 14073) <= 0)		// 13879=NTSC (old: 14475=NTSC  14586=PAL)
+//    if ((YM2612.TimerAcnt -= i) <= 0)
+//    {
+//      YM2612.Status |= (YM2612.Mode & 0x04) >> 2;
+//      YM2612.TimerAcnt += YM2612.TimerAL;
+//
+//#if YM_DEBUG_LEVEL > 0
+//      fprintf(debug_file, "Counter A overflow\n");
+//#endif
+//
+//      if (YM2612.Mode & 0x80) CSM_Key_Control();
+//    }
+//  }
+//
+//  if (YM2612.Mode & 2)							// Timer B ON ?
+//  {
+//    //		if ((YM2612.TimerBcnt -= 14073) <= 0)		// 13879=NTSC (old: 14475=NTSC  14586=PAL)
+//    if ((YM2612.TimerBcnt -= i) <= 0)
+//    {
+//      YM2612.Status |= (YM2612.Mode & 0x08) >> 2;
+//      YM2612.TimerBcnt += YM2612.TimerBL;
+//
+//#if YM_DEBUG_LEVEL > 0
+//      fprintf(debug_file, "Counter B overflow\n");
+//#endif
+//    }
+//  }
+//}
+
 void YM2612_Special_Update(void)
 {
+  //if (YM_Len && YM2612_Enable)
+  //{
+  //  YM2612_Update(YM_Buf, YM_Len);
 
-  if (YM_Len && YM2612_Enable)
-  {
-    YM2612_Update(YM_Buf, YM_Len);
-
-    YM_Buf[0] = LeftAudioBuffer() + Sound_Extrapol[VDP_Current_Line + 1][0];
-    YM_Buf[1] = RightAudioBuffer() + Sound_Extrapol[VDP_Current_Line + 1][0];
-    YM_Len = 0;
-  }
-
+  //  YM_Buf[0] = Seg_L + Sound_Extrapol[VDP_Current_Line + 1][0];
+  //  YM_Buf[1] = RightAudioBuffer() + Sound_Extrapol[VDP_Current_Line + 1][0];
+  //  YM_Len = 0;
+  //}
 }
+
+/* end */

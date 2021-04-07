@@ -26,7 +26,6 @@ extern "C" {
     extern int Frame_Skip;
     extern int Frame_Number;
     extern int Inside_Frame;
-    extern int DAC_Improv;
     extern int RMax_Level;
     extern int GMax_Level;
     extern int BMax_Level;

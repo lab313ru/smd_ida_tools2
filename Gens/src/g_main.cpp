@@ -201,7 +201,6 @@ int frameadvSkipLag_Rewind_State_Buffer_Index = 0;
 bool frameadvSkipLag_Rewind_State_Buffer_Valid = false;
 extern void Update_Emulation_One_Before(HWND hWnd);
 extern void Update_Emulation_After_Fast(HWND hWnd);
-extern "C" int disableSound, disableSound2;
 extern char Lua_Dir[1024];
 
 int frameSearchFrames = -1;
@@ -841,123 +840,6 @@ int Change_Z80()
     return(1);
 }
 
-int Change_DAC()
-{
-    if (DAC_Enable)
-    {
-        DAC_Enable = 0;
-        MESSAGE_L("DAC Disabled");
-    }
-    else
-    {
-        DAC_Enable = 1;
-        MESSAGE_L("DAC Enabled");
-    }
-
-    Build_Main_Menu();
-    return(1);
-}
-
-int Change_DAC_Improv()
-{
-    if (DAC_Improv)
-    {
-        DAC_Improv = 0;
-        MESSAGE_L("Normal DAC sound");
-    }
-    else
-    {
-        DAC_Improv = 1;
-        MESSAGE_L("High Quality DAC sound"); //Nitsuja modified this
-    }
-
-    Build_Main_Menu(); //Nitsuja added this line
-    return(1);
-}
-
-int Change_YM2612()
-{
-    if (YM2612_Enable)
-    {
-        YM2612_Enable = 0;
-        MESSAGE_L("YM2612 Disabled");
-    }
-    else
-    {
-        YM2612_Enable = 1;
-        MESSAGE_L("YM2612 Enabled");
-    }
-
-    Build_Main_Menu();
-    return(1);
-}
-
-int Change_YM2612_Improv()
-{
-    unsigned char Reg_1[0x200];
-
-    if (YM2612_Improv)
-    {
-        YM2612_Improv = 0;
-        MESSAGE_L("Normal YM2612 emulation");
-    }
-    else
-    {
-        YM2612_Improv = 1;
-        MESSAGE_L("High Quality YM2612 emulation");
-    }
-
-    YM2612_Save(Reg_1);
-
-    if (CPU_Mode)
-    {
-        YM2612_Init(CLOCK_PAL / 7, Sound_Rate, YM2612_Improv);
-    }
-    else
-    {
-        YM2612_Init(CLOCK_NTSC / 7, Sound_Rate, YM2612_Improv);
-    }
-
-    YM2612_Restore(Reg_1);
-
-    Build_Main_Menu();
-    return 1;
-}
-
-int Change_PSG()
-{
-    if (PSG_Enable)
-    {
-        PSG_Enable = 0;
-        MESSAGE_L("PSG Disabled");
-    }
-    else
-    {
-        PSG_Enable = 1;
-        MESSAGE_L("PSG Enabled");
-    }
-
-    Build_Main_Menu();
-    return 1;
-}
-
-int Change_PSG_Improv()
-{
-    if (PSG_Improv)
-    {
-        PSG_Improv = 0;
-        MESSAGE_L("Normal PSG sound");
-    }
-    else
-    {
-        PSG_Improv = 1;
-        MESSAGE_L("High Quality PSG sound"); //Nitsuja modified this
-    }
-
-    Build_Main_Menu(); //Nitsuja added this line
-    return 1;
-}
-
 int Change_PCM()
 {
     if (PCM_Enable)
@@ -1009,56 +891,6 @@ int Change_CDDA()
     return(1);
 }
 
-int Change_Sound(HWND hWnd)
-{
-    if (Sound_Enable)
-    {
-        End_Sound();
-
-        Sound_Enable = 0;
-        YM2612_Enable = 0;
-        PSG_Enable = 0;
-        DAC_Enable = 0;
-        //PCM_Enable = 0; // commented out for the same reason that disabling sound doesn't disable the Z80 (affects emulation too much for what's supposed to act like a "mute" option)
-        PWM_Enable = 0;
-        CDDA_Enable = 0;
-
-        MESSAGE_L("Sound Disabled");
-    }
-    else
-    {
-        if (!Init_Sound(hWnd))
-        {
-            Sound_Enable = 0;
-            YM2612_Enable = 0;
-            PSG_Enable = 0;
-            DAC_Enable = 0;
-            PCM_Enable = 0;
-            PWM_Enable = 0;
-            CDDA_Enable = 0;
-
-            return 0;
-        }
-
-        Sound_Enable = 1;
-        Play_Sound();
-
-        if (!(Z80_State & 1)) Change_Z80();
-
-        YM2612_Enable = 1;
-        PSG_Enable = 1;
-        DAC_Enable = 1;
-        PCM_Enable = 1;
-        PWM_Enable = 1;
-        CDDA_Enable = 1;
-
-        MESSAGE_L("Sound Enabled");
-    }
-
-    Build_Main_Menu();
-    return 1;
-}
-
 int Change_Sample_Rate(HWND hWnd, int Rate)
 {
     unsigned char Reg_1[0x200];
@@ -1081,34 +913,29 @@ int Change_Sample_Rate(HWND hWnd, int Rate)
             break;
     }
 
-    if (Sound_Enable)
+    PSG_Save_State();
+    YM2612_Save(Reg_1);
+
+    End_Sound();
+
+    if (CPU_Mode)
     {
-        PSG_Save_State();
-        YM2612_Save(Reg_1);
-
-        End_Sound();
-        Sound_Enable = 0;
-
-        if (CPU_Mode)
-        {
-            YM2612_Init(CLOCK_PAL / 7, Sound_Rate, YM2612_Improv);
-            PSG_Init(CLOCK_PAL / 15, Sound_Rate);
-        }
-        else
-        {
-            YM2612_Init(CLOCK_NTSC / 7, Sound_Rate, YM2612_Improv);
-            PSG_Init(CLOCK_NTSC / 15, Sound_Rate);
-        }
-
-        if (SegaCD_Started) Set_Rate_PCM(Sound_Rate);
-        YM2612_Restore(Reg_1);
-        PSG_Restore_State();
-
-        if (!Init_Sound(hWnd)) return(0);
-
-        Sound_Enable = 1;
-        Play_Sound();
+      YM2612_Init(CLOCK_PAL / 7, Sound_Rate, 1);
+      PSG_Init(CLOCK_PAL / 15, Sound_Rate);
     }
+    else
+    {
+      YM2612_Init(CLOCK_NTSC / 7, Sound_Rate, 1);
+      PSG_Init(CLOCK_NTSC / 15, Sound_Rate);
+    }
+
+    if (SegaCD_Started) Set_Rate_PCM(Sound_Rate);
+    YM2612_Restore(Reg_1);
+    PSG_Restore_State();
+
+    if (!Init_Sound(hWnd)) return(0);
+
+    Play_Sound();
 
     Build_Main_Menu();
     return(1);
@@ -1129,34 +956,29 @@ int Change_Sound_Stereo(HWND hWnd)
         MESSAGE_L("Stereo sound");
     }
 
-    if (Sound_Enable)
+    PSG_Save_State();
+    YM2612_Save(Reg_1);
+
+    End_Sound();
+
+    if (CPU_Mode)
     {
-        PSG_Save_State();
-        YM2612_Save(Reg_1);
-
-        End_Sound();
-        Sound_Enable = 0;
-
-        if (CPU_Mode)
-        {
-            YM2612_Init(CLOCK_PAL / 7, Sound_Rate, YM2612_Improv);
-            PSG_Init(CLOCK_PAL / 15, Sound_Rate);
-        }
-        else
-        {
-            YM2612_Init(CLOCK_NTSC / 7, Sound_Rate, YM2612_Improv);
-            PSG_Init(CLOCK_NTSC / 15, Sound_Rate);
-        }
-
-        if (SegaCD_Started) Set_Rate_PCM(Sound_Rate);
-        YM2612_Restore(Reg_1);
-        PSG_Restore_State();
-
-        if (!Init_Sound(hWnd)) return(0);
-
-        Sound_Enable = 1;
-        Play_Sound();
+      YM2612_Init(CLOCK_PAL / 7, Sound_Rate, 1);
+      PSG_Init(CLOCK_PAL / 15, Sound_Rate);
     }
+    else
+    {
+      YM2612_Init(CLOCK_NTSC / 7, Sound_Rate, 1);
+      PSG_Init(CLOCK_NTSC / 15, Sound_Rate);
+    }
+
+    if (SegaCD_Started) Set_Rate_PCM(Sound_Rate);
+    YM2612_Restore(Reg_1);
+    PSG_Restore_State();
+
+    if (!Init_Sound(hWnd)) return(0);
+
+    Play_Sound();
 
     Build_Main_Menu();
     return(1);
@@ -1271,34 +1093,29 @@ int Change_Country(HWND hWnd, int Num)
         Timer_Step = 135708;
     }
 
-    if (Sound_Enable)
+    PSG_Save_State();
+    YM2612_Save(Reg_1);
+
+    End_Sound();
+
+    if (CPU_Mode)
     {
-        PSG_Save_State();
-        YM2612_Save(Reg_1);
-
-        End_Sound();
-        Sound_Enable = 0;
-
-        if (CPU_Mode)
-        {
-            YM2612_Init(CLOCK_PAL / 7, Sound_Rate, YM2612_Improv);
-            PSG_Init(CLOCK_PAL / 15, Sound_Rate);
-        }
-        else
-        {
-            YM2612_Init(CLOCK_NTSC / 7, Sound_Rate, YM2612_Improv);
-            PSG_Init(CLOCK_NTSC / 15, Sound_Rate);
-        }
-
-        if (SegaCD_Started) Set_Rate_PCM(Sound_Rate);
-        YM2612_Restore(Reg_1);
-        PSG_Restore_State();
-
-        if (!Init_Sound(hWnd)) return(0);
-
-        Sound_Enable = 1;
-        Play_Sound();
+      YM2612_Init(CLOCK_PAL / 7, Sound_Rate, 1);
+      PSG_Init(CLOCK_PAL / 15, Sound_Rate);
     }
+    else
+    {
+      YM2612_Init(CLOCK_NTSC / 7, Sound_Rate, 1);
+      PSG_Init(CLOCK_NTSC / 15, Sound_Rate);
+    }
+
+    if (SegaCD_Started) Set_Rate_PCM(Sound_Rate);
+    YM2612_Restore(Reg_1);
+    PSG_Restore_State();
+
+    if (!Init_Sound(hWnd)) return(0);
+
+    Play_Sound();
 
     if (Game_Mode)
     {
@@ -1412,7 +1229,6 @@ BOOL Init(HINSTANCE hInst, int nCmdShow)
     Render_FS = 0;
     Show_Message = 1;
 
-    Sound_Enable = 0;
     Sound_Segs = 8;
     Sound_Stereo = 1;
     Sound_Initialised = 0;
@@ -1479,7 +1295,7 @@ BOOL Init(HINSTANCE hInst, int nCmdShow)
     S68K_Init();
     Z80_Init();
 
-    YM2612_Init(CLOCK_NTSC / 7, Sound_Rate, YM2612_Improv);
+    YM2612_Init(CLOCK_NTSC / 7, Sound_Rate, 1);
     PSG_Init(CLOCK_NTSC / 15, Sound_Rate);
     PWM_Init();
 
@@ -2289,12 +2105,9 @@ int PASCAL WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nC
                         Temp_Frame_Skip = 8;
                     if (Lag_Frame && Frame_Number + 1 >= Temp_Frame_Skip)
                         Do_VDP_Refresh(); // better than nothing for showing skipped frames
-                    if (!Lag_Frame)
-                        disableSound2 = true;
 
                     Update_Emulation_One_Before(HWnd);
                     Update_Frame_Fast();
-                    disableSound2 = false;
                     soundCleared = false;
                     tgtime = timeGetTime();
                     if (Lag_Frame)
@@ -3026,7 +2839,6 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             Load_State_From_Buffer(frameSearch_Start_State_Buffer);
             if (MainMovie.File && MainMovie.Status == MOVIE_RECORDING)
                 MainMovie.NbRerecords++;
-            disableSound2 = true;
             for (int i = 0; i < frameSearchFrames; i++)
             {
                 SetNextInputCondensed(frameSearchInitialInput);
@@ -3034,7 +2846,6 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 Update_Frame_Fast();
                 Update_Emulation_After_Fast(HWnd);
             }
-            disableSound2 = false;
             Save_State_To_Buffer(frameSearch_End_State_Buffer);
             Update_Emulation_One(HWnd);
             soundCleared = false;
@@ -3981,18 +3792,6 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             Change_Z80();
             return 0;
 
-        case ID_SOUND_YM2612ENABLE:
-            Change_YM2612();
-            return 0;
-
-        case ID_SOUND_PSGENABLE:
-            Change_PSG();
-            return 0;
-
-        case ID_SOUND_DACENABLE:
-            Change_DAC();
-            return 0;
-
         case ID_SOUND_PCMENABLE:
             Change_PCM();
             return 0;
@@ -4005,20 +3804,8 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             Change_CDDA();
             return 0;
 
-        case ID_SOUND_DACIMPROV:
-            Change_DAC_Improv();
-            return 0;
-
         case ID_SOUND_PSGIMPROV:
             //                  Change_PSG_Improv(hWnd);
-            return 0;
-
-        case ID_SOUND_YMIMPROV:
-            Change_YM2612_Improv();
-            return 0;
-
-        case ID_SOUND_ENABLE:
-            Change_Sound(hWnd);
             return 0;
 
         case ID_SOUND_RATE_11000:
@@ -4794,8 +4581,6 @@ HMENU Build_Main_Menu(void)
 
     i = 0;
 
-    MENU_L(Sound, i++, Flags | (Sound_Enable ? MF_CHECKED : MF_UNCHECKED), ID_SOUND_ENABLE, "&Enable");
-
     InsertMenu(Sound, i++, MF_SEPARATOR, NULL, NULL);
 
     MENU_L(Sound, i++, Flags | MF_POPUP, (UINT)SoundRate, "&Rate");
@@ -4812,12 +4597,6 @@ HMENU Build_Main_Menu(void)
 
     InsertMenu(Sound, i++, Flags | ((Z80_State & 1) ? MF_CHECKED : MF_UNCHECKED),
         ID_SOUND_Z80ENABLE, "&Z80");
-    InsertMenu(Sound, i++, Flags | (YM2612_Enable ? MF_CHECKED : MF_UNCHECKED),
-        ID_SOUND_YM2612ENABLE, "&YM2612");
-    InsertMenu(Sound, i++, Flags | (PSG_Enable ? MF_CHECKED : MF_UNCHECKED),
-        ID_SOUND_PSGENABLE, "&PSG");
-    InsertMenu(Sound, i++, Flags | (DAC_Enable ? MF_CHECKED : MF_UNCHECKED),
-        ID_SOUND_DACENABLE, "&DAC");
 
     if (!Genesis_Started && !_32X_Started)
     {
@@ -4831,10 +4610,6 @@ HMENU Build_Main_Menu(void)
             ID_SOUND_PWMENABLE, "P&WM");
 
     InsertMenu(Sound, i++, MF_SEPARATOR, NULL, NULL);
-
-    MENU_L(Sound, i++, Flags | (YM2612_Improv ? MF_CHECKED : MF_UNCHECKED), ID_SOUND_YMIMPROV, "YM2612 High &Quality");
-    /*  MENU_L(Sound, i++, Flags | (PSG_Improv ? MF_CHECKED : MF_UNCHECKED), ID_SOUND_PSGIMPROV, "PSG High &Quality"); */
-    MENU_L(Sound, i++, Flags | (DAC_Improv ? MF_CHECKED : MF_UNCHECKED), ID_SOUND_DACIMPROV, "DAC High &Quality");
 
     // RATE //
 
@@ -7390,15 +7165,9 @@ LRESULT CALLBACK ControllerProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 int SaveFlags()
 {
     int flags = Z80_State & 0x1;
-    flags |= YM2612_Enable << 1;
-    flags |= PSG_Enable << 2;
-    flags |= DAC_Enable << 3;
     flags |= PCM_Enable << 4;
     flags |= PWM_Enable << 5;
     flags |= CDDA_Enable << 6;
-    flags |= YM2612_Improv << 7;
-    flags |= PSG_Improv << 8;
-    flags |= DAC_Improv << 9;
     flags |= ((Sound_Rate / 22050) << 10);
     flags |= LeftRightEnabled << 16;
     return flags;
@@ -7409,15 +7178,9 @@ void LoadFlags(int flags)
         Z80_State |= 0x1;
     else
         Z80_State &= ~0x1;
-    YM2612_Enable = (flags >> 1) & 1;
-    PSG_Enable = (flags >> 2) & 1;
-    DAC_Enable = (flags >> 3) & 1;
     PCM_Enable = (flags >> 4) & 1;
     PWM_Enable = (flags >> 5) & 1;
     CDDA_Enable = (flags >> 6) & 1;
-    YM2612_Improv = (flags >> 7) & 1;
-    DAC_Improv = (flags >> 8) & 1;
-    PSG_Improv = (flags >> 9) & 1;
     Change_Sample_Rate(HWnd, (flags >> 10) & 0x3);
     LeftRightEnabled = (flags >> 16) & 1;
     return;

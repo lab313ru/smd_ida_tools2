@@ -2360,8 +2360,6 @@ int Save_Config(char *File_Name)
     wsprintf(Str_Tmp, "%d", Correct_256_Aspect_Ratio); //Modif N.
     WritePrivateProfileString("Graphics", "Proper Aspect Ratio", Str_Tmp, Conf_File);
 
-    wsprintf(Str_Tmp, "%d", Sound_Enable & 1);
-    WritePrivateProfileString("Sound", "State", Str_Tmp, Conf_File);
     wsprintf(Str_Tmp, "%d", Sound_Rate);
     WritePrivateProfileString("Sound", "Rate", Str_Tmp, Conf_File);
     wsprintf(Str_Tmp, "%d", Sound_Stereo);
@@ -2370,22 +2368,12 @@ int Save_Config(char *File_Name)
     WritePrivateProfileString("Sound", "SoundSoftenFilter", Str_Tmp, Conf_File); // Modif N.
     wsprintf(Str_Tmp, "%d", Z80_State & 1);
     WritePrivateProfileString("Sound", "Z80 State", Str_Tmp, Conf_File);
-    wsprintf(Str_Tmp, "%d", YM2612_Enable & 1);
-    WritePrivateProfileString("Sound", "YM2612 State", Str_Tmp, Conf_File);
-    wsprintf(Str_Tmp, "%d", PSG_Enable & 1);
-    WritePrivateProfileString("Sound", "PSG State", Str_Tmp, Conf_File);
-    wsprintf(Str_Tmp, "%d", DAC_Enable & 1);
-    WritePrivateProfileString("Sound", "DAC State", Str_Tmp, Conf_File);
     wsprintf(Str_Tmp, "%d", PCM_Enable & 1);
     WritePrivateProfileString("Sound", "PCM State", Str_Tmp, Conf_File);
     wsprintf(Str_Tmp, "%d", PWM_Enable & 1);
     WritePrivateProfileString("Sound", "PWM State", Str_Tmp, Conf_File);
     wsprintf(Str_Tmp, "%d", CDDA_Enable & 1);
     WritePrivateProfileString("Sound", "CDDA State", Str_Tmp, Conf_File);
-    wsprintf(Str_Tmp, "%d", YM2612_Improv & 1);
-    WritePrivateProfileString("Sound", "YM2612 Improvement", Str_Tmp, Conf_File);
-    wsprintf(Str_Tmp, "%d", DAC_Improv & 1);
-    WritePrivateProfileString("Sound", "DAC Improvement", Str_Tmp, Conf_File);
     //	wsprintf(Str_Tmp, "%d", PSG_Improv & 1);
     //	WritePrivateProfileString("Sound", "PSG Improvement", Str_Tmp, Conf_File);
 
@@ -2770,7 +2758,6 @@ int Save_As_Config(HWND hWnd)
 
 int Load_Config(char *File_Name, void *Game_Active)
 {
-    int new_val;
     char Conf_File[1024];
 
     SetCurrentDirectory(Gens_Path);
@@ -2889,31 +2876,10 @@ int Load_Config(char *File_Name, void *Game_Active)
     if (GetPrivateProfileInt("Sound", "Z80 State", 1, Conf_File)) Z80_State |= 1;
     else Z80_State &= ~1;
 
-    new_val = GetPrivateProfileInt("Sound", "State", 1, Conf_File);
-    if (new_val != Sound_Enable)
-    {
-        if (Change_Sound(HWnd))
-        {
-            YM2612_Enable = GetPrivateProfileInt("Sound", "YM2612 State", 1, Conf_File);
-            PSG_Enable = GetPrivateProfileInt("Sound", "PSG State", 1, Conf_File);
-            DAC_Enable = GetPrivateProfileInt("Sound", "DAC State", 1, Conf_File);
-            PCM_Enable = GetPrivateProfileInt("Sound", "PCM State", 1, Conf_File);
-            PWM_Enable = GetPrivateProfileInt("Sound", "PWM State", 1, Conf_File);
-            CDDA_Enable = GetPrivateProfileInt("Sound", "CDDA State", 1, Conf_File);
-        }
-    }
-    else
-    {
-        YM2612_Enable = GetPrivateProfileInt("Sound", "YM2612 State", 1, Conf_File);
-        PSG_Enable = GetPrivateProfileInt("Sound", "PSG State", 1, Conf_File);
-        DAC_Enable = GetPrivateProfileInt("Sound", "DAC State", 1, Conf_File);
-        PCM_Enable = GetPrivateProfileInt("Sound", "PCM State", 1, Conf_File);
-        PWM_Enable = GetPrivateProfileInt("Sound", "PWM State", 1, Conf_File);
-        CDDA_Enable = GetPrivateProfileInt("Sound", "CDDA State", 1, Conf_File);
-    }
+    PCM_Enable = GetPrivateProfileInt("Sound", "PCM State", 1, Conf_File);
+    PWM_Enable = GetPrivateProfileInt("Sound", "PWM State", 1, Conf_File);
+    CDDA_Enable = GetPrivateProfileInt("Sound", "CDDA State", 1, Conf_File);
 
-    YM2612_Improv = GetPrivateProfileInt("Sound", "YM2612 Improvement", 0, Conf_File); // Modif N
-    DAC_Improv = GetPrivateProfileInt("Sound", "DAC Improvement", 0, Conf_File); // Modif N
     //	PSG_Improv = GetPrivateProfileInt("Sound", "PSG Improvement", 0, Conf_File); // Modif N
     MastVol = (GetPrivateProfileInt("Sound", "Master Volume", 128, Conf_File) & 0x1FF);
     YM2612Vol = (GetPrivateProfileInt("Sound", "YM2612 Volume", 256, Conf_File) & 0x1FF);

@@ -104,11 +104,6 @@ extern "C" {
 
     /* Gens */
 
-    extern int YM2612_Enable;
-    extern int YM2612_Improv;
-    extern int DAC_Enable;
-    extern int *YM_Buf[2];
-    extern int YM_Len;
     extern unsigned short YM2612Vol;
     extern unsigned short DACVol;
 

@@ -241,7 +241,6 @@ BOOL IsAsyncAllowed(void)
 int Frame_Skip;
 int Frame_Number;
 int Inside_Frame = 0;
-int DAC_Improv;
 int RMax_Level;
 int GMax_Level;
 int BMax_Level;
@@ -798,7 +797,7 @@ void Init_Genesis_Bios(void)
     CPL_M68K = Round_Double((((double)CLOCK_NTSC / 7.0) / 60.0) / 262.0);
     VDP_Num_Lines = 262;
     VDP_Status &= 0xFFFE;
-    YM2612_Init(CLOCK_NTSC / 7, Sound_Rate, YM2612_Improv);
+    YM2612_Init(CLOCK_NTSC / 7, Sound_Rate, 1);
     PSG_Init(CLOCK_NTSC / 15, Sound_Rate);
 }
 
@@ -906,7 +905,7 @@ int Init_Genesis(struct Rom *MD_Rom)
         VDP_Num_Lines = 312;
         VDP_Status |= 0x0001;
 
-        YM2612_Init(CLOCK_PAL / 7, Sound_Rate, YM2612_Improv);
+        YM2612_Init(CLOCK_PAL / 7, Sound_Rate, 1);
         PSG_Init(CLOCK_PAL / 15, Sound_Rate);
     }
     else
@@ -919,19 +918,16 @@ int Init_Genesis(struct Rom *MD_Rom)
         VDP_Num_Lines = 262;
         VDP_Status &= 0xFFFE;
 
-        YM2612_Init(CLOCK_NTSC / 7, Sound_Rate, YM2612_Improv);
+        YM2612_Init(CLOCK_NTSC / 7, Sound_Rate, 1);
         PSG_Init(CLOCK_NTSC / 15, Sound_Rate);
     }
 
     if (Auto_Fix_CS) Fix_Checksum();
 
-    if (Sound_Enable)
-    {
-        End_Sound();
+    End_Sound();
 
-        if (!Init_Sound(HWnd)) Sound_Enable = 0;
-        else Play_Sound();
-    }
+    Init_Sound(HWnd);
+    Play_Sound();
 
     Load_Patch_File();
     Build_Main_Menu();
@@ -982,14 +978,8 @@ void Reset_Genesis()
 
 extern "C"
 {
-    int disableSound = false;
-    int disableSound2 = false; // slower but more reversible way of disabling sound generation
     int disableRamSearchUpdate = false;
-    int Seg_Junk[882];
 }
-
-inline static int* LeftAudioBuffer() { return disableSound2 ? Seg_Junk : Seg_L; }
-inline static int* RightAudioBuffer() { return disableSound2 ? Seg_Junk : Seg_R; }
 
 // to make two different compiled functions
 template<int bits>
@@ -1183,13 +1173,6 @@ int Do_Genesis_Frame(bool fast)
     if ((CPU_Mode) && (VDP_Reg.Set2 & 0x8))	VDP_Num_Vis_Lines = 240;
     else VDP_Num_Vis_Lines = 224;
 
-    if (!disableSound)
-    {
-        YM_Buf[0] = PSG_Buf[0] = LeftAudioBuffer();
-        YM_Buf[1] = PSG_Buf[1] = RightAudioBuffer();
-    }
-    YM_Len = PSG_Len = 0;
-
     Cycles_M68K = Cycles_Z80 = 0;
     Last_BUS_REQ_Cnt = -1000;
     main68k_tripOdometer();
@@ -1211,14 +1194,10 @@ int Do_Genesis_Frame(bool fast)
 
     for (VDP_Current_Line = 0; VDP_Current_Line < VDP_Num_Vis_Lines; VDP_Current_Line++)
     {
-        if (!disableSound)
-        {
-            buf[0] = LeftAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
-            buf[1] = RightAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
-            YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
-            YM_Len += Sound_Extrapol[VDP_Current_Line][1];
-            PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
-        }
+      buf[0] = Seg_L + Sound_Extrapol[VDP_Current_Line][0];
+      buf[1] = Seg_R + Sound_Extrapol[VDP_Current_Line][0];
+      YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
+      PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
 
         Fix_Controllers();
         Cycles_M68K += CPL_M68K;
@@ -1250,14 +1229,10 @@ int Do_Genesis_Frame(bool fast)
         Render_MD_Screen();
     }
 
-    if (!disableSound)
-    {
-        buf[0] = LeftAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
-        buf[1] = RightAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
-        YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
-        YM_Len += Sound_Extrapol[VDP_Current_Line][1];
-        PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
-    }
+    buf[0] = Seg_L + Sound_Extrapol[VDP_Current_Line][0];
+    buf[1] = Seg_R + Sound_Extrapol[VDP_Current_Line][0];
+    YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
+    PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
 
     Fix_Controllers();
     Cycles_M68K += CPL_M68K;
@@ -1287,14 +1262,10 @@ int Do_Genesis_Frame(bool fast)
 
     for (VDP_Current_Line++; VDP_Current_Line < VDP_Num_Lines; VDP_Current_Line++)
     {
-        if (!disableSound)
-        {
-            buf[0] = LeftAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
-            buf[1] = RightAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
-            YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
-            YM_Len += Sound_Extrapol[VDP_Current_Line][1];
-            PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
-        }
+      buf[0] = Seg_L + Sound_Extrapol[VDP_Current_Line][0];
+      buf[1] = Seg_R + Sound_Extrapol[VDP_Current_Line][0];
+      YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
+      PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
 
         Fix_Controllers();
         Cycles_M68K += CPL_M68K;
@@ -1310,11 +1281,9 @@ int Do_Genesis_Frame(bool fast)
         else z80_Set_Odo(&M_Z80, Cycles_Z80);
     }
 
-    if (!disableSound)
-    {
-        PSG_Special_Update();
-        YM2612_Special_Update();
-    }
+    PSG_Special_Update();
+    YM2612_Special_Update();
+
 #ifdef RKABOXHACK
     CamX = CheatRead<short>(0xB158);
     CamY = CheatRead<short>(0xB1D6);
@@ -1566,7 +1535,7 @@ int Init_32X(struct Rom *MD_Rom)
         VDP_Status |= 0x0001;
         _32X_VDP.Mode &= ~0x8000;
 
-        YM2612_Init(CLOCK_PAL / 7, Sound_Rate, YM2612_Improv);
+        YM2612_Init(CLOCK_PAL / 7, Sound_Rate, 1);
         PSG_Init(CLOCK_PAL / 15, Sound_Rate);
     }
     else
@@ -1580,7 +1549,7 @@ int Init_32X(struct Rom *MD_Rom)
         VDP_Status &= 0xFFFE;
         _32X_VDP.Mode |= 0x8000;
 
-        YM2612_Init(CLOCK_NTSC / 7, Sound_Rate, YM2612_Improv);
+        YM2612_Init(CLOCK_NTSC / 7, Sound_Rate, 1);
         PSG_Init(CLOCK_NTSC / 15, Sound_Rate);
     }
 
@@ -1588,13 +1557,10 @@ int Init_32X(struct Rom *MD_Rom)
 
     if (Auto_Fix_CS) Fix_Checksum();
 
-    if (Sound_Enable)
-    {
-        End_Sound();
+    End_Sound();
 
-        if (!Init_Sound(HWnd)) Sound_Enable = 0;
-        else Play_Sound();
-    }
+    Init_Sound(HWnd);
+    Play_Sound();
 
     Load_Patch_File();
     Build_Main_Menu();
@@ -1683,13 +1649,6 @@ int Do_32X_Frame(bool fast)
     if ((CPU_Mode) && (VDP_Reg.Set2 & 0x8))	VDP_Num_Vis_Lines = 240;
     else VDP_Num_Vis_Lines = 224;
 
-    if (!disableSound)
-    {
-        YM_Buf[0] = PSG_Buf[0] = LeftAudioBuffer();
-        YM_Buf[1] = PSG_Buf[1] = RightAudioBuffer();
-    }
-    YM_Len = PSG_Len = 0;
-
     CPL_PWM = CPL_M68K * 3;
 
     PWM_Cycles = Cycles_SSH2 = Cycles_MSH2 = Cycles_M68K = Cycles_Z80 = 0;
@@ -1724,15 +1683,11 @@ int Do_32X_Frame(bool fast)
 
     for (VDP_Current_Line = 0; VDP_Current_Line < VDP_Num_Vis_Lines; VDP_Current_Line++)
     {
-        if (!disableSound)
-        {
-            buf[0] = LeftAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
-            buf[1] = RightAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
-            YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
-            PWM_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
-            YM_Len += Sound_Extrapol[VDP_Current_Line][1];
-            PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
-        }
+      buf[0] = Seg_L + Sound_Extrapol[VDP_Current_Line][0];
+      buf[1] = Seg_R + Sound_Extrapol[VDP_Current_Line][0];
+      YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
+      PWM_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
+      PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
 
         i = Cycles_M68K + (p_i * 2);
         j = Cycles_MSH2 + (p_j * 2);
@@ -1813,15 +1768,11 @@ int Do_32X_Frame(bool fast)
         Render_MD_Screen32X();
     }
 
-    if (!disableSound)
-    {
-        buf[0] = LeftAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
-        buf[1] = RightAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
-        YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
-        PWM_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
-        YM_Len += Sound_Extrapol[VDP_Current_Line][1];
-        PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
-    }
+    buf[0] = Seg_L + Sound_Extrapol[VDP_Current_Line][0];
+    buf[1] = Seg_R + Sound_Extrapol[VDP_Current_Line][0];
+    YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
+    PWM_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
+    PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
 
     i = Cycles_M68K + p_i;
     j = Cycles_MSH2 + p_j;
@@ -1903,15 +1854,11 @@ int Do_32X_Frame(bool fast)
 
     for (VDP_Current_Line++; VDP_Current_Line < VDP_Num_Lines; VDP_Current_Line++)
     {
-        if (!disableSound)
-        {
-            buf[0] = LeftAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
-            buf[1] = RightAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
-            YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
-            PWM_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
-            YM_Len += Sound_Extrapol[VDP_Current_Line][1];
-            PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
-        }
+      buf[0] = Seg_L + Sound_Extrapol[VDP_Current_Line][0];
+      buf[1] = Seg_R + Sound_Extrapol[VDP_Current_Line][0];
+      YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
+      PWM_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
+      PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
 
         i = Cycles_M68K + (p_i * 2);
         j = Cycles_MSH2 + (p_j * 2);
@@ -1965,11 +1912,8 @@ int Do_32X_Frame(bool fast)
         else z80_Set_Odo(&M_Z80, Cycles_Z80);
     }
 
-    if (!disableSound)
-    {
-        PSG_Special_Update();
-        YM2612_Special_Update();
-    }
+    PSG_Special_Update();
+    YM2612_Special_Update();
 
     if (!fast)
         Update_RAM_Search();
@@ -2110,24 +2054,21 @@ int Init_SegaCD(char *iso_name)
 
     if (CPU_Mode)
     {
-        YM2612_Init(CLOCK_PAL / 7, Sound_Rate, YM2612_Improv);
+        YM2612_Init(CLOCK_PAL / 7, Sound_Rate, 1);
         PSG_Init(CLOCK_PAL / 15, Sound_Rate);
     }
     else
     {
-        YM2612_Init(CLOCK_NTSC / 7, Sound_Rate, YM2612_Improv);
+        YM2612_Init(CLOCK_NTSC / 7, Sound_Rate, 1);
         PSG_Init(CLOCK_NTSC / 15, Sound_Rate);
     }
 
     Init_PCM(Sound_Rate);
 
-    if (Sound_Enable)
-    {
-        End_Sound();
+    End_Sound();
 
-        if (!Init_Sound(HWnd)) Sound_Enable = 0;
-        else Play_Sound();
-    }
+    Init_Sound(HWnd);
+    Play_Sound();
 
     Load_BRAM();				// Initialise BRAM
     Load_Patch_File();			// Only used to reset Patch structure
@@ -2255,13 +2196,6 @@ int Do_SegaCD_Frame(bool fast)
 
     CPL_S68K = 795;
 
-    if (!disableSound)
-    {
-        YM_Buf[0] = PSG_Buf[0] = LeftAudioBuffer();
-        YM_Buf[1] = PSG_Buf[1] = RightAudioBuffer();
-    }
-    YM_Len = PSG_Len = 0;
-
     Cycles_S68K = Cycles_M68K = Cycles_Z80 = 0;
     Last_BUS_REQ_Cnt = -1000;
     main68k_tripOdometer();
@@ -2284,15 +2218,11 @@ int Do_SegaCD_Frame(bool fast)
 
     for (VDP_Current_Line = 0; VDP_Current_Line < VDP_Num_Vis_Lines; VDP_Current_Line++)
     {
-        if (!disableSound)
-        {
-            buf[0] = LeftAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
-            buf[1] = RightAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
-            if (PCM_Enable) Update_PCM(buf, Sound_Extrapol[VDP_Current_Line][1]);
-            YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
-            YM_Len += Sound_Extrapol[VDP_Current_Line][1];
-            PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
-        }
+      buf[0] = Seg_L + Sound_Extrapol[VDP_Current_Line][0];
+      buf[1] = Seg_R + Sound_Extrapol[VDP_Current_Line][0];
+      if (PCM_Enable) Update_PCM(buf, Sound_Extrapol[VDP_Current_Line][1]);
+      YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
+      PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
         Update_CDC_TRansfert();
 
         Fix_Controllers();
@@ -2328,15 +2258,11 @@ int Do_SegaCD_Frame(bool fast)
         Render_MD_Screen();
     }
 
-    if (!disableSound)
-    {
-        buf[0] = LeftAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
-        buf[1] = RightAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
-        if (PCM_Enable) Update_PCM(buf, Sound_Extrapol[VDP_Current_Line][1]);
-        YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
-        YM_Len += Sound_Extrapol[VDP_Current_Line][1];
-        PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
-    }
+    buf[0] = Seg_L + Sound_Extrapol[VDP_Current_Line][0];
+    buf[1] = Seg_R + Sound_Extrapol[VDP_Current_Line][0];
+    if (PCM_Enable) Update_PCM(buf, Sound_Extrapol[VDP_Current_Line][1]);
+    YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
+    PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
     Update_CDC_TRansfert();
 
     Fix_Controllers();
@@ -2371,15 +2297,11 @@ int Do_SegaCD_Frame(bool fast)
 
     for (VDP_Current_Line++; VDP_Current_Line < VDP_Num_Lines; VDP_Current_Line++)
     {
-        if (!disableSound)
-        {
-            buf[0] = LeftAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
-            buf[1] = RightAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
-            if (PCM_Enable) Update_PCM(buf, Sound_Extrapol[VDP_Current_Line][1]);
-            YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
-            YM_Len += Sound_Extrapol[VDP_Current_Line][1];
-            PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
-        }
+      buf[0] = Seg_L + Sound_Extrapol[VDP_Current_Line][0];
+      buf[1] = Seg_R + Sound_Extrapol[VDP_Current_Line][0];
+      if (PCM_Enable) Update_PCM(buf, Sound_Extrapol[VDP_Current_Line][1]);
+      YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
+      PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
         Update_CDC_TRansfert();
 
         Fix_Controllers();
@@ -2399,15 +2321,12 @@ int Do_SegaCD_Frame(bool fast)
         Update_SegaCD_Timer();
     }
 
-    if (!disableSound)
-    {
-        buf[0] = LeftAudioBuffer();
-        buf[1] = RightAudioBuffer();
+    buf[0] = Seg_L;
+    buf[1] = Seg_R;
 
-        PSG_Special_Update();
-        YM2612_Special_Update();
-        Update_CD_Audio(buf, Seg_Length);
-    }
+    PSG_Special_Update();
+    YM2612_Special_Update();
+    Update_CD_Audio(buf, Seg_Length);
 
     if (!fast)
         Update_RAM_Search();
@@ -2437,13 +2356,6 @@ int Do_SegaCD_Frame_Cycle_Accurate(bool fast)
 
     CPL_S68K = 795;
 
-    if (!disableSound)
-    {
-        YM_Buf[0] = PSG_Buf[0] = LeftAudioBuffer();
-        YM_Buf[1] = PSG_Buf[1] = RightAudioBuffer();
-    }
-    YM_Len = PSG_Len = 0;
-
     Cycles_S68K = Cycles_M68K = Cycles_Z80 = 0;
     Last_BUS_REQ_Cnt = -1000;
     main68k_tripOdometer();
@@ -2466,15 +2378,11 @@ int Do_SegaCD_Frame_Cycle_Accurate(bool fast)
 
     for (VDP_Current_Line = 0; VDP_Current_Line < VDP_Num_Vis_Lines; VDP_Current_Line++)
     {
-        if (!disableSound)
-        {
-            buf[0] = LeftAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
-            buf[1] = RightAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
-            if (PCM_Enable) Update_PCM(buf, Sound_Extrapol[VDP_Current_Line][1]);
-            YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
-            YM_Len += Sound_Extrapol[VDP_Current_Line][1];
-            PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
-        }
+      buf[0] = Seg_L + Sound_Extrapol[VDP_Current_Line][0];
+      buf[1] = Seg_R + Sound_Extrapol[VDP_Current_Line][0];
+      if (PCM_Enable) Update_PCM(buf, Sound_Extrapol[VDP_Current_Line][1]);
+      YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
+      PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
         Update_CDC_TRansfert();
 
         i = Cycles_M68K + 24;
@@ -2549,15 +2457,11 @@ int Do_SegaCD_Frame_Cycle_Accurate(bool fast)
         Render_MD_Screen();
     }
 
-    if (!disableSound)
-    {
-        buf[0] = LeftAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
-        buf[1] = RightAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
-        if (PCM_Enable) Update_PCM(buf, Sound_Extrapol[VDP_Current_Line][1]);
-        YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
-        YM_Len += Sound_Extrapol[VDP_Current_Line][1];
-        PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
-    }
+    buf[0] = Seg_L + Sound_Extrapol[VDP_Current_Line][0];
+    buf[1] = Seg_R + Sound_Extrapol[VDP_Current_Line][0];
+    if (PCM_Enable) Update_PCM(buf, Sound_Extrapol[VDP_Current_Line][1]);
+    YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
+    PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
     Update_CDC_TRansfert();
 
     i = Cycles_M68K + 24;
@@ -2630,15 +2534,11 @@ int Do_SegaCD_Frame_Cycle_Accurate(bool fast)
 
     for (VDP_Current_Line++; VDP_Current_Line < VDP_Num_Lines; VDP_Current_Line++)
     {
-        if (!disableSound)
-        {
-            buf[0] = LeftAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
-            buf[1] = RightAudioBuffer() + Sound_Extrapol[VDP_Current_Line][0];
-            if (PCM_Enable) Update_PCM(buf, Sound_Extrapol[VDP_Current_Line][1]);
-            YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
-            YM_Len += Sound_Extrapol[VDP_Current_Line][1];
-            PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
-        }
+      buf[0] = Seg_L + Sound_Extrapol[VDP_Current_Line][0];
+      buf[1] = Seg_R + Sound_Extrapol[VDP_Current_Line][0];
+      if (PCM_Enable) Update_PCM(buf, Sound_Extrapol[VDP_Current_Line][1]);
+      YM2612_Update(buf, Sound_Extrapol[VDP_Current_Line][1]);
+      PSG_Len += Sound_Extrapol[VDP_Current_Line][1];
         Update_CDC_TRansfert();
 
         i = Cycles_M68K + 24;
@@ -2697,15 +2597,12 @@ int Do_SegaCD_Frame_Cycle_Accurate(bool fast)
         Update_SegaCD_Timer();
     }
 
-    if (!disableSound)
-    {
-        buf[0] = LeftAudioBuffer();
-        buf[1] = RightAudioBuffer();
+    buf[0] = Seg_L;
+    buf[1] = Seg_R;
 
-        PSG_Special_Update();
-        YM2612_Special_Update();
-        Update_CD_Audio(buf, Seg_Length);
-    }
+    PSG_Special_Update();
+    YM2612_Special_Update();
+    Update_CD_Audio(buf, Seg_Length);
 
     if (!fast)
         Update_RAM_Search();

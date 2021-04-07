@@ -45,7 +45,7 @@ int Blit_Soft;
 int Effect_Color = 7;
 int FPS_Style = EMU_MODE | WHITE;
 int Message_Style = EMU_MODE | WHITE | SIZE_X2;
-extern "C" int disableSound, disableSound2, disableRamSearchUpdate;
+extern "C" int disableRamSearchUpdate;
 
 long int MovieSize;//Modif
 int SlowFrame = 0; //Modif
@@ -95,14 +95,13 @@ int Update_Frame_Adjusted()
         // the delay from your computer hardware stacks with the delay from the emulated hardware,
         // so eliminating some of that delay should make it feel closer to the real system
 
-        disableSound2 = true;
         int retval = Update_Frame_Fast();
         Update_RAM_Search();
         disableRamSearchUpdate = true;
         Save_State_To_Buffer(State_Buffer);
         for (int i = 0; i < VideoLatencyCompensation - 1; i++)
             Update_Frame_Fast();
-        disableSound2 = false;
+
         Update_Frame();
         disableRamSearchUpdate = false;
         Load_State_From_Buffer(State_Buffer);
@@ -1362,7 +1361,6 @@ int Update_Emulation(HWND hWnd)
     int prevFrameCount = FrameCount;
 
     static int Over_Time = 0;
-    int current_div;
 
     int Temp_Frame_Skip = Frame_Skip; //Modif N - part of a quick hack to make Tab the fast-forward key
     if (TurboMode)
@@ -1386,15 +1384,12 @@ int Update_Emulation(HWND hWnd)
     }
     if (Temp_Frame_Skip != -1)
     {
-        if (Sound_Enable)
-        {
-            WP = (WP + 1) & (Sound_Segs - 1);
+      WP = (WP + 1) & (Sound_Segs - 1);
 
-            if (WP == Get_Current_Seg())
-                WP = (WP + Sound_Segs - 1) & (Sound_Segs - 1);
+      if (WP == Get_Current_Seg())
+        WP = (WP + Sound_Segs - 1) & (Sound_Segs - 1);
 
-            Write_Sound_Buffer(NULL);
-        }
+      Write_Sound_Buffer(NULL);
         UpdateInput(); //Modif N
         if (MainMovie.Status == MOVIE_RECORDING)	//Modif
             MovieRecordingStuff();
@@ -1417,130 +1412,64 @@ int Update_Emulation(HWND hWnd)
     }
     else
     {
-        if (Sound_Enable)
+      while (WP == Get_Current_Seg()) Sleep(Sleep_Time);
+      RP = Get_Current_Seg();
+      while (WP != RP)
+      {
+        Write_Sound_Buffer(NULL);
+        WP = (WP + 1) & (Sound_Segs - 1);
+        if (SlowDownMode)
         {
-            while (WP == Get_Current_Seg()) Sleep(Sleep_Time);
-            RP = Get_Current_Seg();
-            while (WP != RP)
+          if (SlowFrame)
+            SlowFrame--;
+          else
+          {
+            SlowFrame = SlowDownSpeed;
+            UpdateInput(); //Modif N
+            if (MainMovie.Status == MOVIE_RECORDING)	//Modif
+              MovieRecordingStuff();
+            FrameCount++; //Modif
+
+            // note: we check for RamSearchHWnd because if it's open then it's likely causing most of any slowdown we get, in which case skipping renders will only make the slowdown appear worse
+            if (WP != RP && Never_Skip_Frame == 0 && !Dont_Skip_Next_Frame && !(RamSearchHWnd || RamWatchHWnd))
             {
-                Write_Sound_Buffer(NULL);
-                WP = (WP + 1) & (Sound_Segs - 1);
-                if (SlowDownMode)
-                {
-                    if (SlowFrame)
-                        SlowFrame--;
-                    else
-                    {
-                        SlowFrame = SlowDownSpeed;
-                        UpdateInput(); //Modif N
-                        if (MainMovie.Status == MOVIE_RECORDING)	//Modif
-                            MovieRecordingStuff();
-                        FrameCount++; //Modif
-
-                        // note: we check for RamSearchHWnd because if it's open then it's likely causing most of any slowdown we get, in which case skipping renders will only make the slowdown appear worse
-                        if (WP != RP && Never_Skip_Frame == 0 && !Dont_Skip_Next_Frame && !(RamSearchHWnd || RamWatchHWnd))
-                        {
-                            Lag_Frame = 1;
-                            Update_Frame_Fast_Hook();
-                            UpdateLagCount();
-                        }
-                        else
-                        {
-                            Lag_Frame = 1;
-                            Update_Frame_Hook();
-                            UpdateLagCount();
-                            Flip(hWnd);
-                        }
-                    }
-                }
-                else
-                {
-                    UpdateInput(); //Modif N
-                    if (MainMovie.Status == MOVIE_RECORDING)	//Modif
-                        MovieRecordingStuff();
-                    FrameCount++; //Modif
-
-                    if (WP != RP && Never_Skip_Frame == 0 && !Dont_Skip_Next_Frame && !(RamSearchHWnd || RamWatchHWnd))
-                    {
-                        Lag_Frame = 1;
-                        Update_Frame_Fast_Hook();
-                        UpdateLagCount();
-                    }
-                    else
-                    {
-                        Lag_Frame = 1;
-                        Update_Frame_Hook();
-                        UpdateLagCount();
-                        Flip(hWnd);
-                    }
-                }
-                if (Never_Skip_Frame || Dont_Skip_Next_Frame)
-                    WP = RP;
+              Lag_Frame = 1;
+              Update_Frame_Fast_Hook();
+              UpdateLagCount();
             }
+            else
+            {
+              Lag_Frame = 1;
+              Update_Frame_Hook();
+              UpdateLagCount();
+              Flip(hWnd);
+            }
+          }
         }
         else
         {
-            if (CPU_Mode) current_div = 20;
-            else current_div = 16 + (Over_Time ^= 1);
+          UpdateInput(); //Modif N
+          if (MainMovie.Status == MOVIE_RECORDING)	//Modif
+            MovieRecordingStuff();
+          FrameCount++; //Modif
 
-            if (SlowDownMode)
-                current_div *= (SlowDownSpeed + 1);
-
-            New_Time = GetTickCount();
-            Used_Time += (New_Time - Last_Time);
-            Frame_Number = Used_Time / current_div;
-            Used_Time %= current_div;
-            Last_Time = New_Time;
-
-            if (Frame_Number > 8) Frame_Number = 8;
-            if ((Never_Skip_Frame != 0 || Dont_Skip_Next_Frame) && Frame_Number > 0)
-                Frame_Number = 1;
-            /*if(SlowDownMode)
-            {
-            if(SlowFrame)
-            {
-            Frame_Number>>=1; //Modif
-            SlowFrame--;
-            }
-            else
-            SlowFrame=SlowDownSpeed;
-            }*/
-
-            for (; Frame_Number > 1; Frame_Number--)
-            {
-                UpdateInput(); //Modif N
-                if (MainMovie.Status == MOVIE_RECORDING)	//Modif
-                    MovieRecordingStuff();
-                FrameCount++; //Modif
-
-                if (Never_Skip_Frame == 0 && !Dont_Skip_Next_Frame)
-                {
-                    Lag_Frame = 1;
-                    Update_Frame_Fast_Hook();
-                    UpdateLagCount();
-                }
-                else
-                {
-                    Lag_Frame = 1;
-                    Update_Frame_Hook();
-                    UpdateLagCount();
-                    Flip(hWnd);
-                }
-            }
-
-            if (Frame_Number)
-            {
-                UpdateInput(); //Modif N
-                if (MainMovie.Status == MOVIE_RECORDING)	//Modif
-                    MovieRecordingStuff();
-                FrameCount++; //Modif
-                Lag_Frame = 1;
-                Update_Frame_Hook();
-                UpdateLagCount();
-                Flip(hWnd);
-            }
-            else Sleep(Sleep_Time);
+          if (WP != RP && Never_Skip_Frame == 0 && !Dont_Skip_Next_Frame && !(RamSearchHWnd || RamWatchHWnd))
+          {
+            Lag_Frame = 1;
+            Update_Frame_Fast_Hook();
+            UpdateLagCount();
+          }
+          else
+          {
+            Lag_Frame = 1;
+            Update_Frame_Hook();
+            UpdateLagCount();
+            Flip(hWnd);
+          }
         }
+        if (Never_Skip_Frame || Dont_Skip_Next_Frame)
+          WP = RP;
+      }
     }
 
     if (Dont_Skip_Next_Frame)
@@ -1551,15 +1480,12 @@ int Update_Emulation(HWND hWnd)
 
 void Update_Emulation_One_Before(HWND hWnd)
 {
-    if (Sound_Enable)
-    {
-        WP = (WP + 1) & (Sound_Segs - 1);
+  WP = (WP + 1) & (Sound_Segs - 1);
 
-        if (WP == Get_Current_Seg())
-            WP = (WP + Sound_Segs - 1) & (Sound_Segs - 1);
+  if (WP == Get_Current_Seg())
+    WP = (WP + Sound_Segs - 1) & (Sound_Segs - 1);
 
-        Write_Sound_Buffer(NULL);
-    }
+  Write_Sound_Buffer(NULL);
     UpdateInput(); //Modif N
     if (MainMovie.Status == MOVIE_RECORDING)	//Modif
         MovieRecordingStuff();
