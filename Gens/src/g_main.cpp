@@ -4609,8 +4609,6 @@ HMENU Build_Main_Menu(void)
         InsertMenu(Sound, i++, Flags | (PWM_Enable ? MF_CHECKED : MF_UNCHECKED),
             ID_SOUND_PWMENABLE, "P&WM");
 
-    InsertMenu(Sound, i++, MF_SEPARATOR, NULL, NULL);
-
     // RATE //
 
     InsertMenu(SoundRate, 0, Flags | (Sound_Rate == 11025 ? MF_CHECKED : MF_UNCHECKED),
