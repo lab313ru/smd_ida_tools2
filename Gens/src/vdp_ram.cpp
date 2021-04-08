@@ -9,8 +9,6 @@
 #include "resource.h"
 #include "gens.h"
 #include "mem_m68k.h"
-#include "mem_s68k.h"
-#include "mem_sh2.h"
 #include "misc.h"
 #include "mem_z80.h"
 #include "vdp_io.h"
@@ -1188,7 +1186,7 @@ LRESULT CALLBACK ButtonsProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
                     ((char*)&VRam)[i ^ 1] = fname[i & 2047];
                 }
                 fclose(in);
-                if (Genesis_Started || _32X_Started || SegaCD_Started)
+                if (Genesis_Started)
                     Show_Genesis_Screen(HWnd);
             }
             return FALSE;

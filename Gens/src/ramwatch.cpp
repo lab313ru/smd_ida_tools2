@@ -1,8 +1,6 @@
 #include "resource.h"
 #include "gens.h"
 #include "mem_m68k.h"
-#include "mem_s68k.h"
-#include "mem_sh2.h"
 #include "misc.h"
 #include "mem_z80.h"
 #include "vdp_io.h"
@@ -410,7 +408,7 @@ void OpenRWRecentFile(int memwRFileNumber)
     char mode;
     fgets(Str_Tmp, 1024, WatchFile);
     sscanf(Str_Tmp, "%c%*s", &mode);
-    if ((mode == '1' && !(SegaCD_Started)) || (mode == '2' && !(_32X_Started)))
+    if ((mode == '1') || (mode == '2'))
     {
         char Device[8];
         strcpy(Device, (mode > '1') ? "32X" : "SegaCD");
@@ -452,7 +450,7 @@ bool Save_Watches()
     {
         FILE *WatchFile = fopen(Str_Tmp, "r+b");
         if (!WatchFile) WatchFile = fopen(Str_Tmp, "w+b");
-        fputc(SegaCD_Started ? '1' : (_32X_Started ? '2' : '0'), WatchFile);
+        fputc('0', WatchFile);
         fputc('\n', WatchFile);
         strcpy(currentWatch, Str_Tmp);
         RWAddRecentFile(currentWatch);
@@ -484,7 +482,7 @@ bool QuickSaveWatches()
     strcpy(Str_Tmp, currentWatch);
     FILE *WatchFile = fopen(Str_Tmp, "r+b");
     if (!WatchFile) WatchFile = fopen(Str_Tmp, "w+b");
-    fputc(SegaCD_Started ? '1' : (_32X_Started ? '2' : '0'), WatchFile);
+    fputc('0', WatchFile);
     fputc('\n', WatchFile);
     sprintf(Str_Tmp, "%d\n", WatchCount);
     fputs(Str_Tmp, WatchFile);
@@ -522,7 +520,7 @@ bool Load_Watches(bool clear, const char* filename)
     char mode;
     fgets(Str_Tmp, 1024, WatchFile);
     sscanf(Str_Tmp, "%c%*s", &mode);
-    if ((mode == '1' && !(SegaCD_Started)) || (mode == '2' && !(_32X_Started)))
+    if ((mode == '1') || (mode == '2'))
     {
         char Device[8];
         strcpy(Device, (mode > '1') ? "32X" : "SegaCD");

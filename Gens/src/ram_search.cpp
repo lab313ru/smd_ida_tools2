@@ -27,8 +27,6 @@
 #include "resource.h"
 #include "gens.h"
 #include "mem_m68k.h"
-#include "mem_s68k.h"
-#include "mem_sh2.h"
 #include "misc.h"
 #include "mem_z80.h"
 #include "vdp_io.h"
@@ -72,12 +70,9 @@ static BOOL s_itemIndicesInvalid = true; // if true, the link from listbox items
 static BOOL s_prevValuesNeedUpdate = true; // if true, the "prev" values should be updated using the "cur" values on the next frame update signaled
 static unsigned int s_maxItemIndex = 0; // max currently valid item index, the listbox sometimes tries to update things past the end of the list so we need to know this to ignore those attempts
 
-static const MemoryRegion s_prgRegion = { 0x020000, SEGACD_RAM_PRG_SIZE, (unsigned char*)Ram_Prg, true };
-static const MemoryRegion s_word1MRegion = { 0x200000, SEGACD_1M_RAM_SIZE, (unsigned char*)Ram_Word_1M, true };
-static const MemoryRegion s_word2MRegion = { 0x200000, SEGACD_2M_RAM_SIZE, (unsigned char*)Ram_Word_2M, true };
 static const MemoryRegion s_z80Region = { 0xA00000, Z80_RAM_SIZE, (unsigned char*)Ram_Z80, true };
 static const MemoryRegion s_68kRegion = { 0xFF0000, _68K_RAM_SIZE, (unsigned char*)Ram_68k, true };
-static const MemoryRegion s_32xRegion = { 0x06000000, _32X_RAM_SIZE, (unsigned char*)_32X_Ram, false };
+
 
 // list of contiguous uneliminated memory regions
 typedef std::list<MemoryRegion> MemoryList;
@@ -99,15 +94,6 @@ void ResetMemoryRegions()
     {
         s_activeMemoryRegions.push_back(s_68kRegion);
         s_activeMemoryRegions.push_back(s_z80Region);
-        if (SegaCD_Started)
-        {
-            s_activeMemoryRegions.push_back(s_prgRegion);
-            s_activeMemoryRegions.push_back((Ram_Word_State & 0x2) ? s_word1MRegion : s_word2MRegion);
-        }
-        if (_32X_Started)
-        {
-            s_activeMemoryRegions.push_back(s_32xRegion);
-        }
     }
 
     int nextVirtualIndex = 0;
@@ -843,14 +829,8 @@ unsigned int ReadValueAtHardwareAddress(unsigned int address, unsigned int size)
         return ReadValueAtSoftwareAddress(Ram_68k + address - 0xFF0000, size, true);
     if (IsInRange(address, 0xA00000, Z80_RAM_SIZE))
         return ReadValueAtSoftwareAddress(Ram_Z80 + address - 0xA00000, size, true);
-    if (SegaCD_Started && IsInRange(address, 0x020000, SEGACD_RAM_PRG_SIZE))
-        return ReadValueAtSoftwareAddress(Ram_Prg + address - 0x020000, size, true);
-    if (SegaCD_Started && IsInRange(address, 0x200000, SEGACD_1M_RAM_SIZE))
-        return ReadValueAtSoftwareAddress(((Ram_Word_State & 0x2) ? Ram_Word_1M : Ram_Word_2M) + address - 0x200000, size, true);
     if (IsInRange(address, 0x0, Rom_Size))
         return ReadValueAtSoftwareAddress(Rom_Data + address, size, true);
-    if (_32X_Started && IsInRange(address, 0x06000000, _32X_RAM_SIZE))
-        return ReadValueAtSoftwareAddress(_32X_Ram + address - 0x06000000, size, false);
     return 0;
 }
 
@@ -996,12 +976,6 @@ bool WriteValueAtHardwareRAMAddress(unsigned int address, unsigned int value, un
         WriteValueAtSoftwareAddress(Ram_68k + address - 0xFF0000, value, size, true);
     else if (IsInRange(address, 0xA00000, Z80_RAM_SIZE))
         WriteValueAtSoftwareAddress(Ram_Z80 + address - 0xA00000, value, size, true);
-    else if (SegaCD_Started && IsInRange(address, 0x020000, SEGACD_RAM_PRG_SIZE))
-        WriteValueAtSoftwareAddress(Ram_Prg + address - 0x020000, value, size, true);
-    else if (SegaCD_Started && IsInRange(address, 0x200000, SEGACD_1M_RAM_SIZE))
-        WriteValueAtSoftwareAddress(((Ram_Word_State & 0x2) ? Ram_Word_1M : Ram_Word_2M) + address - 0x200000, value, size, true);
-    else if (_32X_Started && IsInRange(address, 0x06000000, _32X_RAM_SIZE))
-        WriteValueAtSoftwareAddress(_32X_Ram + address - 0x06000000, value, size, false);
     else return false;
     if (!hookless) // a script that calls e.g. memory.writebyte() should trigger write hooks
         CallRegisteredLuaMemHook(address, size, value, LUAMEMHOOK_WRITE);
@@ -1026,12 +1000,6 @@ bool IsHardwareRAMAddressValid(unsigned int address)
     if (IsInRange(address, 0xFF0000, _68K_RAM_SIZE))
         return true;
     if (IsInRange(address, 0xA00000, Z80_RAM_SIZE))
-        return true;
-    if (SegaCD_Started && IsInRange(address, 0x020000, SEGACD_RAM_PRG_SIZE))
-        return true;
-    if (SegaCD_Started && IsInRange(address, 0x200000, SEGACD_1M_RAM_SIZE))
-        return true;
-    if (_32X_Started && IsInRange(address, 0x06000000, _32X_RAM_SIZE))
         return true;
     return false;
 }

@@ -30,8 +30,6 @@ extern "C" {
 
     extern struct pcm_chip_ PCM_Chip;
     extern unsigned char Ram_PCM[64 * 1024];
-    extern int PCM_Enable;
-    extern unsigned short PCMVol;
 
     int Init_PCM(int Rate);
     void Set_Rate_PCM(int Rate);

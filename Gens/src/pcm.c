@@ -10,7 +10,6 @@
 
 #include <stdio.h>
 #include "pcm.h"
-#include "cd_sys.h"
 #include "star_68k.h"
 #include "mem_m68k.h"
 #include <memory.h>
@@ -20,8 +19,6 @@
 struct pcm_chip_ PCM_Chip;
 unsigned char Ram_PCM[64 * 1024];
 int PCM_Volume_Tab[256 * 256];
-int PCM_Enable;
-unsigned short PCMVol = 256;
 
 /* initialise the pcm chip */
 int Init_PCM(int Rate)
@@ -367,14 +364,14 @@ int Update_PCM(int **buf, int Length)
                     if (Ram_PCM[Addr] & 0x80)
                     {
                         CH->Data = Ram_PCM[Addr] & 0x7F;
-                        bufL[j] -= (int)(((CH->Data * CH->MUL_L) * PCMVol) >> 8);
-                        bufR[j] -= (int)(((CH->Data * CH->MUL_R) * PCMVol) >> 8);
+                        bufL[j] -= (int)(CH->Data * CH->MUL_L);
+                        bufR[j] -= (int)(CH->Data * CH->MUL_R);
                     }
                     else
                     {
                         CH->Data = Ram_PCM[Addr];
-                        bufL[j] += (int)(((CH->Data * CH->MUL_L) * PCMVol) >> 8);
-                        bufR[j] += (int)(((CH->Data * CH->MUL_R) * PCMVol) >> 8);
+                        bufL[j] += (int)(CH->Data * CH->MUL_L);
+                        bufR[j] += (int)(CH->Data * CH->MUL_R);
                     }
 
                     // update address register

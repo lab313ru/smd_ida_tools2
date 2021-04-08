@@ -2149,27 +2149,6 @@ registerPointerMap m68kPointerMap[] = {
     RPM_ENTRY("sr", main68k_context.sr)
     {}
 };
-registerPointerMap s68kPointerMap[] = {
-    RPM_ENTRY("a0", sub68k_context.areg[0])
-    RPM_ENTRY("a1", sub68k_context.areg[1])
-    RPM_ENTRY("a2", sub68k_context.areg[2])
-    RPM_ENTRY("a3", sub68k_context.areg[3])
-    RPM_ENTRY("a4", sub68k_context.areg[4])
-    RPM_ENTRY("a5", sub68k_context.areg[5])
-    RPM_ENTRY("a6", sub68k_context.areg[6])
-    RPM_ENTRY("a7", sub68k_context.areg[7])
-    RPM_ENTRY("d0", sub68k_context.dreg[0])
-    RPM_ENTRY("d1", sub68k_context.dreg[1])
-    RPM_ENTRY("d2", sub68k_context.dreg[2])
-    RPM_ENTRY("d3", sub68k_context.dreg[3])
-    RPM_ENTRY("d4", sub68k_context.dreg[4])
-    RPM_ENTRY("d5", sub68k_context.dreg[5])
-    RPM_ENTRY("d6", sub68k_context.dreg[6])
-    RPM_ENTRY("d7", sub68k_context.dreg[7])
-    RPM_ENTRY("pc", sub68k_context.pc)
-    RPM_ENTRY("sr", sub68k_context.sr)
-    {}
-};
 
 struct cpuToRegisterMap
 {
@@ -2180,8 +2159,6 @@ cpuToRegisterMaps[] =
 {
     { "m68k.", m68kPointerMap },
     { "main.", m68kPointerMap },
-    { "s68k.", s68kPointerMap },
-    { "sub.", s68kPointerMap },
     { "", m68kPointerMap },
 };
 
@@ -2262,8 +2239,6 @@ DEFINE_LUA_FUNCTION(state_create, "[location]")
     }
 
     int len = GENESIS_STATE_LENGTH;
-    if (SegaCD_Started) len += SEGACD_LENGTH_EX;
-    if (_32X_Started) len += G32X_LENGTH_EX;
     if (!Game)
         len += max(SEGACD_LENGTH_EX, G32X_LENGTH_EX);
 
@@ -3484,10 +3459,6 @@ DEFINE_LUA_FUNCTION(gens_hardreset, "")
 
     if (Genesis_Started)
         Reset_Genesis();
-    else if (_32X_Started)
-        Reset_32X();
-    else if (SegaCD_Started)
-        Reset_SegaCD();
 
     FrameCount = 0;
     LagCount = 0;
@@ -3512,7 +3483,7 @@ DEFINE_LUA_FUNCTION(gens_lagged, "")
 }
 DEFINE_LUA_FUNCTION(gens_emulating, "")
 {
-    lua_pushboolean(L, (Genesis_Started || _32X_Started || SegaCD_Started));
+    lua_pushboolean(L, (Genesis_Started));
     return 1;
 }
 DEFINE_LUA_FUNCTION(gens_atframeboundary, "")

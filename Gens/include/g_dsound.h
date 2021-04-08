@@ -27,8 +27,6 @@ extern "C" {
 
     extern char Dump_Dir[1024];
 
-    extern unsigned short MastVol;
-
     int Init_Sound(HWND hWnd);
     void End_Sound(void);
     int Get_Current_Seg(void);

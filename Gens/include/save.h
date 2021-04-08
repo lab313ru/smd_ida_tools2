@@ -25,7 +25,6 @@ extern "C" {
 
     extern char State_Dir[1024];
     extern char SRAM_Dir[1024];
-    extern char BRAM_Dir[1024];
     extern unsigned short FrameBuffer[336 * 240];
     extern unsigned int FrameBuffer32[336 * 240];
 
@@ -48,10 +47,6 @@ extern "C" {
     int Save_State(char *Name);
     int Import_Genesis(unsigned char *Data);
     void Export_Genesis(unsigned char *Data);
-    int Import_SegaCD(unsigned char *Data);
-    void Export_SegaCD(unsigned char *Data);
-    int Import_32X(unsigned char *Data);
-    void Export_32X(unsigned char *Data);
     int Save_Config(char *File_Name);
     int Save_As_Config(HWND hWnd);
     int Load_Config(char *File_Name, void *Game_Active);
@@ -60,9 +55,6 @@ extern "C" {
     int Load_SRAMFromBuf(char *buf);
     int Save_SRAM(void);
     int Save_SRAMToBuf(char *buf);
-    int Load_BRAM(void);
-    int Save_BRAM(void);
-    void Format_Backup_Ram(void);
 
 #ifdef __cplusplus
 };

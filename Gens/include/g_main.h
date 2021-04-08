@@ -34,7 +34,6 @@ extern "C" {
     extern int Setting_Render;
     extern int Show_FPS;
     extern int Show_Message;
-    extern int Show_LED;
     extern int Auto_Pause;
     extern int Auto_Fix_CS;
     extern int Country;
@@ -42,7 +41,6 @@ extern "C" {
     extern int WinNT_Flag;
     extern int Gens_Priority;
     extern int Intro_Style;
-    extern int SegaCD_Accurate;
     extern int DialogsOpen;
     extern int SlowDownMode; //Modif
     extern int VideoLatencyCompensation; // Modif N.

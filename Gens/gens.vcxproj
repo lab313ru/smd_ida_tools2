@@ -103,15 +103,6 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug7|Win32'">nasm\nasm.exe -i%(RootDir)%(Directory) "%(FullPath)" -f win32 -o "$(IntDir)%(Filename).obj" -w-orphan-labels</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release7|Win32'">nasm\nasm.exe -i%(RootDir)%(Directory) "%(FullPath)" -f win32 -o "$(IntDir)%(Filename).obj" -w-orphan-labels</Command>
     </CustomBuild>
-    <CustomBuild Include="asm\gfx_cd.asm">
-      <FileType>Document</FileType>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug7|Win32'">Assembling %(Filename).asm</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release7|Win32'">Assembling %(Filename).asm</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug7|Win32'">$(IntDir)%(Filename).obj;%(Outputs)</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release7|Win32'">$(IntDir)%(Filename).obj;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug7|Win32'">nasm\nasm.exe -i%(RootDir)%(Directory) "%(FullPath)" -f win32 -o "$(IntDir)%(Filename).obj" -w-orphan-labels</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release7|Win32'">nasm\nasm.exe -i%(RootDir)%(Directory) "%(FullPath)" -f win32 -o "$(IntDir)%(Filename).obj" -w-orphan-labels</Command>
-    </CustomBuild>
     <CustomBuild Include="asm\io.asm">
       <FileType>Document</FileType>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug7|Win32'">Assembling %(Filename).asm</Message>
@@ -130,24 +121,6 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug7|Win32'">nasm\nasm.exe -i%(RootDir)%(Directory) "%(FullPath)" -f win32 -o "$(IntDir)%(Filename).obj" -w-orphan-labels</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release7|Win32'">nasm\nasm.exe -i%(RootDir)%(Directory) "%(FullPath)" -f win32 -o "$(IntDir)%(Filename).obj" -w-orphan-labels</Command>
     </CustomBuild>
-    <CustomBuild Include="asm\mem_s68k.asm">
-      <FileType>Document</FileType>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug7|Win32'">Assembling %(Filename).asm</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release7|Win32'">Assembling %(Filename).asm</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug7|Win32'">$(IntDir)%(Filename).obj;%(Outputs)</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release7|Win32'">$(IntDir)%(Filename).obj;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug7|Win32'">nasm\nasm.exe -i%(RootDir)%(Directory) "%(FullPath)" -f win32 -o "$(IntDir)%(Filename).obj" -w-orphan-labels</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release7|Win32'">nasm\nasm.exe -i%(RootDir)%(Directory) "%(FullPath)" -f win32 -o "$(IntDir)%(Filename).obj" -w-orphan-labels</Command>
-    </CustomBuild>
-    <CustomBuild Include="asm\mem_sh2.asm">
-      <FileType>Document</FileType>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug7|Win32'">Assembling %(Filename).asm</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release7|Win32'">Assembling %(Filename).asm</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug7|Win32'">$(IntDir)%(Filename).obj;%(Outputs)</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release7|Win32'">$(IntDir)%(Filename).obj;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug7|Win32'">nasm\nasm.exe -i%(RootDir)%(Directory) "%(FullPath)" -f win32 -o "$(IntDir)%(Filename).obj" -w-orphan-labels</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release7|Win32'">nasm\nasm.exe -i%(RootDir)%(Directory) "%(FullPath)" -f win32 -o "$(IntDir)%(Filename).obj" -w-orphan-labels</Command>
-    </CustomBuild>
     <CustomBuild Include="asm\mem_z80.asm">
       <FileType>Document</FileType>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug7|Win32'">Assembling %(Filename).asm</Message>
@@ -158,33 +131,6 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release7|Win32'">nasm\nasm.exe -i%(RootDir)%(Directory) "%(FullPath)" -f win32 -o "$(IntDir)%(Filename).obj" -w-orphan-labels</Command>
     </CustomBuild>
     <CustomBuild Include="asm\misc.asm">
-      <FileType>Document</FileType>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug7|Win32'">Assembling %(Filename).asm</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release7|Win32'">Assembling %(Filename).asm</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug7|Win32'">$(IntDir)%(Filename).obj;%(Outputs)</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release7|Win32'">$(IntDir)%(Filename).obj;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug7|Win32'">nasm\nasm.exe -i%(RootDir)%(Directory) "%(FullPath)" -f win32 -o "$(IntDir)%(Filename).obj" -w-orphan-labels</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release7|Win32'">nasm\nasm.exe -i%(RootDir)%(Directory) "%(FullPath)" -f win32 -o "$(IntDir)%(Filename).obj" -w-orphan-labels</Command>
-    </CustomBuild>
-    <CustomBuild Include="asm\pwm_asm.asm">
-      <FileType>Document</FileType>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug7|Win32'">Assembling %(Filename).asm</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release7|Win32'">Assembling %(Filename).asm</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug7|Win32'">$(IntDir)%(Filename).obj;%(Outputs)</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release7|Win32'">$(IntDir)%(Filename).obj;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug7|Win32'">nasm\nasm.exe -i%(RootDir)%(Directory) "%(FullPath)" -f win32 -o "$(IntDir)%(Filename).obj" -w-orphan-labels</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release7|Win32'">nasm\nasm.exe -i%(RootDir)%(Directory) "%(FullPath)" -f win32 -o "$(IntDir)%(Filename).obj" -w-orphan-labels</Command>
-    </CustomBuild>
-    <CustomBuild Include="asm\sh2a.asm">
-      <FileType>Document</FileType>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug7|Win32'">Assembling %(Filename).asm</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release7|Win32'">Assembling %(Filename).asm</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug7|Win32'">$(IntDir)%(Filename).obj;%(Outputs)</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release7|Win32'">$(IntDir)%(Filename).obj;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug7|Win32'">nasm\nasm.exe -i%(RootDir)%(Directory) "%(FullPath)" -f win32 -o "$(IntDir)%(Filename).obj" -w-orphan-labels</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release7|Win32'">nasm\nasm.exe -i%(RootDir)%(Directory) "%(FullPath)" -f win32 -o "$(IntDir)%(Filename).obj" -w-orphan-labels</Command>
-    </CustomBuild>
-    <CustomBuild Include="asm\vdp_32x.asm">
       <FileType>Document</FileType>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug7|Win32'">Assembling %(Filename).asm</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release7|Win32'">Assembling %(Filename).asm</Message>
@@ -254,20 +200,9 @@
     <ClCompile Include="lua\src\lundump.c" />
     <ClCompile Include="lua\src\lvm.c" />
     <ClCompile Include="lua\src\lzio.c" />
-    <ClCompile Include="mp3_dec\common.c" />
-    <ClCompile Include="mp3_dec\dct64_i386.c" />
-    <ClCompile Include="mp3_dec\decode_i386.c" />
-    <ClCompile Include="mp3_dec\interface.c" />
-    <ClCompile Include="mp3_dec\layer3.c" />
-    <ClCompile Include="mp3_dec\tabinit.c" />
     <ClCompile Include="src\cblit.cpp" />
-    <ClCompile Include="src\cdda_mp3.cpp" />
-    <ClCompile Include="src\cd_aspi.cpp" />
-    <ClCompile Include="src\cd_file.c" />
-    <ClCompile Include="src\cd_sys.c" />
     <ClCompile Include="src\corehooks.cpp" />
     <ClCompile Include="src\cpu_68k.c" />
-    <ClCompile Include="src\cpu_sh2.c" />
     <ClCompile Include="src\cpu_z80.c" />
     <ClCompile Include="src\debugwindow.cpp" />
     <ClCompile Include="src\drawutil.cpp" />
@@ -280,7 +215,6 @@
     <ClCompile Include="src\g_dsound.cpp" />
     <ClCompile Include="src\g_main.cpp" />
     <ClCompile Include="src\hexeditor.cpp" />
-    <ClCompile Include="src\lc89510.c" />
     <ClCompile Include="src\luascript.cpp" />
     <ClCompile Include="src\luascript_window.cpp" />
     <ClCompile Include="src\m68k_debugwindow.cpp" />
@@ -289,14 +223,11 @@
     <ClCompile Include="src\pcm.c" />
     <ClCompile Include="src\plane_explorer_kmod.cpp" />
     <ClCompile Include="src\psg.c" />
-    <ClCompile Include="src\pwm.c" />
     <ClCompile Include="src\ramwatch.cpp" />
     <ClCompile Include="src\ram_search.cpp" />
     <ClCompile Include="src\rom.cpp" />
     <ClCompile Include="src\save.cpp" />
-    <ClCompile Include="src\sh2.c" />
     <ClCompile Include="src\tracer.cpp" />
-    <ClCompile Include="src\tracer_cd.cpp" />
     <ClCompile Include="src\vdp_ram.cpp" />
     <ClCompile Include="src\vdp_sprites.cpp" />
     <ClCompile Include="src\wave.c" />
@@ -322,19 +253,12 @@
     <ClInclude Include="..\gen-cpp\DbgServer.h" />
     <ClInclude Include="..\gen-cpp\debug_proto_types.h" />
     <ClInclude Include="include\blit.h" />
-    <ClInclude Include="include\cdda_lp7.h" />
-    <ClInclude Include="include\cdda_mp3.h" />
-    <ClInclude Include="include\cd_aspi.h" />
-    <ClInclude Include="include\cd_file.h" />
-    <ClInclude Include="include\cd_sys.h" />
     <ClInclude Include="include\corehooks.h" />
     <ClInclude Include="include\cpu_68k.h" />
-    <ClInclude Include="include\cpu_sh2.h" />
     <ClInclude Include="include\cpu_z80.h" />
     <ClInclude Include="include\debugwindow.h" />
     <ClInclude Include="include\drawutil.h" />
     <ClInclude Include="include\gens.h" />
-    <ClInclude Include="include\gfx_cd.h" />
     <ClInclude Include="include\ggenie.h" />
     <ClInclude Include="include\gm2_structs.h" />
     <ClInclude Include="include\guidraw.h" />
@@ -345,12 +269,9 @@
     <ClInclude Include="include\hexeditor.h" />
     <ClInclude Include="include\joypads.h" />
     <ClInclude Include="include\keycode.h" />
-    <ClInclude Include="include\lc89510.h" />
     <ClInclude Include="include\luascript.h" />
     <ClInclude Include="include\m68k_debugwindow.h" />
     <ClInclude Include="include\mem_m68k.h" />
-    <ClInclude Include="include\mem_s68k.h" />
-    <ClInclude Include="include\mem_sh2.h" />
     <ClInclude Include="include\mem_z80.h" />
     <ClInclude Include="include\misc.h" />
     <ClInclude Include="include\movie.h" />
@@ -361,18 +282,15 @@
     <ClInclude Include="include\pngasmrd.h" />
     <ClInclude Include="include\pngconf.h" />
     <ClInclude Include="include\psg.h" />
-    <ClInclude Include="include\pwm.h" />
     <ClInclude Include="include\ramwatch.h" />
     <ClInclude Include="include\ram_dump.h" />
     <ClInclude Include="include\ram_search.h" />
     <ClInclude Include="include\resource.h" />
     <ClInclude Include="include\rom.h" />
     <ClInclude Include="include\save.h" />
-    <ClInclude Include="include\sh2.h" />
     <ClInclude Include="include\star_68k.h" />
     <ClInclude Include="include\tracer.h" />
     <ClInclude Include="include\unzip.h" />
-    <ClInclude Include="include\vdp_32x.h" />
     <ClInclude Include="include\vdp_io.h" />
     <ClInclude Include="include\vdp_ram.h" />
     <ClInclude Include="include\vdp_rend.h" />
@@ -425,15 +343,6 @@
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="asm\main68k.asm">
-      <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug7|Win32'">nasm\nasm.exe -i%(RootDir)%(Directory) "%(FullPath)" -f win32 -o "$(IntDir)%(Filename).obj" -w-orphan-labels</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release7|Win32'">nasm\nasm.exe -i%(RootDir)%(Directory) "%(FullPath)" -f win32 -o "$(IntDir)%(Filename).obj" -w-orphan-labels</Command>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug7|Win32'">Assembling %(Filename).asm</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release7|Win32'">Assembling %(Filename).asm</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug7|Win32'">$(IntDir)%(Filename).obj;%(Outputs)</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release7|Win32'">$(IntDir)%(Filename).obj;%(Outputs)</Outputs>
-    </CustomBuild>
-    <CustomBuild Include="asm\sub68k.asm">
       <FileType>Document</FileType>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug7|Win32'">nasm\nasm.exe -i%(RootDir)%(Directory) "%(FullPath)" -f win32 -o "$(IntDir)%(Filename).obj" -w-orphan-labels</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release7|Win32'">nasm\nasm.exe -i%(RootDir)%(Directory) "%(FullPath)" -f win32 -o "$(IntDir)%(Filename).obj" -w-orphan-labels</Command>

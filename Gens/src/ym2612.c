@@ -171,9 +171,6 @@ int INTER_TAB[MAX_UPDATE_LENGTH];           // Interpolation table
 
 int LFO_INC_TAB[8];                         // LFO step table
 
-unsigned short YM2612Vol = 256;
-unsigned short DACVol = 256;
-
 void (*UPDATE_CHAN[8 * 8])(channel_ *CH, int **buf, int lenght) =        // Update Channel functions pointer table
 {
     Update_Chan_Algo0,

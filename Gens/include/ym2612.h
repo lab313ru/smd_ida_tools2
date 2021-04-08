@@ -102,11 +102,6 @@ extern "C" {
     } ym2612_;
     extern struct ym2612__ YM2612;
 
-    /* Gens */
-
-    extern unsigned short YM2612Vol;
-    extern unsigned short DACVol;
-
     /* end */
 
     int YM2612_Init(int clock, int rate, int interpolation);

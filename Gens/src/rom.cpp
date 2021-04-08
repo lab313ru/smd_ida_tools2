@@ -10,15 +10,12 @@
 #include "gens.h"
 #include "ggenie.h"
 #include "cpu_68k.h"
-#include "cd_sys.h"
 #include "mem_m68k.h"
-#include "mem_sh2.h"
 #include "vdp_io.h"
 #include "save.h"
 #include "misc.h"
 #include "unzip.h"
 #include "wave.h"
-#include "cd_file.h"
 #include "luascript.h"
 #include <assert.h>
 
@@ -28,12 +25,6 @@ char Rom_Name[512];
 char Rom_Dir[1024];
 char IPS_Dir[1024];
 char Recent_Rom[MAX_RECENT_ROMS][1024];
-char US_CD_Bios[1024];
-char EU_CD_Bios[1024];
-char JA_CD_Bios[1024];
-char _32X_Genesis_Bios[1024];
-char _32X_Master_Bios[1024];
-char _32X_Slave_Bios[1024];
 char Genesis_Bios[1024];
 
 void Get_Name_From_Path(char *Full_Path, char *Name)
@@ -167,15 +158,6 @@ int Detect_Format(char *FileName)
     SetCurrentDirectory(Gens_Path);
 
     size_t Name_len = strlen(Name);
-    if (Name_len > 3 && (!stricmp("CUE", &Name[Name_len - 3])))
-    {
-        char isoname[1024];
-        isoname[0] = 0;
-        Get_CUE_ISO_Filename(isoname, 1024, Name);
-        size_t isoname_len = strlen(isoname);
-        if (isoname[0] && !(isoname_len > 3 && (!stricmp("CUE", &isoname[isoname_len - 3]))))
-            return Detect_Format(isoname);
-    }
 
     char buf[1024] = { 0 };
     {
@@ -185,9 +167,6 @@ int Detect_Format(char *FileName)
         fclose(f);
     }
 
-    if (!strnicmp("SEGADISCSYSTEM", &buf[0x00], 14)) return SEGACD_IMAGE;		// Sega CD (ISO)
-    if (!strnicmp("SEGADISCSYSTEM", &buf[0x10], 14)) return SEGACD_IMAGE + 1;	// Sega CD (BIN)
-
     i = 0;
 
     if (strnicmp("SEGA", &buf[0x100], 4))
@@ -196,17 +175,6 @@ int Detect_Format(char *FileName)
 
         if (!strnicmp("EA", &buf[0x200 + (0x100 / 2)], 2)) i = 1;
         if ((buf[0x08] == 0xAA) && (buf[0x09] == 0xBB) && (buf[0x0A] == 0x06)) i = 1;
-    }
-
-    if (i)		// interleaved
-    {
-        if ((!strnicmp("32X", &Name[strlen(Name) - 3], 3)) && (buf[0x200 / 2] == 0x4E)) return _32X_ROM + 1;
-        if (!strnicmp("3X", &buf[0x200 + (0x105 / 2)], 2)) return _32X_ROM + 1;
-    }
-    else
-    {
-        if ((!strnicmp("32X", &Name[strlen(Name) - 3], 3)) && (buf[0x200] == 0x4E)) return _32X_ROM;
-        if (!strnicmp("32X", &buf[0x105], 3)) return _32X_ROM;
     }
 
     return GENESIS_ROM + i;
@@ -417,21 +385,6 @@ int Get_Rom(HWND hWnd)
         Build_Main_Menu();
         return Genesis_Started ? 1 : -1;
         break;
-
-    case 2:		// 32X rom
-        if (Game) _32X_Started = Init_32X(Game);
-        Build_Main_Menu();
-        return _32X_Started ? 1 : -1;
-        break;
-
-    case 3:		// Sega CD image
-        SegaCD_Started = Init_SegaCD(PhysicalName);
-        Build_Main_Menu();
-        return SegaCD_Started ? 1 : -1;
-        break;
-
-    case 4:		// Sega CD 32X image
-        break;
     }
 
     return -1;
@@ -472,21 +425,6 @@ int Pre_Load_Rom(HWND hWnd, const char *NameTemp)
         if (Game) Genesis_Started = Init_Genesis(Game);
         Build_Main_Menu();
         return Genesis_Started ? 1 : -1;
-        break;
-
-    case 2:		// 32X rom
-        if (Game) _32X_Started = Init_32X(Game);
-        Build_Main_Menu();
-        return _32X_Started ? 1 : -1;
-        break;
-
-    case 3:		// Sega CD image
-        SegaCD_Started = Init_SegaCD(PhysicalName);
-        Build_Main_Menu();
-        return SegaCD_Started ? 1 : -1;
-        break;
-
-    case 4:		// Sega CD 32X image
         break;
     }
 
@@ -589,8 +527,6 @@ void Fix_Checksum(void)
     {
         Rom_Data[0x18E] = checks & 0xFF;
         Rom_Data[0x18F] = checks >> 8;
-        _32X_Rom[0x18E] = checks >> 8;;
-        _32X_Rom[0x18F] = checks & 0xFF;
     }
 }
 
@@ -687,13 +623,9 @@ void Free_Rom(Rom *Rom_MD)
     CC_Close();
 #endif
 
-    if (SegaCD_Started) Save_BRAM();
     Save_SRAM();
     Save_Patch_File();
-    if (SegaCD_Started) Stop_CD();
     Genesis_Started = 0;
-    _32X_Started = 0;
-    SegaCD_Started = 0;
     Game = NULL;
 
     if (Rom_MD)

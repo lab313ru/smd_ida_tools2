@@ -25,7 +25,6 @@ extern "C" {
 
     extern int *PSG_Buf[2];
     extern int PSG_Len;
-    extern unsigned short PSGVol;
     /* end */
 
     void PSG_Write(int data);

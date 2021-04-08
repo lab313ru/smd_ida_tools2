@@ -48,8 +48,6 @@ extern "C" {
     //extern unsigned int Spr_Link[256]; // not really
     extern int H_Pix_Begin;
     extern int Genesis_Started;
-    extern int SegaCD_Started;
-    extern int _32X_Started;
 
     extern struct Reg_VDP_Type VDP_Reg;
     extern int VDP_Current_Line;

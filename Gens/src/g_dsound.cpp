@@ -36,7 +36,6 @@ int Sound_Initialised = 0;
 int WAV_Dumping = 0;
 int GYM_Playing = 0;
 int WP, RP;
-unsigned short MastVol = 128;
 extern unsigned long FrameCount;
 unsigned long FrameCountAtLastAudioOutput = -1;
 
@@ -314,8 +313,8 @@ void Dump_Sound_Stereo(short *Dest, int length)
         else if (out_R > 0x7FFF) *dest++ = 0x7FFF;
         else *dest++ = (short)out_R;
     }
-    out_R = (int)(((out_R * MastVol) >> 8) / 255.0);
-    out_L = (int)(((out_L * MastVol) >> 8) / 255.0);
+    out_R = (int)(out_R / 255.0);
+    out_L = (int)(out_L / 255.0);
 }
 
 void Write_Sound_Mono(short *Dest, int length)
@@ -362,7 +361,7 @@ void Dump_Sound_Mono(short *Dest, int length)
         else if (out > 0xFFFF) *dest++ = 0x7FFF;
         else *dest++ = (short)(out >> 1);
     }
-    out = (int)(((out * MastVol) >> 8) / 255.0);
+    out = (int)(out / 255.0);
 }
 
 int Write_Sound_Buffer(void *Dump_Buf)
@@ -398,9 +397,9 @@ int Write_Sound_Buffer(void *Dump_Buf)
         else
         {
             for (int i = 0; i < Seg_Length; i++)
-                Seg_L[i] = (Seg_L[i] * MastVol) >> 8;
+                Seg_L[i] = Seg_L[i];
             for (int i = 0; i < Seg_Length; i++)
-                Seg_R[i] = (Seg_R[i] * MastVol) >> 8;
+                Seg_R[i] = Seg_R[i];
 
             if (SlowDownMode)
             {

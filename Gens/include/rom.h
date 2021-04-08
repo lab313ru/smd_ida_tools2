@@ -4,9 +4,6 @@
 #define ROM_H
 
 #define GENESIS_ROM      2
-#define _32X_ROM         4
-#define SEGACD_IMAGE     6
-#define SEGACD_32X_IMAGE 8
 #define COMPRESSED_IMAGE 10
 
 #ifdef __cplusplus
@@ -40,12 +37,6 @@ extern "C" {
     extern char IPS_Dir[1024];
     extern char Rom_Dir[1024];
     extern char Rom_Name[512];
-    extern char US_CD_Bios[1024];
-    extern char EU_CD_Bios[1024];
-    extern char JA_CD_Bios[1024];
-    extern char _32X_Genesis_Bios[1024];
-    extern char _32X_Master_Bios[1024];
-    extern char _32X_Slave_Bios[1024];
     extern char Genesis_Bios[1024];
 
     void Get_Name_From_Path(char *Full_Path, char *Name);

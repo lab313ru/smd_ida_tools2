@@ -13,9 +13,6 @@
     <Filter Include="src">
       <UniqueIdentifier>{5f1885b6-6942-42d1-9d56-ddd45a8f047d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\mp3_dec">
-      <UniqueIdentifier>{41360031-fc33-4e97-a66e-240a977f28fd}</UniqueIdentifier>
-    </Filter>
     <Filter Include="include">
       <UniqueIdentifier>{42724d95-981d-47c5-829f-5faadb4f0fe9}</UniqueIdentifier>
     </Filter>
@@ -27,9 +24,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="asm\vdp_32x.asm">
-      <Filter>asm</Filter>
-    </CustomBuild>
     <CustomBuild Include="asm\vdp_io.asm">
       <Filter>asm</Filter>
     </CustomBuild>
@@ -42,16 +36,7 @@
     <CustomBuild Include="asm\main68k.asm">
       <Filter>asm</Filter>
     </CustomBuild>
-    <CustomBuild Include="asm\sub68k.asm">
-      <Filter>asm</Filter>
-    </CustomBuild>
-    <CustomBuild Include="asm\pwm_asm.asm">
-      <Filter>asm</Filter>
-    </CustomBuild>
     <CustomBuild Include="asm\blit.asm">
-      <Filter>asm</Filter>
-    </CustomBuild>
-    <CustomBuild Include="asm\gfx_cd.asm">
       <Filter>asm</Filter>
     </CustomBuild>
     <CustomBuild Include="asm\io.asm">
@@ -60,19 +45,10 @@
     <CustomBuild Include="asm\mem_m68k.asm">
       <Filter>asm</Filter>
     </CustomBuild>
-    <CustomBuild Include="asm\mem_s68k.asm">
-      <Filter>asm</Filter>
-    </CustomBuild>
-    <CustomBuild Include="asm\mem_sh2.asm">
-      <Filter>asm</Filter>
-    </CustomBuild>
     <CustomBuild Include="asm\mem_z80.asm">
       <Filter>asm</Filter>
     </CustomBuild>
     <CustomBuild Include="asm\misc.asm">
-      <Filter>asm</Filter>
-    </CustomBuild>
-    <CustomBuild Include="asm\sh2a.asm">
       <Filter>asm</Filter>
     </CustomBuild>
   </ItemGroup>
@@ -164,31 +140,7 @@
     <ClCompile Include="lua\src\lzio.c">
       <Filter>lua</Filter>
     </ClCompile>
-    <ClCompile Include="mp3_dec\common.c">
-      <Filter>src\mp3_dec</Filter>
-    </ClCompile>
-    <ClCompile Include="mp3_dec\dct64_i386.c">
-      <Filter>src\mp3_dec</Filter>
-    </ClCompile>
-    <ClCompile Include="mp3_dec\decode_i386.c">
-      <Filter>src\mp3_dec</Filter>
-    </ClCompile>
-    <ClCompile Include="mp3_dec\interface.c">
-      <Filter>src\mp3_dec</Filter>
-    </ClCompile>
-    <ClCompile Include="mp3_dec\layer3.c">
-      <Filter>src\mp3_dec</Filter>
-    </ClCompile>
-    <ClCompile Include="mp3_dec\tabinit.c">
-      <Filter>src\mp3_dec</Filter>
-    </ClCompile>
     <ClCompile Include="src\cblit.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\cd_aspi.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\cdda_mp3.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\corehooks.cpp">
@@ -260,9 +212,6 @@
     <ClCompile Include="src\tracer.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\tracer_cd.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\vdp_ram.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -275,34 +224,16 @@
     <ClCompile Include="src\wave.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\sh2.c">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\pwm.c">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\psg.c">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\pcm.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\lc89510.c">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\cpu_z80.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\cpu_sh2.c">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\cpu_68k.c">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\cd_sys.c">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\cd_file.c">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="zlib\adler32.c">
@@ -436,28 +367,10 @@
     <ClInclude Include="include\blit.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\cd_aspi.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\cd_file.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\cd_sys.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\cdda_lp7.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\cdda_mp3.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="include\corehooks.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\cpu_68k.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\cpu_sh2.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\cpu_z80.h">
@@ -484,9 +397,6 @@
     <ClInclude Include="include\gens.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\gfx_cd.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="include\ggenie.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -502,9 +412,6 @@
     <ClInclude Include="include\keycode.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\lc89510.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="include\luascript.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -512,12 +419,6 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\mem_m68k.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\mem_s68k.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\mem_sh2.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\mem_z80.h">
@@ -550,9 +451,6 @@
     <ClInclude Include="include\psg.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\pwm.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="include\ram_dump.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -568,9 +466,6 @@
     <ClInclude Include="include\save.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\sh2.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="include\star_68k.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -578,9 +473,6 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\unzip.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\vdp_32x.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\vdp_io.h">

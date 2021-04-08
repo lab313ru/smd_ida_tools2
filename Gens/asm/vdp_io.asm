@@ -30,7 +30,6 @@ section .data align=64
 
 	extern Rom_Data
 	extern Rom_Size
-	extern Cell_Conv_Tab
 	extern MD_Palette
 	extern MD_Palette32
 	extern MD_Screen
@@ -40,7 +39,6 @@ section .data align=64
 	extern CPL_M68K
 	extern Cycles_M68K
 	extern _main68k_context		; Starscream context (for interrupts)
-	extern Ram_Word_State
 	extern PalLock
 
 	ALIGN64
@@ -92,12 +90,6 @@ section .data align=64
 	DECL Genesis_Started
 		dd 0
 
-	DECL SegaCD_Started
-		dd 0
-
-	DECL _32X_Started
-		dd 0
-
 	Size_V_Scroll:
 		dd 255, 511, 255, 1023
 
@@ -107,9 +99,6 @@ section .data align=64
 section .bss align=64
 
 	extern Ram_68k
-	extern Ram_Prg
-	extern Ram_Word_2M
-	extern Ram_Word_1M
 	extern Bank_M68K
 
 	DECL VRam
@@ -291,26 +280,6 @@ section .text align=64
 %elif %1 < 2
 	mov ax, [Ram_68k + esi]
 	add si, 2
-%elif %1 < 3
-	mov ax, [Ram_Prg + esi]
-	add esi, 2
-%elif %1 < 4
-	mov ax, [Ram_Word_2M + esi]
-	add esi, 2
-%elif %1 < 6
-	mov ax, [Ram_Word_1M + esi + 0x00000]
-	add esi, 2
-%elif %1 < 7
-	mov ax, [Ram_Word_1M + esi + 0x20000]
-	add esi, 2
-%elif %1 < 8
-	mov ax, [Cell_Conv_Tab + esi]
-	add esi, 2
-	mov ax, [Ram_Word_1M + eax * 2 + 0x00000]
-%elif %1 < 9
-	mov ax, [Cell_Conv_Tab + esi]
-	add esi, 2
-	mov ax, [Ram_Word_1M + eax * 2 + 0x20000]
 %endif
 %if %2 < 1
 	shr di, 1
@@ -1049,25 +1018,6 @@ section .text align=64
 		cmp esi, [Rom_Size]
 		jb short .DMA_Src_OK				; Src = ROM (ebx = 0)
 		mov ebx, 1
-		test byte [SegaCD_Started], 0xFF
-		jz short .DMA_Src_OK				; Src = Normal RAM (ebx = 1)
-
-		cmp esi, 0x00240000
-		jae short .DMA_Src_OK				; Src = Normal RAM (ebx = 1)
-		cmp esi, 0x00040000
-		mov ebx, 2
-		jb short .DMA_Src_OK				; Src = PRG RAM (ebx = 2)
-
-		mov bh, [Ram_Word_State]
-		mov bl, 3							; Src = WORD RAM ; 3 = WORD RAM 2M
-		and bh, 3							; 4 = BAD
-		add bl, bh							; 5 = WORD RAM 1M Bank 0
-		xor bh, bh							; 6 = WORD RAM 1M Bank 1
-		cmp bl, 5
-		jb short .DMA_Src_OK
-		cmp esi, 0x00220000
-		jb short .DMA_Src_OK				; 7 = CELL ARRANGED Bank 0
-		add bl, 2							; 8 = CELL ARRANGED Bank 1
 
 	.DMA_Src_OK
 		test eax, 0x2						; Dest = CRAM or VSRAM

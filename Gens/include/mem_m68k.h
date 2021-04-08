@@ -30,24 +30,17 @@ extern "C" {
     extern int SRAM_Write;
     extern int SRAM_Custom;
 
-    extern int BRAM_Ex_State;
-    extern int BRAM_Ex_Size;
-
     extern int Z80_M68K_Cycle_Tab[512];
 
-    extern int S68K_State;
     extern int Z80_State;
     extern int Last_BUS_REQ_Cnt;
     extern int Last_BUS_REQ_St;
     extern int Bank_M68K;
-    extern int Bank_SH2;
     extern int Fake_Fetch;
 
     extern int CPL_M68K;
-    extern int CPL_S68K;
     extern int CPL_Z80;
     extern int Cycles_M68K;
-    extern int Cycles_S68K;
     extern int Cycles_Z80;
 
     extern int Game_Mode;
@@ -62,7 +55,6 @@ extern "C" {
     void M68K_WBC(unsigned int Adr, unsigned char Data);
     void M68K_WB(unsigned int Adr, unsigned char Data);
     void M68K_WW(unsigned int Adr, unsigned short Data);
-    void Update_SegaCD_Timer(void);
 
 #ifdef __cplusplus
 };

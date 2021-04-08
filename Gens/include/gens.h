@@ -38,10 +38,8 @@ extern "C" {
     extern int VDP_Reg_Set4_Current;
 
     int Round_Double(double val);
-    void Init_Tab(void);
     void Recalculate_Palettes(void);
     void Check_Country_Order(void);
-    char* Detect_Country_SegaCD(void);
     void Detect_Country_Genesis(void);
 
     void Init_Genesis_Bios(void);
@@ -50,19 +48,6 @@ extern "C" {
     int Do_VDP_Refresh(void);
     int Do_Genesis_Frame_No_VDP(void);
     int Do_Genesis_Frame(void);
-
-    int Init_32X(struct Rom *MD_Rom);
-    void Reset_32X();
-    int Do_32X_Frame_No_VDP(void);
-    int Do_32X_Frame(void);
-
-    int Init_SegaCD(char *iso_name);
-    int Reload_SegaCD(char *iso_name);
-    void Reset_SegaCD(void);
-    int Do_SegaCD_Frame_No_VDP(void);
-    int Do_SegaCD_Frame(void);
-    int Do_SegaCD_Frame_Cycle_Accurate(void);
-    int Do_SegaCD_Frame_No_VDP_Cycle_Accurate(void);
 
     BOOL IsAsyncAllowed(void);
 

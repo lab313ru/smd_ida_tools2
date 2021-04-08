@@ -20,8 +20,6 @@
 #include "resource.h"
 #include "gens.h"
 #include "mem_m68k.h"
-#include "mem_s68k.h"
-#include "mem_sh2.h"
 #include "mem_z80.h"
 #include "g_main.h"
 #include "g_ddraw.h"
@@ -59,10 +57,6 @@ HexRegion HexRegions[] = {
     { "Regs 68K", (u8 *)&main68k_context.dreg, 0, sizeof(int) * 16, true, 3 },
     { "Regs Z80", (u8 *)&M_Z80, 0, sizeof(int) * 14, true, 3 },
     { "Regs VDP", (u8 *)&VDP_Reg, 0, sizeof(VDP_Reg), true, 0 },
-    { "RAM CD PRG", (u8 *)Ram_Prg, 0x20000, sizeof(Ram_Prg), !!SegaCD_Started, 1 },
-    { "RAM CD 1M", (u8 *)Ram_Word_1M, 0x200000, sizeof(Ram_Word_1M), !!SegaCD_Started, 1 },
-    { "RAM CD 2M", (u8 *)Ram_Word_2M, 0x200000, sizeof(Ram_Word_2M), !!SegaCD_Started, 1 },
-    { "RAM 32X", (u8 *)_32X_Ram, 0x6000000, sizeof(_32X_Ram), !!_32X_Started, 0 }
 };
 
 HexParams HexCommon = {

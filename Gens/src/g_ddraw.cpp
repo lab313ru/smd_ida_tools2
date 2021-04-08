@@ -14,8 +14,6 @@
 #include "blit.h"
 #include "save.h"
 
-#include "cdda_mp3.h"
-
 #include "movie.h"
 #include "moviegfx.h"
 #include "joypads.h"
@@ -597,50 +595,6 @@ void CalculateDrawArea(HWND hWnd, RECT& RectDest, RECT& RectSrc)
     }
 }
 
-extern "C" { extern unsigned int LED_Status; }
-void Draw_SegaCD_LED()
-{
-    if (LED_Status & 2)
-    {
-        MD_Screen[336 * 220 + 12] = 0x03E0;
-        MD_Screen[336 * 220 + 13] = 0x03E0;
-        MD_Screen[336 * 220 + 14] = 0x03E0;
-        MD_Screen[336 * 220 + 15] = 0x03E0;
-        MD_Screen[336 * 222 + 12] = 0x03E0;
-        MD_Screen[336 * 222 + 13] = 0x03E0;
-        MD_Screen[336 * 222 + 14] = 0x03E0;
-        MD_Screen[336 * 222 + 15] = 0x03E0;
-        MD_Screen32[336 * 220 + 12] = 0x00FF00;
-        MD_Screen32[336 * 220 + 13] = 0x00FF00;
-        MD_Screen32[336 * 220 + 14] = 0x00FF00;
-        MD_Screen32[336 * 220 + 15] = 0x00FF00;
-        MD_Screen32[336 * 222 + 12] = 0x00FF00;
-        MD_Screen32[336 * 222 + 13] = 0x00FF00;
-        MD_Screen32[336 * 222 + 14] = 0x00FF00;
-        MD_Screen32[336 * 222 + 15] = 0x00FF00;
-    }
-
-    if (LED_Status & 1)
-    {
-        MD_Screen[336 * 220 + 12 + 8] = 0xF800;
-        MD_Screen[336 * 220 + 13 + 8] = 0xF800;
-        MD_Screen[336 * 220 + 14 + 8] = 0xF800;
-        MD_Screen[336 * 220 + 15 + 8] = 0xF800;
-        MD_Screen[336 * 222 + 12 + 8] = 0xF800;
-        MD_Screen[336 * 222 + 13 + 8] = 0xF800;
-        MD_Screen[336 * 222 + 14 + 8] = 0xF800;
-        MD_Screen[336 * 222 + 15 + 8] = 0xF800;
-        MD_Screen32[336 * 220 + 12 + 8] = 0xFF0000;
-        MD_Screen32[336 * 220 + 13 + 8] = 0xFF0000;
-        MD_Screen32[336 * 220 + 14 + 8] = 0xFF0000;
-        MD_Screen32[336 * 220 + 15 + 8] = 0xFF0000;
-        MD_Screen32[336 * 222 + 12 + 8] = 0xFF0000;
-        MD_Screen32[336 * 222 + 13 + 8] = 0xFF0000;
-        MD_Screen32[336 * 222 + 14 + 8] = 0xFF0000;
-        MD_Screen32[336 * 222 + 15 + 8] = 0xFF0000;
-    }
-}
-
 // text, recording status, etc.
 void DrawInformationOnTheScreen()
 {
@@ -650,9 +604,6 @@ void DrawInformationOnTheScreen()
     static float FPS = 0.0f, frames[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
     static unsigned int old_time = 0, view_fps = 0, index_fps = 0, freq_cpu[2] = { 0, 0 };
     unsigned int new_time[2];
-
-    if (Show_LED && SegaCD_Started)
-        Draw_SegaCD_LED();
 
     if (MainMovie.Status == MOVIE_RECORDING)
     {

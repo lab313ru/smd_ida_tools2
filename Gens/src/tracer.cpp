@@ -5,7 +5,6 @@
 #include "cpu_68k.h"
 #include "m68k_debugwindow.h"
 #include "mem_m68k.h"
-#include "mem_s68k.h"
 #include "vdp_io.h"
 #include "luascript.h"
 

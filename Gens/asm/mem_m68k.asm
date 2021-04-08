@@ -1,7 +1,6 @@
 %include "nasmhead.inc"
 
 %define CYCLE_FOR_TAKE_Z80_BUS_GENESIS 16
-%define CYCLE_FOR_TAKE_Z80_BUS_SEGACD 32
 
 	extern _Write_To_68K_Space
 	extern _Read_To_68K_Space
@@ -16,8 +15,6 @@ section .data align=64
 	extern Controller_2_Delay
 	extern Controller_2_State
 	extern Controller_2_COM
-	extern Memory_Control_Status
-	extern Cell_Conv_Tab
 	extern VDP_Current_Line
 	extern _hook_address
 	extern _hook_value
@@ -147,238 +144,6 @@ section .data align=64
 		dd M68K_Write_Word_Ram,		; 0xE00000 - 0xEFFFFF
 		dd M68K_Write_Word_Ram,		; 0xF00000 - 0xFFFFFF
 
-	; Sega CD Default Jump Table
-
-	DECL SegaCD_M68K_Read_Byte_Table
-		dd M68K_Read_Byte_Bios_CD,	; 0x000000 - 0x07FFFF
-		dd M68K_Read_Byte_Bad,		; 0x080000 - 0x0FFFFF
-		dd M68K_Read_Byte_Bad,		; 0x100000 - 0x17FFFF
-		dd M68K_Read_Byte_Bad,		; 0x180000 - 0x1FFFFF
-		dd M68K_Read_Byte_WRam,		; 0x200000 - 0x27FFFF
-		dd M68K_Read_Byte_Bad,		; 0x280000 - 0x2FFFFF
-		dd M68K_Read_Byte_Bad,		; 0x300000 - 0x37FFFF
-		dd M68K_Read_Byte_Bad,		; 0x380000 - 0x3FFFFF
-		dd M68K_Read_Byte_BRAM_L,	; 0x400000 - 0x47FFFF
-		dd M68K_Read_Byte_Bad,		; 0x480000 - 0x4FFFFF
-		dd M68K_Read_Byte_Bad,		; 0x500000 - 0x57FFFF
-		dd M68K_Read_Byte_Bad,		; 0x580000 - 0x5FFFFF
-		dd M68K_Read_Byte_BRAM,		; 0x600000 - 0x67FFFF
-		dd M68K_Read_Byte_Bad,		; 0x680000 - 0x6FFFFF
-		dd M68K_Read_Byte_Bad,		; 0x700000 - 0x77FFFF
-		dd M68K_Read_Byte_BRAM_W,	; 0x780000 - 0x7FFFFF
-		dd M68K_Read_Byte_Bad,		; 0x800000 - 0x87FFFF
-		dd M68K_Read_Byte_Bad,		; 0x880000 - 0x8FFFFF
-		dd M68K_Read_Byte_Bad,		; 0x900000 - 0x97FFFF
-		dd M68K_Read_Byte_Bad,		; 0x980000 - 0x9FFFFF
-		dd M68K_Read_Byte_Misc_CD,	; 0xA00000 - 0xA7FFFF
-		dd M68K_Read_Byte_Bad,		; 0xA80000 - 0xAFFFFF
-		dd M68K_Read_Byte_Bad,		; 0xB00000 - 0xB7FFFF
-		dd M68K_Read_Byte_Bad,		; 0xB80000 - 0xBFFFFF
-		dd M68K_Read_Byte_VDP,		; 0xC00000 - 0xC7FFFF
-		dd M68K_Read_Byte_Bad,		; 0xC80000 - 0xCFFFFF
-		dd M68K_Read_Byte_Bad,		; 0xD00000 - 0xD7FFFF
-		dd M68K_Read_Byte_Bad,		; 0xD80000 - 0xDFFFFF
-		dd M68K_Read_Byte_Ram,		; 0xE00000 - 0xE7FFFF
-		dd M68K_Read_Byte_Ram,		; 0xE80000 - 0xEFFFFF
-		dd M68K_Read_Byte_Ram,		; 0xF00000 - 0xF7FFFF
-		dd M68K_Read_Byte_Ram,		; 0xF80000 - 0xFFFFFF
-
-	DECL SegaCD_M68K_Read_Word_Table
-		dd M68K_Read_Word_Bios_CD,	; 0x000000 - 0x07FFFF
-		dd M68K_Read_Word_Bad,		; 0x080000 - 0x0FFFFF
-		dd M68K_Read_Word_Bad,		; 0x100000 - 0x17FFFF
-		dd M68K_Read_Word_Bad,		; 0x180000 - 0x1FFFFF
-		dd M68K_Read_Word_WRam,		; 0x200000 - 0x27FFFF
-		dd M68K_Read_Word_Bad,		; 0x280000 - 0x2FFFFF
-		dd M68K_Read_Word_Bad,		; 0x300000 - 0x37FFFF
-		dd M68K_Read_Word_Bad,		; 0x380000 - 0x3FFFFF
-		dd M68K_Read_Word_BRAM_L,	; 0x400000 - 0x47FFFF
-		dd M68K_Read_Word_Bad,		; 0x480000 - 0x4FFFFF
-		dd M68K_Read_Word_Bad,		; 0x500000 - 0x57FFFF
-		dd M68K_Read_Word_Bad,		; 0x580000 - 0x5FFFFF
-		dd M68K_Read_Word_BRAM,		; 0x600000 - 0x67FFFF
-		dd M68K_Read_Word_Bad,		; 0x680000 - 0x6FFFFF
-		dd M68K_Read_Word_Bad,		; 0x700000 - 0x77FFFF
-		dd M68K_Read_Word_BRAM_W,	; 0x780000 - 0x7FFFFF
-		dd M68K_Read_Word_Bad,		; 0x800000 - 0x87FFFF
-		dd M68K_Read_Word_Bad,		; 0x880000 - 0x8FFFFF
-		dd M68K_Read_Word_Bad,		; 0x900000 - 0x97FFFF
-		dd M68K_Read_Word_Bad,		; 0x980000 - 0x9FFFFF
-		dd M68K_Read_Word_Misc_CD,	; 0xA00000 - 0xA7FFFF
-		dd M68K_Read_Word_Bad,		; 0xA80000 - 0xAFFFFF
-		dd M68K_Read_Word_Bad,		; 0xB00000 - 0xB7FFFF
-		dd M68K_Read_Word_Bad,		; 0xB80000 - 0xBFFFFF
-		dd M68K_Read_Word_VDP,		; 0xC00000 - 0xC7FFFF
-		dd M68K_Read_Word_Bad,		; 0xC80000 - 0xCFFFFF
-		dd M68K_Read_Word_Bad,		; 0xD00000 - 0xD7FFFF
-		dd M68K_Read_Word_Bad,		; 0xD80000 - 0xDFFFFF
-		dd M68K_Read_Word_Ram,		; 0xE00000 - 0xE7FFFF
-		dd M68K_Read_Word_Ram,		; 0xE80000 - 0xEFFFFF
-		dd M68K_Read_Word_Ram,		; 0xF00000 - 0xF7FFFF
-		dd M68K_Read_Word_Ram,		; 0xF80000 - 0xFFFFFF
-
-	DECL SegaCD_M68K_Write_Byte_Table
-		dd M68K_Write_Byte_Bios_CD,	; 0x000000 - 0x0FFFFF
-		dd M68K_Write_Bad,			; 0x100000 - 0x1FFFFF
-		dd M68K_Write_Byte_WRam,	; 0x200000 - 0x2FFFFF
-		dd M68K_Write_Bad,			; 0x300000 - 0x3FFFFF
-		dd M68K_Write_Bad,			; 0x400000 - 0x4FFFFF
-		dd M68K_Write_Bad,			; 0x500000 - 0x5FFFFF
-		dd M68K_Write_Byte_BRAM,	; 0x600000 - 0x6FFFFF
-		dd M68K_Write_Byte_BRAM_W,	; 0x700000 - 0x7FFFFF
-		dd M68K_Write_Bad,			; 0x800000 - 0x8FFFFF
-		dd M68K_Write_Bad,			; 0x900000 - 0x9FFFFF
-		dd M68K_Write_Byte_Misc_CD,	; 0xA00000 - 0xAFFFFF
-		dd M68K_Write_Bad,			; 0xB00000 - 0xBFFFFF
-		dd M68K_Write_Byte_VDP,		; 0xC00000 - 0xCFFFFF
-		dd M68K_Write_Bad,			; 0xD00000 - 0xDFFFFF
-		dd M68K_Write_Byte_Ram,		; 0xE00000 - 0xEFFFFF
-		dd M68K_Write_Byte_Ram,		; 0xF00000 - 0xFFFFFF
-
-	DECL SegaCD_M68K_Write_Word_Table
-		dd M68K_Write_Word_Bios_CD,	; 0x000000 - 0x0FFFFF
-		dd M68K_Write_Bad,			; 0x100000 - 0x1FFFFF
-		dd M68K_Write_Word_WRam,	; 0x200000 - 0x2FFFFF
-		dd M68K_Write_Bad,			; 0x300000 - 0x3FFFFF
-		dd M68K_Write_Bad,			; 0x400000 - 0x4FFFFF
-		dd M68K_Write_Bad,			; 0x500000 - 0x5FFFFF
-		dd M68K_Write_Word_BRAM,	; 0x600000 - 0x6FFFFF
-		dd M68K_Write_Word_BRAM_W,	; 0x700000 - 0x7FFFFF
-		dd M68K_Write_Bad,			; 0x800000 - 0x8FFFFF
-		dd M68K_Write_Bad,			; 0x900000 - 0x9FFFFF
-		dd M68K_Write_Word_Misc_CD,	; 0xA00000 - 0xAFFFFF
-		dd M68K_Write_Bad,			; 0xB00000 - 0xBFFFFF
-		dd M68K_Write_Word_VDP,		; 0xC00000 - 0xCFFFFF
-		dd M68K_Write_Bad,			; 0xD00000 - 0xDFFFFF
-		dd M68K_Write_Word_Ram,		; 0xE00000 - 0xEFFFFF
-		dd M68K_Write_Word_Ram,		; 0xF00000 - 0xFFFFFF
-
-	; 32X Default Jump Table
-
-	DECL _32X_M68K_Read_Byte_Table
-		dd M68K_Read_Byte_Rom0,		; 0x000000 - 0x07FFFF
-		dd M68K_Read_Byte_Rom1,		; 0x080000 - 0x0FFFFF
-		dd M68K_Read_Byte_Rom2,		; 0x100000 - 0x17FFFF
-		dd M68K_Read_Byte_Rom3,		; 0x180000 - 0x1FFFFF
-		dd M68K_Read_Byte_Rom4,		; 0x200000 - 0x27FFFF
-		dd M68K_Read_Byte_Rom5,		; 0x280000 - 0x2FFFFF
-		dd M68K_Read_Byte_Rom6,		; 0x300000 - 0x37FFFF
-		dd M68K_Read_Byte_Rom7,		; 0x380000 - 0x3FFFFF
-		dd M68K_Read_Byte_Bios_32X,	; 0x400000 - 0x47FFFF
-		dd M68K_Read_Byte_BiosR_32X,; 0x480000 - 0x4FFFFF
-		dd M68K_Read_Byte_Bad,		; 0x500000 - 0x57FFFF
-		dd M68K_Read_Byte_Bad,		; 0x580000 - 0x5FFFFF
-		dd M68K_Read_Byte_Bad,		; 0x600000 - 0x67FFFF
-		dd M68K_Read_Byte_Bad,		; 0x680000 - 0x6FFFFF
-		dd M68K_Read_Byte_Bad,		; 0x700000 - 0x77FFFF
-		dd M68K_Read_Byte_32X_FB0,	; 0x780000 - 0x7FFFFF
-		dd M68K_Read_Byte_32X_FB1,	; 0x800000 - 0x87FFFF
-		dd M68K_Read_Byte_Rom0,		; 0x880000 - 0x8FFFFF
-		dd M68K_Read_Byte_Rom1,		; 0x900000 - 0x97FFFF
-		dd M68K_Read_Byte_Rom2,		; 0x980000 - 0x9FFFFF
-		dd M68K_Read_Byte_Misc_32X,	; 0xA00000 - 0xA7FFFF
-		dd M68K_Read_Byte_Bad,		; 0xA80000 - 0xAFFFFF
-		dd M68K_Read_Byte_Bad,		; 0xB00000 - 0xB7FFFF
-		dd M68K_Read_Byte_Bad,		; 0xB80000 - 0xBFFFFF
-		dd M68K_Read_Byte_VDP,		; 0xC00000 - 0xC7FFFF
-		dd M68K_Read_Byte_Bad,		; 0xC80000 - 0xCFFFFF
-		dd M68K_Read_Byte_Bad,		; 0xD00000 - 0xD7FFFF
-		dd M68K_Read_Byte_Bad,		; 0xD80000 - 0xDFFFFF
-		dd M68K_Read_Byte_Ram,		; 0xE00000 - 0xE7FFFF
-		dd M68K_Read_Byte_Ram,		; 0xE80000 - 0xEFFFFF
-		dd M68K_Read_Byte_Ram,		; 0xF00000 - 0xF7FFFF
-		dd M68K_Read_Byte_Ram,		; 0xF80000 - 0xFFFFFF
-
-	DECL _32X_M68K_Read_Word_Table
-		dd M68K_Read_Word_Rom0,		; 0x000000 - 0x07FFFF
-		dd M68K_Read_Word_Rom1,		; 0x080000 - 0x0FFFFF
-		dd M68K_Read_Word_Rom2,		; 0x100000 - 0x17FFFF
-		dd M68K_Read_Word_Rom3,		; 0x180000 - 0x1FFFFF
-		dd M68K_Read_Word_Rom4,		; 0x200000 - 0x27FFFF
-		dd M68K_Read_Word_Rom5,		; 0x280000 - 0x2FFFFF
-		dd M68K_Read_Word_Rom6,		; 0x300000 - 0x37FFFF
-		dd M68K_Read_Word_Rom7,		; 0x380000 - 0x3FFFFF
-		dd M68K_Read_Word_Bios_32X,	; 0x480000 - 0x4FFFFF
-		dd M68K_Read_Word_BiosR_32X,; 0x480000 - 0x4FFFFF
-		dd M68K_Read_Word_Bad,		; 0x500000 - 0x57FFFF
-		dd M68K_Read_Word_Bad,		; 0x580000 - 0x5FFFFF
-		dd M68K_Read_Word_Bad,		; 0x600000 - 0x67FFFF
-		dd M68K_Read_Word_Bad,		; 0x680000 - 0x6FFFFF
-		dd M68K_Read_Word_Bad,		; 0x700000 - 0x77FFFF
-		dd M68K_Read_Word_32X_FB0,	; 0x780000 - 0x7FFFFF
-		dd M68K_Read_Word_32X_FB1,	; 0x800000 - 0x87FFFF
-		dd M68K_Read_Word_Rom0,		; 0x880000 - 0x8FFFFF
-		dd M68K_Read_Word_Rom1,		; 0x900000 - 0x97FFFF
-		dd M68K_Read_Word_Rom2,		; 0x980000 - 0x9FFFFF
-		dd M68K_Read_Word_Misc_32X,	; 0xA00000 - 0xA7FFFF
-		dd M68K_Read_Word_Bad,		; 0xA80000 - 0xAFFFFF
-		dd M68K_Read_Word_Bad,		; 0xB00000 - 0xB7FFFF
-		dd M68K_Read_Word_Bad,		; 0xB80000 - 0xBFFFFF
-		dd M68K_Read_Word_VDP,		; 0xC00000 - 0xC7FFFF
-		dd M68K_Read_Word_Bad,		; 0xC80000 - 0xCFFFFF
-		dd M68K_Read_Word_Bad,		; 0xD00000 - 0xD7FFFF
-		dd M68K_Read_Word_Bad,		; 0xD80000 - 0xDFFFFF
-		dd M68K_Read_Word_Ram,		; 0xE00000 - 0xE7FFFF
-		dd M68K_Read_Word_Ram,		; 0xE80000 - 0xEFFFFF
-		dd M68K_Read_Word_Ram,		; 0xF00000 - 0xF7FFFF
-		dd M68K_Read_Word_Ram,		; 0xF80000 - 0xFFFFFF
-
-	DECL _32X_M68K_Write_Byte_Table
-		dd M68K_Write_Bad,			; 0x000000 - 0x0FFFFF
-		dd M68K_Write_Bad,			; 0x100000 - 0x1FFFFF
-		dd M68K_Write_Byte_SRAM,	; 0x200000 - 0x2FFFFF
-		dd M68K_Write_Bad,			; 0x300000 - 0x3FFFFF
-		dd M68K_Write_Bad,			; 0x400000 - 0x4FFFFF
-		dd M68K_Write_Bad,			; 0x500000 - 0x5FFFFF
-		dd M68K_Write_Bad,			; 0x600000 - 0x6FFFFF
-		dd M68K_Write_Byte_32X_FB0,	; 0x700000 - 0x7FFFFF
-		dd M68K_Write_Byte_32X_FB1,	; 0x800000 - 0x8FFFFF
-		dd M68K_Write_Bad,			; 0x900000 - 0x9FFFFF
-		dd M68K_Write_Byte_Misc_32X,; 0xA00000 - 0xAFFFFF
-		dd M68K_Write_Bad,			; 0xB00000 - 0xBFFFFF
-		dd M68K_Write_Byte_VDP,		; 0xC00000 - 0xCFFFFF
-		dd M68K_Write_Bad,			; 0xD00000 - 0xDFFFFF
-		dd M68K_Write_Byte_Ram,		; 0xE00000 - 0xEFFFFF
-		dd M68K_Write_Byte_Ram,		; 0xF00000 - 0xFFFFFF
-
-	DECL _32X_M68K_Write_Byte_Cheat_Table
-		dd M68K_Write_Byte_ROM,		; 0x000000 - 0x0FFFFF
-		dd M68K_Write_Byte_ROM,		; 0x100000 - 0x1FFFFF
-		dd M68K_Write_Byte_ROM2,	; 0x200000 - 0x2FFFFF
-		dd M68K_Write_Byte_ROM,		; 0x300000 - 0x3FFFFF
-		dd M68K_Write_Bad,			; 0x400000 - 0x4FFFFF
-		dd M68K_Write_Bad,			; 0x500000 - 0x5FFFFF
-		dd M68K_Write_Bad,			; 0x600000 - 0x6FFFFF
-		dd M68K_Write_Byte_32X_FB0,	; 0x700000 - 0x7FFFFF
-		dd M68K_Write_Byte_32X_FB1,	; 0x800000 - 0x8FFFFF
-		dd M68K_Write_Bad,			; 0x900000 - 0x9FFFFF
-		dd M68K_Write_Byte_Misc_32X,; 0xA00000 - 0xAFFFFF
-		dd M68K_Write_Bad,			; 0xB00000 - 0xBFFFFF
-		dd M68K_Write_Byte_VDP,		; 0xC00000 - 0xCFFFFF
-		dd M68K_Write_Bad,			; 0xD00000 - 0xDFFFFF
-		dd M68K_Write_Byte_Ram,		; 0xE00000 - 0xEFFFFF
-		dd M68K_Write_Byte_Ram,		; 0xF00000 - 0xFFFFFF
-
-
-	DECL _32X_M68K_Write_Word_Table
-		dd M68K_Write_Bad,			; 0x000000 - 0x0FFFFF
-		dd M68K_Write_Bad,			; 0x100000 - 0x1FFFFF
-		dd M68K_Write_Word_SRAM,	; 0x200000 - 0x2FFFFF
-		dd M68K_Write_Bad,			; 0x300000 - 0x3FFFFF
-		dd M68K_Write_Bad,			; 0x400000 - 0x4FFFFF
-		dd M68K_Write_Bad,			; 0x500000 - 0x5FFFFF
-		dd M68K_Write_Bad,			; 0x600000 - 0x6FFFFF
-		dd M68K_Write_Word_32X_FB0,	; 0x700000 - 0x7FFFFF
-		dd M68K_Write_Word_32X_FB1,	; 0x800000 - 0x8FFFFF
-		dd M68K_Write_Bad,			; 0x900000 - 0x9FFFFF
-		dd M68K_Write_Word_Misc_32X,; 0xA00000 - 0xAFFFFF
-		dd M68K_Write_Bad,			; 0xB00000 - 0xBFFFFF
-		dd M68K_Write_Word_VDP,		; 0xC00000 - 0xCFFFFF
-		dd M68K_Write_Bad,			; 0xD00000 - 0xDFFFFF
-		dd M68K_Write_Word_Ram,		; 0xE00000 - 0xEFFFFF
-		dd M68K_Write_Word_Ram,		; 0xF00000 - 0xFFFFFF
-
-
 	; Current Main 68000 Jump Table
 
 	DECL M68K_Read_Byte_Table
@@ -399,66 +164,10 @@ section .data align=64
 section .bss align=64
 
 	extern Ram_Z80
-	extern Ram_Prg
-	extern Ram_Word_2M
-	extern Ram_Word_1M
-	extern Ram_Word_State
 
-	extern S68K_Mem_WP
-	extern Int_Mask_S68K
 	extern Bank_Z80
 
-	extern M_SH2
-	extern S_SH2
 	extern M_Z80
-
-	extern _32X_Comm
-	extern _32X_ADEN
-	extern _32X_RES
-	extern _32X_FM
-	extern _32X_RV
-	extern _32X_DREQ_ST
-	extern _32X_DREQ_SRC
-	extern _32X_DREQ_DST
-	extern _32X_DREQ_LEN
-	extern _32X_FIFO_A
-	extern _32X_FIFO_B
-	extern _32X_FIFO_Block
-	extern _32X_FIFO_Write
-	extern _32X_FIFO_Read
-	extern _32X_MINT
-	extern _32X_SINT
-	extern _32X_Palette_16B
-	extern _32X_Palette_32B
-	extern _32X_VDP_Ram
-	extern _32X_VDP_CRam
-	extern _32X_VDP_CRam_Ajusted
-	extern _32X_VDP_CRam_Ajusted32
-	extern _32X_VDP
-
-	extern _PWM_FIFO_R
-	extern _PWM_FIFO_L
-	extern _PWM_FULL_TAB
-	extern _PWM_RP_R
-	extern _PWM_WP_R
-	extern _PWM_RP_L
-	extern _PWM_WP_L
-	extern _PWM_Mode
-
-	extern _PWM_Cycle_Tmp
-	extern _PWM_Int_Tmp
-	extern _PWM_FIFO_L_Tmp
-	extern _PWM_FIFO_R_Tmp
-
-	extern COMM.Flag
-	extern COMM.Command
-	extern COMM.Status
-
-	extern CDC.RS0
-	extern CDC.RS1
-	extern CDC.Host_Data
-	extern CDC.DMA_Adr
-	extern CDC.Stop_Watch
 
 	struc vx
 		.Mode		resd 1
@@ -478,14 +187,8 @@ section .bss align=64
 	DECL SRAM
 	resb 64 * 1024
 
-	DECL Ram_Backup_Ex
-	resb 64 * 1024
-
 	DECL Genesis_Rom
 	resb 2 * 1024
-
-	DECL _32X_Genesis_Rom
-	resb 256
 
 	DECL Rom_Size
 	resd 1
@@ -500,18 +203,12 @@ section .bss align=64
 	resd 1
 	DECL SRAM_Custom
 	resd 1
-	DECL BRAM_Ex_State
-	resd 1
-	DECL BRAM_Ex_Size
-	resd 1
 
 	ALIGNB64
 
 	DECL Z80_M68K_Cycle_Tab
 	resd 512
 	
-	DECL S68K_State
-	resd 1
 	DECL Z80_State
 	resd 1
 	DECL Last_BUS_REQ_Cnt
@@ -519,8 +216,6 @@ section .bss align=64
 	DECL Last_BUS_REQ_St
 	resd 1
 	DECL Bank_M68K
-	resd 1
-	DECL Bank_SH2
 	resd 1
 	DECL Fake_Fetch
 	resd 1
@@ -536,11 +231,7 @@ section .bss align=64
 
 	DECL CPL_M68K
 	resd 1
-	DECL CPL_S68K
-	resd 1
 	DECL CPL_Z80
-	resd 1
-	DECL Cycles_S68K
 	resd 1
 	DECL Cycles_M68K
 	resd 1
@@ -566,28 +257,14 @@ section .text align=64
 	extern RD_Controller_2
 	extern WR_Controller_1
 	extern WR_Controller_2
-	extern SH2_Reset
-	extern SH2_Interrupt
-	extern SH2_DMA0_Request
 	extern _main68k_readOdometer
-	extern _sub68k_reset
-	extern _sub68k_interrupt
 	extern z80_Reset
 	extern z80_Exec
 	extern z80_Set_Odo
-	extern _M68K_Set_Prg_Ram
-	extern _MS68K_Set_Word_Ram
-	extern _M68K_Set_32X_Rom_Bank
 	extern _YM2612_Write
 	extern _YM2612_Read
 	extern _YM2612_Reset
 	extern _PSG_Write
-	extern _Read_CDC_Host_MAIN
-	extern _M68K_32X_Mode
-	extern _M68K_Set_32X_Rom_Bank
-	extern __32X_Set_FB
-	extern @PWM_Set_Cycle@4
-	extern @PWM_Set_Int@4
 	extern _Fix_Codes
 
 
@@ -597,9 +274,6 @@ section .text align=64
 		push eax
 		push ebx
 		mov ebx, 15
-		cmp byte [esp + 12], 1
-		ja near .SegaCD
-		je near ._32X
 		jmp short .Genesis
 
 	ALIGN4
@@ -623,68 +297,6 @@ section .text align=64
 
 		dec ebx
 		jns short .Genesis
-
-		pop ebx
-		pop eax
-		ret
-
-	ALIGN32
-	
-	._32X
-		mov eax, [_32X_M68K_Read_Byte_Table + ebx * 8]
-		mov [M68K_Read_Byte_Table + ebx * 8], eax
-		mov eax, [_32X_M68K_Read_Byte_Table + ebx * 8 + 4]
-		mov [M68K_Read_Byte_Table + ebx * 8 + 4], eax
-		mov eax, [_32X_M68K_Read_Word_Table + ebx * 8]
-		mov [M68K_Read_Word_Table + ebx * 8], eax
-		mov eax, [_32X_M68K_Read_Word_Table + ebx * 8 + 4]
-		mov [M68K_Read_Word_Table + ebx * 8 + 4], eax
-
-		mov eax, [_32X_M68K_Write_Byte_Table + ebx * 4]
-		mov [M68K_Write_Byte_Table + ebx * 4], eax
-;		mov eax, [_32X_M68K_Write_Byte_Cheat_Table + ebx * 4]
-		mov [M68K_Write_Byte_Cheat_Table + ebx * 4], eax
-			mov eax, [_32X_M68K_Write_Word_Table + ebx * 4]
-		mov [M68K_Write_Word_Table + ebx * 4], eax
-
-		dec ebx
-		jns short ._32X
-
-		mov eax, [_32X_M68K_Read_Byte_Table + 6 * 8]
-		mov [M68K_Read_Byte_Table + 8 * 8 - 4], eax
-		mov eax, [_32X_M68K_Read_Word_Table + 6 * 8]
-		mov [M68K_Read_Word_Table + 8 * 8 - 4], eax
-
-		mov eax, [_32X_M68K_Write_Byte_Table + 6 * 4]
-		mov [M68K_Write_Byte_Table + 8 * 4 + 4], eax
-		mov eax, [_32X_M68K_Write_Word_Table + 6 * 4]
-		mov [M68K_Write_Word_Table + 8 * 4 + 4], eax
-
-		pop ebx
-		pop eax
-		ret
-
-	ALIGN32
-
-	.SegaCD
-		mov eax, [SegaCD_M68K_Read_Byte_Table + ebx * 8]
-		mov [M68K_Read_Byte_Table + ebx * 8], eax
-		mov eax, [SegaCD_M68K_Read_Byte_Table + ebx * 8 + 4]
-		mov [M68K_Read_Byte_Table + ebx * 8 + 4], eax
-		mov eax, [SegaCD_M68K_Read_Word_Table + ebx * 8]
-		mov [M68K_Read_Word_Table + ebx * 8], eax
-		mov eax, [SegaCD_M68K_Read_Word_Table + ebx * 8 + 4]
-		mov [M68K_Read_Word_Table + ebx * 8 + 4], eax
-
-		mov eax, [SegaCD_M68K_Write_Byte_Table + ebx * 4]
-		mov [M68K_Write_Byte_Table + ebx * 4], eax
-;		mov eax, [SegaCD_M68K_Write_Byte_Cheat_Table + ebx * 4]
-		mov [M68K_Write_Byte_Cheat_Table + ebx * 4], eax
-		mov eax, [SegaCD_M68K_Write_Word_Table + ebx * 4]
-		mov [M68K_Write_Word_Table + ebx * 4], eax
-
-		dec ebx
-		jns short .SegaCD
 
 		pop ebx
 		pop eax
@@ -2084,8 +1696,4 @@ section .text align=64
 ;		pop ebx
 		ret
 
-
-%include "mem_m68k_cd.inc"
-
-%include "mem_m68k_32x.inc"
 

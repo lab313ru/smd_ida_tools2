@@ -8,16 +8,6 @@
 #define BRAM_SIZE ((8 << BRAM_Ex_Size) * 1024)*/
 #define GENESIS_RAM_SIZE (_68K_RAM_SIZE + Z80_RAM_SIZE)
 
-//_32X_Ram[]
-#define _32X_RAM_SIZE 256*1024
-
-//512k in Ram_Prg, 256k in Ram_Word_1M and Ram_Word_2M
-//(docs say 6Mbit of ram, but I'm not sure what's used when)
-#define SEGACD_RAM_PRG_SIZE 512*1024
-#define SEGACD_1M_RAM_SIZE 256*1024
-#define SEGACD_2M_RAM_SIZE 256*1024
-#define SEGACD_RAM_SIZE (SEGACD_RAM_PRG_SIZE + SEGACD_2M_RAM_SIZE)
-
 //#define MAX_RAM_SIZE (0x112000)
 #define MAX_RAM_SIZE (0xD2000)
 

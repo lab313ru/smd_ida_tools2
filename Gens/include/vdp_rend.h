@@ -45,7 +45,6 @@ extern "C" {
         int dirt;
     } Sprite_Struct[256];
 
-    extern unsigned char _32X_Rend_Mode;
     extern int Mode_555;
     extern int Sprite_Over;
     extern int Sprite_Boxing;
@@ -62,16 +61,11 @@ extern "C" {
     extern char Swap_Scroll_PriorityA;
     extern char Swap_Scroll_PriorityB;
     extern char Swap_Sprite_Priority;
-    extern char Swap_32X_Plane_Priority;
-    extern char _32X_Plane_High_On;
-    extern char _32X_Plane_Low_On;
-    extern char _32X_Plane_On;
     extern char PalLock;
     extern bool PinkBG;
 
     void Render_Line();
     void Post_Line();
-    void Render_Line_32X();
 
 #ifdef __cplusplus
 };

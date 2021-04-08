@@ -69,8 +69,6 @@ int Z80_Init(void)
     return 1;
 }
 
-#include "cd_sys.h"
-
 void Write_To_Bank(int val)
 {
 #ifdef DEBUG_CD

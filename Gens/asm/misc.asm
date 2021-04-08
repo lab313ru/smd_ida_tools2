@@ -7,13 +7,6 @@ section .data align=64
 	extern CRam
 	extern Palette
 	extern Palette32
-	extern CDD.Control
-	extern CDD.Rcv_Status
-	extern CDD.Status
-	extern CDD.Minute
-	extern CDD.Seconde
-	extern CDD.Frame
-	extern CDD.Ext
 	extern _Bits32
 
 
@@ -1820,40 +1813,6 @@ section .text align=64
 		ret
 		
 	ALIGN32
-
-	; void CDD_Export_Status(void)
-	DECL CDD_Export_Status
-		push ebx
-		push ecx
-
-		mov ax, [CDD.Status]
-		mov bx, [CDD.Minute]
-		mov cx, [CDD.Seconde]
-		mov [CDD.Rcv_Status + 0], ax
-		mov [CDD.Rcv_Status + 2], bx
-		mov [CDD.Rcv_Status + 4], cx
-		add al, bl
-		add al, bh
-		mov bx, [CDD.Frame]
-		add al, ch
-		add al, cl
-		and byte [CDD.Control], 0x3
-		add al, ah
-		add al, bl
-		mov ah, [CDD.Ext]
-		add al, bh
-		add al, ah
-		mov [CDD.Rcv_Status + 6], bx
-		not al
-		and al, 0x0F
-		mov [CDD.Rcv_Status + 8], ax
-
-		pop ecx
-		pop ebx
-		ret
-
-	ALIGN32
-
 
 	; void Write_Sound_Mono_MMX(int *Left, int *Right, short *Dest, int length)
 	DECL Write_Sound_Mono_MMX

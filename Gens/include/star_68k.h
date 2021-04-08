@@ -126,7 +126,6 @@ void     SN##addCycles        (int cycles);                   \
 unsigned SN##readPC           (void);                         \
 
     STARSCREAM_IDENTIFIERS(S68000, main68k_)
-        STARSCREAM_IDENTIFIERS(S68000, sub68k_)
 
 #ifdef __cplusplus
 }

@@ -233,9 +233,6 @@ static InputButton s_inputButtons[] =
     //	{MOD_CONTROL|MOD_SHIFT, 'S',       ID_CPU_SOFTRESET,         0, NULL, "Soft Reset CPU", "SoftResetKey"},
     //	{MOD_CONTROL|MOD_SHIFT, 'P',       ID_CPU_ACCURATE_SYNCHRO,  0, NULL, "Accurate Sega CD CPU Sync On/Off", "AccurateSyncKey"},
 
-    { MOD_CONTROL, 'B', ID_FILES_BOOTCD, 0, NULL, "Boot CD", "BootCDKey" },
-    { MOD_CONTROL, 'V', ID_FILES_OPENCLOSECD, 0, NULL, "Open/Close CD", "OpenCloseCDKey" },
-
     { MOD_NONE, VK_NONE, ID_FILES_OPENRECENTROM0, 0, NULL, "Open Most Recent ROM", "OpenMostRecentROM" },
     { MOD_NONE, VK_NONE, ID_TOOLS_OPENRECENTMOVIE0, 0, NULL, "Open Most Recent Movie", "OpenMostRecentMovie" },
     { MOD_NONE, VK_NONE, ID_LUA_OPENRECENTSCRIPT0, 0, NULL, "Open Most Recent Lua Script", "OpenMostRecentLua" },

@@ -35,12 +35,9 @@ using namespace ::apache::thrift::concurrency;
 #include "ggenie.h"
 #include "cpu_68k.h"
 #include "star_68k.h"
-#include "cpu_sh2.h"
 #include "cpu_z80.h"
 #include "z80.h"
 #include "mem_m68k.h"
-#include "mem_s68k.h"
-#include "mem_sh2.h"
 #include "mem_z80.h"
 #include "joypads.h"
 #include "psg.h"
@@ -48,10 +45,6 @@ using namespace ::apache::thrift::concurrency;
 #include "pwm.h"
 #include "vdp_io.h"
 #include "vdp_rend.h"
-#include "vdp_32x.h"
-#include "lc89510.h"
-#include "gfx_cd.h"
-#include "cd_aspi.h"
 #include "pcm.h"
 #include "wave.h"
 #include "ram_search.h"
@@ -136,14 +129,12 @@ int Setting_Render = 0;
 int Render_FS = 0;
 int Show_FPS = 0;
 int Show_Message = 0;
-int Show_LED = 0;
 int FS_Minimised = 0;
 int Auto_Pause = 0;
 int Auto_Fix_CS = 0;
 int Country = -1;
 int Country_Order[3];
 int Intro_Style = 0;
-int SegaCD_Accurate = 1;
 int Gens_Running = 0;
 int WinNT_Flag = 0;
 int Gens_Priority;
@@ -232,7 +223,6 @@ LRESULT CALLBACK HexEditorProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK VDPRamProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK VDPSpritesProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK RamCheatProc(HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK VolumeProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK PromptSpliceFrameProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK PromptSeekFrameProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK LuaScriptProc(HWND, UINT, WPARAM, LPARAM);
@@ -445,8 +435,6 @@ int Change_Layer(int Num) //Nitsuja added this to allow for layer enabling and d
         { &VScrollBh, "Scroll B High" },
         { &VSpritel, "Sprites Low" },
         { &VSpritel, "Sprites High" },
-        { &_32X_Plane_Low_On, "32X Plane Low" },
-        { &_32X_Plane_High_On, "32X Plane High" },
     };
 
     if (Num < 0 || Num >= sizeof(layers) / sizeof(layers[0]))
@@ -500,9 +488,6 @@ int Change_LayerSwap(int num)
     case 2:
         Plane = &Swap_Sprite_Priority;
         break;
-    case 3:
-        Plane = &Swap_32X_Plane_Priority;
-        break;
     default:
         return 1;
     }
@@ -533,10 +518,6 @@ int Change_Plane(int num)
     case 2:
         Plane = &SpriteOn;
         sprintf(Layer, "Sprites");
-        break;
-    case 3:
-        Plane = &_32X_Plane_On;
-        sprintf(Layer, "32X");
         break;
     default:
         return 1;
@@ -765,64 +746,6 @@ tryAgain:
     return 1;
 }
 
-int Change_SegaCD_Synchro(void)
-{
-    if (SegaCD_Accurate)
-    {
-        SegaCD_Accurate = 0;
-
-        if (SegaCD_Started)
-        {
-            Update_Frame = Do_SegaCD_Frame;
-            Update_Frame_Fast = Do_SegaCD_Frame_No_VDP;
-        }
-
-        MESSAGE_L("SegaCD normal mode");
-    }
-    else
-    {
-        SegaCD_Accurate = 1;
-
-        if (SegaCD_Started)
-        {
-            Update_Frame = Do_SegaCD_Frame_Cycle_Accurate;
-            Update_Frame_Fast = Do_SegaCD_Frame_No_VDP_Cycle_Accurate;
-        }
-
-        MESSAGE_L("SegaCD perfect synchro mode (slower)");
-    }
-
-    Build_Main_Menu();
-    return 1;
-}
-
-int Change_SegaCD_SRAM_Size(int num)
-{
-    if (num == ((BRAM_Ex_State & 0x100) ? BRAM_Ex_Size : -1))
-        return 1;
-
-    Save_BRAM();
-    if (num == -1)
-    {
-        BRAM_Ex_State &= 1;
-        MESSAGE_L("SegaCD SRAM cart removed");
-    }
-    else
-    {
-        char bsize[256];
-
-        BRAM_Ex_State |= 0x100;
-        BRAM_Ex_Size = num;
-
-        sprintf(bsize, "SegaCD SRAM cart plugged (%d Kb)", 8 << num);
-        MESSAGE_L(bsize);
-    }
-    Load_BRAM();
-
-    Build_Main_Menu();
-    return 1;
-}
-
 int Change_Z80()
 {
     if (Z80_State & 1)
@@ -834,57 +757,6 @@ int Change_Z80()
     {
         Z80_State |= 1;
         MESSAGE_L("Z80 Enabled");
-    }
-
-    Build_Main_Menu();
-    return(1);
-}
-
-int Change_PCM()
-{
-    if (PCM_Enable)
-    {
-        PCM_Enable = 0;
-        MESSAGE_L("PCM Sound Disabled");
-    }
-    else
-    {
-        PCM_Enable = 1;
-        MESSAGE_L("PCM Sound Enabled");
-    }
-
-    Build_Main_Menu();
-    return 1;
-}
-
-int Change_PWM()
-{
-    if (PWM_Enable)
-    {
-        PWM_Enable = 0;
-        MESSAGE_L("PWM Sound Disabled");
-    }
-    else
-    {
-        PWM_Enable = 1;
-        MESSAGE_L("PWM Sound Enabled");
-    }
-
-    Build_Main_Menu();
-    return 1;
-}
-
-int Change_CDDA()
-{
-    if (CDDA_Enable)
-    {
-        CDDA_Enable = 0;
-        MESSAGE_L("CD Audio Sound Disabled");
-    }
-    else
-    {
-        CDDA_Enable = 1;
-        MESSAGE_L("CD Audio Enabled");
     }
 
     Build_Main_Menu();
@@ -929,7 +801,6 @@ int Change_Sample_Rate(HWND hWnd, int Rate)
       PSG_Init(CLOCK_NTSC / 15, Sound_Rate);
     }
 
-    if (SegaCD_Started) Set_Rate_PCM(Sound_Rate);
     YM2612_Restore(Reg_1);
     PSG_Restore_State();
 
@@ -972,7 +843,6 @@ int Change_Sound_Stereo(HWND hWnd)
       PSG_Init(CLOCK_NTSC / 15, Sound_Rate);
     }
 
-    if (SegaCD_Started) Set_Rate_PCM(Sound_Rate);
     YM2612_Restore(Reg_1);
     PSG_Restore_State();
 
@@ -1039,8 +909,7 @@ int Change_Country(HWND hWnd, int Num)
     {
     default:
     case -1:
-        if (Genesis_Started || _32X_Started) Detect_Country_Genesis();
-        else if (SegaCD_Started) Detect_Country_SegaCD();
+        if (Genesis_Started) Detect_Country_Genesis();
         break;
 
     case 0:
@@ -1068,29 +937,17 @@ int Change_Country(HWND hWnd, int Num)
     {
         CPL_Z80 = Round_Double((((double)CLOCK_PAL / 15.0) / 50.0) / 312.0);
         CPL_M68K = Round_Double((((double)CLOCK_PAL / 7.0) / 50.0) / 312.0);
-        CPL_MSH2 = Round_Double(((((((double)CLOCK_PAL / 7.0) * 3.0) / 50.0) / 312.0) * (double)MSH2_Speed) / 100.0);
-        CPL_SSH2 = Round_Double(((((((double)CLOCK_PAL / 7.0) * 3.0) / 50.0) / 312.0) * (double)SSH2_Speed) / 100.0);
 
         VDP_Num_Lines = 312;
         VDP_Status |= 0x0001;
-        _32X_VDP.Mode &= ~0x8000;
-
-        CD_Access_Timer = 2080;
-        Timer_Step = 136752;
     }
     else
     {
         CPL_Z80 = Round_Double((((double)CLOCK_NTSC / 15.0) / 60.0) / 262.0);
         CPL_M68K = Round_Double((((double)CLOCK_NTSC / 7.0) / 60.0) / 262.0);
-        CPL_MSH2 = Round_Double(((((((double)CLOCK_NTSC / 7.0) * 3.0) / 60.0) / 262.0) * (double)MSH2_Speed) / 100.0);
-        CPL_SSH2 = Round_Double(((((((double)CLOCK_NTSC / 7.0) * 3.0) / 60.0) / 262.0) * (double)SSH2_Speed) / 100.0);
 
         VDP_Num_Lines = 262;
         VDP_Status &= 0xFFFE;
-        _32X_VDP.Mode |= 0x8000;
-
-        CD_Access_Timer = 2096;
-        Timer_Step = 135708;
     }
 
     PSG_Save_State();
@@ -1109,7 +966,6 @@ int Change_Country(HWND hWnd, int Num)
       PSG_Init(CLOCK_NTSC / 15, Sound_Rate);
     }
 
-    if (SegaCD_Started) Set_Rate_PCM(Sound_Rate);
     YM2612_Restore(Reg_1);
     PSG_Restore_State();
 
@@ -1134,20 +990,6 @@ int Change_Country(HWND hWnd, int Num)
             sprintf(Str_Tmp, GENS_NAME " - Megadrive : %s", Game->Rom_Name_W);
         else
             sprintf(Str_Tmp, GENS_NAME " - Genesis : %s", Game->Rom_Name_W);
-    }
-    else if (_32X_Started)
-    {
-        if (CPU_Mode == 1)
-            sprintf(Str_Tmp, GENS_NAME " - 32X (PAL) : %s", Game->Rom_Name_W);
-        else
-            sprintf(Str_Tmp, GENS_NAME " - 32X (NTSC) : %s", Game->Rom_Name_W);
-    }
-    else if (SegaCD_Started)
-    {
-        if ((CPU_Mode == 1) || (Game_Mode == 0))
-            sprintf(Str_Tmp, GENS_NAME " - MegaCD : %s", Rom_Name);
-        else
-            sprintf(Str_Tmp, GENS_NAME " - SegaCD : %s", Rom_Name);
     }
 
     if (Game)
@@ -1217,11 +1059,8 @@ BOOL Init(HINSTANCE hInst, int nCmdShow)
     VScrollBh = 1; // Modif N.
     VSpritel = 1; // Modif U.
     VSpriteh = 1; // Modif U.
-    _32X_Plane_High_On = 1;
-    _32X_Plane_Low_On = 1;
     ScrollAOn = 1;
     ScrollBOn = 1;
-    _32X_Plane_On = 1;
     SpriteOn = 1;
     Sprite_Always_Top = 0;
     PinkBG = 0;
@@ -1237,8 +1076,6 @@ BOOL Init(HINSTANCE hInst, int nCmdShow)
     FS_Minimised = 0;
     Game = NULL;
     Genesis_Started = 0;
-    SegaCD_Started = 0;
-    _32X_Started = 0;
     CPU_Mode = 0;
     Window_Pos.x = 0;
     Window_Pos.y = 0;
@@ -1289,15 +1126,11 @@ BOOL Init(HINSTANCE hInst, int nCmdShow)
 
     strcat(Gens_Path, "\\");
 
-    MSH2_Init();
-    SSH2_Init();
     M68K_Init();
-    S68K_Init();
     Z80_Init();
 
     YM2612_Init(CLOCK_NTSC / 7, Sound_Rate, 1);
     PSG_Init(CLOCK_NTSC / 15, Sound_Rate);
-    PWM_Init();
 
     Build_Main_Menu(); // needs to be before config is loaded so Gens_Menu_Width is valid when the render mode gets set
 
@@ -1314,8 +1147,6 @@ BOOL Init(HINSTANCE hInst, int nCmdShow)
         return FALSE;
     }
 
-    Init_CD_Driver();
-    Init_Tab();
     Build_Main_Menu();
 
     DragAcceptFiles(HWnd, TRUE);
@@ -1356,7 +1187,6 @@ void End_All(void)
     End_Input();
     YM2612_End();
     End_Sound();
-    End_CD_Driver();
 
     DragAcceptFiles(HWnd, FALSE);
 
@@ -2233,27 +2063,6 @@ void BeginMoviePlayback()
             MESSAGE_L("Genesis reset");
                 if (MainMovie.ClearSRAM) memset(SRAM, 0, sizeof(SRAM));
         }
-        else if (_32X_Started)
-        {
-            Pre_Load_Rom(HWnd, Recent_Rom[0]);
-            MESSAGE_L("32X reset");
-                if (MainMovie.ClearSRAM) memset(SRAM, 0, sizeof(SRAM));
-        }
-        else if (SegaCD_Started)
-        {
-            g_dontResetAudioCache = 1;
-            if (CD_Load_System == CDROM_)
-            {
-                MessageBox(GetActiveWindow(), "Warning: You are running from a mounted CD. To prevent desyncs, it is recommended you run the game from a CUE or ISO file instead.", "Playback Warning", MB_OK | MB_ICONWARNING);
-                Reset_SegaCD();
-            }
-            else
-                Pre_Load_Rom(HWnd, Recent_Rom[0]);
-            g_dontResetAudioCache = 0;
-            MESSAGE_L("SegaCD reset");
-                if (MainMovie.ClearSRAM) memset(SRAM, 0, sizeof(SRAM));
-            if (MainMovie.ClearSRAM) Format_Backup_Ram();
-        }
         Paused = wasPaused;
     }
     if (MainMovie.Status == MOVIE_PLAYING && MainMovie.UseState != 0)
@@ -2328,33 +2137,6 @@ const char* GensPlayMovie(const char* filename, bool silent)
         }
     }
 
-    if (!silent)
-    {
-        if (SegaCD_Started && !PCM_Enable)
-        {
-            DialogsOpen++;
-            int answer = MessageBox(HWnd, "Your \"PCM Audio\" option is off!\nThis could cause desyncs.\nWould you like to turn it on now?", "Alert", MB_YESNOCANCEL | MB_ICONQUESTION);
-            DialogsOpen--;
-            if (answer == IDCANCEL) { MainMovie.Status = 0; return "user cancelled"; }
-            if (answer == IDYES) PCM_Enable = 1;
-        }
-        if (SegaCD_Started && !SegaCD_Accurate)
-        {
-            DialogsOpen++;
-            int answer = MessageBox(HWnd, "Your \"Perfect SegaCD CPU Synchro\" option is off!\nThis could cause desyncs.\nWould you like to turn it on now?", "Alert", MB_YESNOCANCEL | MB_ICONQUESTION);
-            DialogsOpen--;
-            if (answer == IDCANCEL) { MainMovie.Status = 0; return "user cancelled"; }
-            if (answer == IDYES) SegaCD_Accurate = 1;
-        }
-        if (SegaCD_Started && SCD.TOC.Last_Track == 1)
-        {
-            DialogsOpen++;
-            int answer = MessageBox(HWnd, "You are missing the audio tracks for this game.\nThis could cause desyncs.\nPlease ignore this message if you know this game does not use any CD audio.", "Warning", MB_OKCANCEL | MB_ICONWARNING);
-            DialogsOpen--;
-            if (answer == IDCANCEL) { MainMovie.Status = 0; return "user cancelled"; }
-        }
-    }
-
     BeginMoviePlayback();
 
     return NULL; // success
@@ -2415,7 +2197,6 @@ enum GensFileType
     FILETYPE_ROM,
     FILETYPE_SAVESTATE,
     FILETYPE_SRAM,
-    FILETYPE_BRAM,
     FILETYPE_SCRIPT,
     FILETYPE_WATCH,
     FILETYPE_CONFIG,
@@ -2457,13 +2238,11 @@ GensFileType GuessFileType(const char* filename, const char* extension)
             rv = FILETYPE_SCRIPT;
         else if (!stricmp(extension, "srm") || !stricmp(extension, "sram"))
             rv = FILETYPE_SRAM;
-        else if (!stricmp(extension, "brm") || !stricmp(extension, "bram"))
-            rv = FILETYPE_BRAM;
         else if (!stricmp(extension, "gmv") || !stricmp(extension, "gm2"))
             rv = FILETYPE_MOVIE;
         else if (tolower(extension[0]) == 'g' && tolower(extension[1]) == 's' && (extension[2] == 't' || extension[2] == '-' || isdigit(extension[2])))
             rv = FILETYPE_SAVESTATE;
-        else if (!stricmp(extension, "cue") || !stricmp(extension, "iso") || !stricmp(extension, "raw") || !stricmp(extension, "smd") || !stricmp(extension, "gen") || !stricmp(extension, "32x") || !stricmp(extension, "bin"))
+        else if (!stricmp(extension, "smd") || !stricmp(extension, "gen") || !stricmp(extension, "bin"))
             rv = FILETYPE_ROM;
         else if (filesize >= 1024) // we don't have a reliable way to tell the difference between a ROM/image and other junk, do we?
             rv = FILETYPE_ROM;
@@ -2982,15 +2761,6 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             CallRegisteredLuaFunctions((LuaCallID)(LUACALL_SCRIPT_HOTKEY_1 + index));
         }   break;
 
-        case ID_VOLUME_CONTROL:
-            if (!VolControlHWnd)
-            {
-                VolControlHWnd = CreateDialog(ghInstance, MAKEINTRESOURCE(IDD_VOLUME), hWnd, (DLGPROC)VolumeProc);
-                DialogsOpen++;
-            }
-            else
-                SetForegroundWindow(VolControlHWnd);
-            break;
         case ID_PLAY_FROM_START:
             GensReplayMovie();
             return 0;
@@ -3050,29 +2820,6 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             DialogBox(ghInstance, MAKEINTRESOURCE(IDD_RECORD_A_MOVIE), hWnd, (DLGPROC)RecordMovieProc);
             if (RecordMovieCanceled)
                 return 0;
-            if (SegaCD_Started && !PCM_Enable)
-            {
-                DialogsOpen++;
-                int answer = MessageBox(hWnd, "Your \"PCM Audio\" option is off!\nThis could cause desyncs.\nWould you like to turn it on now?", "Alert", MB_YESNOCANCEL | MB_ICONQUESTION);
-                DialogsOpen--;
-                if (answer == IDCANCEL) { MainMovie.Status = 0; return 0; }
-                if (answer == IDYES) PCM_Enable = 1;
-            }
-            if (SegaCD_Started && !SegaCD_Accurate)
-            {
-                DialogsOpen++;
-                int answer = MessageBox(hWnd, "Your \"Perfect SegaCD CPU Synchro\" option is off!\nThis could cause desyncs.\nWould you like to turn it on now?", "Alert", MB_YESNOCANCEL | MB_ICONQUESTION);
-                DialogsOpen--;
-                if (answer == IDCANCEL) { MainMovie.Status = 0; return 0; }
-                if (answer == IDYES) SegaCD_Accurate = 1;
-            }
-            if (SegaCD_Started && SCD.TOC.Last_Track == 1)
-            {
-                DialogsOpen++;
-                int answer = MessageBox(hWnd, "You are missing the audio tracks for this game.\nThis could prevent other people from being able to watch your movie with audio.\nPlease ignore this message if you know this game does not use any CD audio.", "Warning", MB_OKCANCEL | MB_ICONWARNING);
-                DialogsOpen--;
-                if (answer == IDCANCEL) { MainMovie.Status = 0; return 0; }
-            }
             if (MainMovie.StateRequired)
             {
                 FrameCount = 0;
@@ -3147,27 +2894,7 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     MESSAGE_L("Genesis reset");
                         memset(SRAM, 0, sizeof(SRAM));
                 }
-                else if (_32X_Started)
-                {
-                    Pre_Load_Rom(HWnd, Recent_Rom[0]);
-                    MESSAGE_L("32X reset");
-                        memset(SRAM, 0, sizeof(SRAM));
-                }
-                else if (SegaCD_Started)
-                {
-                    g_dontResetAudioCache = 1;
-                    if (CD_Load_System == CDROM_)
-                    {
-                        MessageBox(GetActiveWindow(), "Warning: You are running from a mounted CD. To prevent desyncs, it is recommended you run the game from a CUE or ISO file instead.", "Recording Warning", MB_OK | MB_ICONWARNING);
-                        Reset_SegaCD();
-                    }
-                    else
-                        Pre_Load_Rom(HWnd, Recent_Rom[0]);
-                    g_dontResetAudioCache = 0;
-                    MESSAGE_L("SegaCD reset");
-                        memset(SRAM, 0, sizeof(SRAM));
-                    Format_Backup_Ram();
-                }
+                
                 MESSAGE_L("Recording from start");
             }
             Build_Main_Menu();
@@ -3216,39 +2943,6 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             GensLoadRom(NULL);
             return 0;
         }
-
-        case ID_FILES_BOOTCD:
-            if (MainMovie.File != NULL)
-                CloseMovieFile(&MainMovie);
-            if (Num_CD_Drive == 0)
-            {
-                extern int failed_to_load_wnaspi_dll;
-                if (failed_to_load_wnaspi_dll)
-                    if (!Full_Screen)
-                        MessageBox(HWnd, "You need WNASPI32.DLL to run from a CD drive.", "Error", MB_OK);
-                    else
-                        MESSAGE_L("You need WNASPI32.DLL to run from a CD drive.");
-                        return 1;
-            }
-            Free_Rom(Game);         // Don't forget it !
-            SegaCD_Started = Init_SegaCD(NULL);
-            Build_Main_Menu();
-            FrameCount = 0;
-            LagCount = 0;
-            LagCountPersistent = 0;
-            frameSearchFrames = -1; frameSearchInitialized = false;
-            ReopenRamWindows();
-            return SegaCD_Started;
-
-        case ID_FILES_OPENCLOSECD:
-            if (MainMovie.File != NULL)
-                CloseMovieFile(&MainMovie);
-            if (SegaCD_Started) Change_CD();
-            FrameCount = 0;
-            LagCount = 0;
-            LagCountPersistent = 0;
-            frameSearchFrames = -1; frameSearchInitialized = false;
-            return 0;
 
         case ID_FILES_CLOSEROM:
             if (MainMovie.File != NULL)
@@ -3391,8 +3085,6 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case ID_GRAPHICS_LAYER3:
         case ID_GRAPHICS_LAYERSPRITE:
         case ID_GRAPHICS_LAYERSPRITEHIGH:
-        case ID_GRAPHICS_LAYER32X_LOW:
-        case ID_GRAPHICS_LAYER32X_HIGH:
             Change_Layer(command - ID_GRAPHICS_LAYER0);
             return 0;
 
@@ -3407,14 +3099,12 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case ID_GRAPHICS_LAYERSWAPA:
         case ID_GRAPHICS_LAYERSWAPB:
         case ID_GRAPHICS_LAYERSWAPS:
-        case ID_GRAPHICS_LAYERSWAP32X:
             Change_LayerSwap(command - ID_GRAPHICS_LAYERSWAPA);
             return 0;
 
         case ID_GRAPHICS_TOGGLEA:
         case ID_GRAPHICS_TOGGLEB:
         case ID_GRAPHICS_TOGGLES:
-        case ID_GRAPHICS_TOGGLE32X:
             Change_Plane(command - ID_GRAPHICS_TOGGLEA);
             return 0;
 
@@ -3642,10 +3332,6 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
             if (Genesis_Started)
                 Reset_Genesis();
-            else if (_32X_Started)
-                Reset_32X();
-            else if (SegaCD_Started)
-                Reset_SegaCD();
 
             FrameCount = 0;
             LagCount = 0;
@@ -3654,10 +3340,6 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
             if (Genesis_Started)
                 MESSAGE_L("Genesis reset")
-            else if (_32X_Started)
-                MESSAGE_L("32X reset")
-            else if (SegaCD_Started)
-                MESSAGE_L("SegaCD reset");
 
                 CallRegisteredLuaFunctions(LUACALL_ONSTART);
 
@@ -3675,64 +3357,6 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 Paused = 0;
                 main68k_reset();
                 if (Genesis_Started) MESSAGE_L("68000 CPU reseted")
-                else if (SegaCD_Started) MESSAGE_L("Main 68000 CPU reseted");
-            }
-            FrameCount = 0;
-            LagCount = 0;
-            LagCountPersistent = 0;
-            frameSearchFrames = -1; frameSearchInitialized = false;
-            return 0;
-
-        case ID_CPU_RESET_MSH2:
-            if (!(Game))
-                return 0;
-            if (MainMovie.File != NULL)
-                CloseMovieFile(&MainMovie);
-            MainMovie.Status = 0;
-
-            if ((Game) && (_32X_Started))
-            {
-                Paused = 0;
-                SH2_Reset(&M_SH2, 1);
-                MESSAGE_L("Master SH2 reseted");
-            }
-            FrameCount = 0;
-            LagCount = 0;
-            LagCountPersistent = 0;
-            frameSearchFrames = -1; frameSearchInitialized = false;
-            return 0;
-
-        case ID_CPU_RESET_SSH2:
-            if (!(Game))
-                return 0;
-            if (MainMovie.File != NULL)
-                CloseMovieFile(&MainMovie);
-            MainMovie.Status = 0;
-
-            if ((Game) && (_32X_Started))
-            {
-                Paused = 0;
-                SH2_Reset(&S_SH2, 1);
-                MESSAGE_L("Slave SH2 reseted");
-            }
-            FrameCount = 0;
-            LagCount = 0;
-            LagCountPersistent = 0;
-            frameSearchFrames = -1; frameSearchInitialized = false;
-            return 0;
-
-        case ID_CPU_RESET_SUB68K:
-            if (!(Game))
-                return 0;
-            if (MainMovie.File != NULL)
-                CloseMovieFile(&MainMovie);
-            MainMovie.Status = 0;
-
-            if ((Game) && (SegaCD_Started))
-            {
-                Paused = 0;
-                sub68k_reset();
-                MESSAGE_L("Sub 68000 CPU reseted");
             }
             FrameCount = 0;
             LagCount = 0;
@@ -3756,10 +3380,6 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             LagCount = 0;
             LagCountPersistent = 0;
             frameSearchFrames = -1; frameSearchInitialized = false;
-            return 0;
-
-        case ID_CPU_ACCURATE_SYNCHRO:
-            Change_SegaCD_Synchro();
             return 0;
 
         case ID_CPU_COUNTRY_AUTO:
@@ -3786,26 +3406,6 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case ID_CPU_COUNTRY_ORDER + 1:
         case ID_CPU_COUNTRY_ORDER + 2:
             Change_Country_Order(command - ID_CPU_COUNTRY_ORDER);
-            return 0;
-
-        case ID_SOUND_Z80ENABLE:
-            Change_Z80();
-            return 0;
-
-        case ID_SOUND_PCMENABLE:
-            Change_PCM();
-            return 0;
-
-        case ID_SOUND_PWMENABLE:
-            Change_PWM();
-            return 0;
-
-        case ID_SOUND_CDDAENABLE:
-            Change_CDDA();
-            return 0;
-
-        case ID_SOUND_PSGIMPROV:
-            //                  Change_PSG_Improv(hWnd);
             return 0;
 
         case ID_SOUND_RATE_11000:
@@ -3897,45 +3497,6 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             Show_FPS = !Show_FPS;
             if (Show_FPS) Flip(hWnd); else Show_Genesis_Screen(hWnd);
             break;
-        case ID_TOGGLE_SHOWLED:
-            Show_LED = !Show_LED;
-            Show_Genesis_Screen(hWnd);
-            break;
-
-        case ID_OPTION_CDDRIVE_0:
-        case ID_OPTION_CDDRIVE_1:
-        case ID_OPTION_CDDRIVE_2:
-        case ID_OPTION_CDDRIVE_3:
-        case ID_OPTION_CDDRIVE_4:
-        case ID_OPTION_CDDRIVE_5:
-        case ID_OPTION_CDDRIVE_6:
-        case ID_OPTION_CDDRIVE_7:
-            if (Num_CD_Drive > (command - ID_OPTION_CDDRIVE_0))
-            {
-                CUR_DEV = command - ID_OPTION_CDDRIVE_0;
-            }
-            Build_Main_Menu();
-            return 0;
-
-        case ID_OPTION_SRAMSIZE_0:
-            Change_SegaCD_SRAM_Size(-1);
-            return 0;
-
-        case ID_OPTION_SRAMSIZE_8:
-            Change_SegaCD_SRAM_Size(0);
-            return 0;
-
-        case ID_OPTION_SRAMSIZE_16:
-            Change_SegaCD_SRAM_Size(1);
-            return 0;
-
-        case ID_OPTION_SRAMSIZE_32:
-            Change_SegaCD_SRAM_Size(2);
-            return 0;
-
-        case ID_OPTION_SRAMSIZE_64:
-            Change_SegaCD_SRAM_Size(3);
-            return 0;
 
         case ID_OPTION_SRAMON:
             SRAM_ON = !SRAM_ON;
@@ -4190,8 +3751,6 @@ HMENU Build_Main_Menu(void)
     HMENU CPUCountryOrder;
     HMENU CPUSlowDownSpeed;
     HMENU SoundRate;
-    HMENU OptionsCDDrive;
-    HMENU OptionsSRAMSize;
     HMENU Tools_Movies; //Upth-Add - Submenu of TAS_Tools
     HMENU Movies_Tracks; //Upth-Add - submenu of Tas_Tools -> Tools_Movies
     HMENU MoviesHistory;
@@ -4236,8 +3795,6 @@ HMENU Build_Main_Menu(void)
     CPUCountryOrder = CreatePopupMenu();
     CPUSlowDownSpeed = CreatePopupMenu();
     SoundRate = CreatePopupMenu();
-    OptionsCDDrive = CreatePopupMenu();
-    OptionsSRAMSize = CreatePopupMenu();
     Tools_Movies = CreatePopupMenu(); //Upth-Add - Initialize my new menus
     Movies_Tracks = CreatePopupMenu(); //Upth-Add - Initialize new menu
     Lua_Script = CreatePopupMenu();
@@ -4267,10 +3824,6 @@ HMENU Build_Main_Menu(void)
     MENU_L(Files, 1, Flags, ID_FILES_CLOSEROM, "&Close ROM\t\tCtrl+C");
 
     i = 2;
-
-    MENU_L(Files, i++, Flags, ID_FILES_BOOTCD, "&Boot CD\t\tCtrl+B");
-
-    InsertMenu(Files, i++, MF_SEPARATOR, NULL, NULL);
 
     MENU_L(Files, i++, Flags, ID_FILES_GAMEGENIE, "&Game Genie");
 
@@ -4341,18 +3894,6 @@ HMENU Build_Main_Menu(void)
 
             case GENESIS_ROM >> 1:
                 strcpy(tmp, "[MD]   - ");
-                break;
-
-            case _32X_ROM >> 1:
-                strcpy(tmp, "[32X]  - ");
-                break;
-
-            case SEGACD_IMAGE >> 1:
-                strcpy(tmp, "[SCD] - ");
-                break;
-
-            case SEGACD_32X_IMAGE >> 1:
-                strcpy(tmp, "[SCDX] - ");
                 break;
 
             case COMPRESSED_IMAGE >> 1:
@@ -4458,7 +3999,6 @@ HMENU Build_Main_Menu(void)
 
     MENU_L(GraphicsLayers, i++, Flags | MF_POPUP, (UINT)GraphicsLayersA, "Scroll &A");
     MENU_L(GraphicsLayers, i++, Flags | MF_POPUP, (UINT)GraphicsLayersB, "Scroll &B");
-    MENU_L(GraphicsLayers, i++, Flags | MF_POPUP, (UINT)GraphicsLayersX, "32&X");
     MENU_L(GraphicsLayers, i++, Flags | MF_POPUP, (UINT)GraphicsLayersS, "&Sprites");
 
     // LAYERS SUBMENUS //
@@ -4467,22 +4007,18 @@ HMENU Build_Main_Menu(void)
 
     MENU_L(GraphicsLayersA, i, MF_BYPOSITION | (VScrollAl ? MF_CHECKED : MF_UNCHECKED), ID_GRAPHICS_LAYER0, "Scroll A &Low");
     MENU_L(GraphicsLayersB, i, MF_BYPOSITION | (VScrollBl ? MF_CHECKED : MF_UNCHECKED), ID_GRAPHICS_LAYER1, "Scroll B &Low");
-    MENU_L(GraphicsLayersX, i, MF_BYPOSITION | (_32X_Plane_Low_On ? MF_CHECKED : MF_UNCHECKED), ID_GRAPHICS_LAYER32X_LOW, "32X Plane &Low");
     MENU_L(GraphicsLayersS, i++, MF_BYPOSITION | (VSpritel ? MF_CHECKED : MF_UNCHECKED), ID_GRAPHICS_LAYERSPRITE, "Sprites &Low");
 
     MENU_L(GraphicsLayersA, i, MF_BYPOSITION | (VScrollAh ? MF_CHECKED : MF_UNCHECKED), ID_GRAPHICS_LAYER2, "Scroll A &High");
     MENU_L(GraphicsLayersB, i, MF_BYPOSITION | (VScrollBh ? MF_CHECKED : MF_UNCHECKED), ID_GRAPHICS_LAYER3, "Scroll B &High");
-    MENU_L(GraphicsLayersX, i, MF_BYPOSITION | (_32X_Plane_High_On ? MF_CHECKED : MF_UNCHECKED), ID_GRAPHICS_LAYER32X_HIGH, "32X Plane &High");
     MENU_L(GraphicsLayersS, i++, MF_BYPOSITION | (VSpriteh ? MF_CHECKED : MF_UNCHECKED), ID_GRAPHICS_LAYERSPRITEHIGH, "Sprites &High");
 
     MENU_L(GraphicsLayersA, i, MF_BYPOSITION | (Swap_Scroll_PriorityA ? MF_CHECKED : MF_UNCHECKED), ID_GRAPHICS_LAYERSWAPA, "&Swap Scroll Layers");
     MENU_L(GraphicsLayersB, i, MF_BYPOSITION | (Swap_Scroll_PriorityB ? MF_CHECKED : MF_UNCHECKED), ID_GRAPHICS_LAYERSWAPB, "&Swap Scroll Layers");
-    MENU_L(GraphicsLayersX, i, MF_BYPOSITION | (Swap_32X_Plane_Priority ? MF_CHECKED : MF_UNCHECKED), ID_GRAPHICS_LAYERSWAP32X, "&Swap 32X Plane Layers");
     MENU_L(GraphicsLayersS, i++, MF_BYPOSITION | (Swap_Sprite_Priority ? MF_CHECKED : MF_UNCHECKED), ID_GRAPHICS_LAYERSWAPS, "&Swap Sprite Layers");
 
     MENU_L(GraphicsLayersA, i, MF_BYPOSITION | (ScrollAOn ? MF_CHECKED : MF_UNCHECKED), ID_GRAPHICS_TOGGLEA, "&Enable");
     MENU_L(GraphicsLayersB, i, MF_BYPOSITION | (ScrollBOn ? MF_CHECKED : MF_UNCHECKED), ID_GRAPHICS_TOGGLEB, "&Enable");
-    MENU_L(GraphicsLayersX, i, MF_BYPOSITION | (_32X_Plane_On ? MF_CHECKED : MF_UNCHECKED), ID_GRAPHICS_TOGGLE32X, "&Enable");
     MENU_L(GraphicsLayersS, i++, MF_BYPOSITION | (SpriteOn ? MF_CHECKED : MF_UNCHECKED), ID_GRAPHICS_TOGGLES, "&Enable");
 
     MENU_L(GraphicsLayersS, i++, MF_BYPOSITION | (Sprite_Always_Top ? MF_CHECKED : MF_UNCHECKED), ID_GRAPHICS_SPRITEALWAYS, "Sprites Always On &Top");
@@ -4524,30 +4060,9 @@ HMENU Build_Main_Menu(void)
 
     MENU_L(CPU, i++, Flags, ID_CPU_RESET, "&Hard Reset\t\tCtrl+Shift+R");
 
-    if (SegaCD_Started)
-    {
-        MENU_L(CPU, i++, Flags, ID_CPU_RESET68K, "Reset &main 68000");
-        MENU_L(CPU, i++, Flags, ID_CPU_RESET_SUB68K, "Reset &sub 68000");
-    }
-    else if (_32X_Started)
-    {
-        MENU_L(CPU, i++, Flags, ID_CPU_RESET68K, "Reset &68000");
-        MENU_L(CPU, i++, Flags, ID_CPU_RESET_MSH2, "Reset master SH2");
-        MENU_L(CPU, i++, Flags, ID_CPU_RESET_SSH2, "Reset slave SH2");
-    }
-    else
-        MENU_L(CPU, i++, Flags, ID_CPU_RESET68K, "Reset &68000");
+    MENU_L(CPU, i++, Flags, ID_CPU_RESET68K, "Reset &68000");
 
     MENU_L(CPU, i++, Flags, ID_CPU_RESETZ80, "Reset &Z80");
-
-    if (!Genesis_Started && !_32X_Started)
-    {
-        InsertMenu(CPU, i++, MF_SEPARATOR, NULL, NULL);
-
-        MENU_L(CPU, i++, Flags | (SegaCD_Accurate ? MF_CHECKED : MF_UNCHECKED), ID_CPU_ACCURATE_SYNCHRO, "&Perfect SegaCD Synchro");
-    }
-
-    //  InsertMenu(CPU, i++, MF_SEPARATOR, NULL, NULL);
 
     // COUNTRY //
 
@@ -4581,33 +4096,10 @@ HMENU Build_Main_Menu(void)
 
     i = 0;
 
-    InsertMenu(Sound, i++, MF_SEPARATOR, NULL, NULL);
-
     MENU_L(Sound, i++, Flags | MF_POPUP, (UINT)SoundRate, "&Rate");
     MENU_L(Sound, i++, Flags | (Sound_Stereo ? MF_CHECKED : MF_UNCHECKED), ID_SOUND_STEREO, "&Stereo");
     MENU_L(Sound, i++, Flags | (Sound_Soften ? MF_CHECKED : MF_UNCHECKED), ID_SOUND_SOFTEN, "Soften &Filter"); // Modif N.
     MENU_L(Sound, i++, Flags | (!Sleep_Time ? MF_CHECKED : MF_UNCHECKED), ID_SOUND_HOG, "&Hog CPU"); // Modif N.
-
-    InsertMenu(Sound, i++, MF_SEPARATOR, NULL, NULL);
-
-    InsertMenu(Sound, i++, Flags,
-        ID_VOLUME_CONTROL, "&Volume Control");
-
-    InsertMenu(Sound, i++, MF_SEPARATOR, NULL, NULL);
-
-    InsertMenu(Sound, i++, Flags | ((Z80_State & 1) ? MF_CHECKED : MF_UNCHECKED),
-        ID_SOUND_Z80ENABLE, "&Z80");
-
-    if (!Genesis_Started && !_32X_Started)
-    {
-        InsertMenu(Sound, i++, Flags | (PCM_Enable ? MF_CHECKED : MF_UNCHECKED),
-            ID_SOUND_PCMENABLE, "P&CM");
-        InsertMenu(Sound, i++, Flags | (CDDA_Enable ? MF_CHECKED : MF_UNCHECKED),
-            ID_SOUND_CDDAENABLE, "CDD&A");
-    }
-    if (!Genesis_Started && !SegaCD_Started)
-        InsertMenu(Sound, i++, Flags | (PWM_Enable ? MF_CHECKED : MF_UNCHECKED),
-            ID_SOUND_PWMENABLE, "P&WM");
 
     // RATE //
 
@@ -4780,64 +4272,8 @@ HMENU Build_Main_Menu(void)
 
     InsertMenu(Options, i++, MF_SEPARATOR, NULL, NULL);
 
-    MENU_L(Options, i++, Flags | MF_POPUP, (UINT)OptionsCDDrive, "Current CD Drive");
-    MENU_L(Options, i++, Flags | MF_POPUP, (UINT)OptionsSRAMSize, "Sega CD SRAM Size");
-
-    if (Genesis_Started && Rom_Size <= (2 * 1024 * 1024))
-        MENU_L(Options, i++, Flags | (SRAM_ON ? MF_CHECKED : MF_UNCHECKED), ID_OPTION_SRAMON, "SRAM Enabled");
-
-    InsertMenu(Options, i++, MF_SEPARATOR, NULL, NULL);
-
     MENU_L(Options, i++, Flags, ID_OPTIONS_LOADCONFIG, "&Load Config...");
     MENU_L(Options, i++, Flags, ID_OPTIONS_SAVEASCONFIG, "&Save Config As...");
-
-    // CD DRIVE //
-
-    if (Num_CD_Drive)
-    {
-        char drive_name[100];
-        for (i = 0; i < Num_CD_Drive; i++)
-        {
-            ASPI_Get_Drive_Info(i, (unsigned char *)drive_name);
-            if (CUR_DEV == i)
-                InsertMenu(OptionsCDDrive, i, Flags | MF_CHECKED,
-                    ID_OPTION_CDDRIVE_0 + i, &drive_name[8]);
-            else
-                InsertMenu(OptionsCDDrive, i, Flags | MF_UNCHECKED,
-                    ID_OPTION_CDDRIVE_0 + i, &drive_name[8]);
-        }
-    }
-    else
-        MENU_L(OptionsCDDrive, 0, Flags | MF_GRAYED, NULL, "No Drive Detected");
-
-    // SRAM SIZE //
-
-    if (BRAM_Ex_State & 0x100)
-    {
-        MENU_L(OptionsSRAMSize, 0, Flags | MF_UNCHECKED, ID_OPTION_SRAMSIZE_0, "&None");
-        for (i = 0; i < 4; i++)
-        {
-            char bsize[16];
-            sprintf(bsize, "&%d Kb", 8 << i);
-            if (BRAM_Ex_Size == i)
-                InsertMenu(OptionsSRAMSize, i + 1, Flags | MF_CHECKED,
-                    ID_OPTION_SRAMSIZE_8 + i, bsize);
-            else
-                InsertMenu(OptionsSRAMSize, i + 1, Flags | MF_UNCHECKED,
-                    ID_OPTION_SRAMSIZE_8 + i, bsize);
-        }
-    }
-    else
-    {
-        MENU_L(OptionsSRAMSize, 0, Flags | MF_CHECKED, ID_OPTION_SRAMSIZE_0, "&None");
-        for (i = 0; i < 4; i++)
-        {
-            char bsize[16];
-            sprintf(bsize, "&%d Kb", 8 << i);
-            InsertMenu(OptionsSRAMSize, i + 1, Flags | MF_UNCHECKED,
-                ID_OPTION_SRAMSIZE_8 + i, bsize);
-        }
-    }
 
     /////////////////////////////////////////////////
     //                  HELP MENU                  //
@@ -5088,7 +4524,6 @@ LRESULT CALLBACK DirectoriesProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 
         WORD_L(ID_CHANGE_SAVE, "Change");
         WORD_L(ID_CHANGE_SRAM, "Change");
-        WORD_L(ID_CHANGE_BRAM, "Change");
         WORD_L(ID_CHANGE_PATCH, "Change");
         WORD_L(ID_CHANGE_IPS, "Change");
         WORD_L(ID_CHANGE_MOVIE, "Change");
@@ -5096,14 +4531,12 @@ LRESULT CALLBACK DirectoriesProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 
         WORD_L(IDC_STATIC_SAVE, "SAVE STATE");
         WORD_L(IDC_STATIC_SRAM, "SRAM BACKUP");
-        WORD_L(IDC_STATIC_BRAM, "BRAM BACKUP");
         WORD_L(IDC_STATIC_PATCH, "PAT PATCH");
         WORD_L(IDC_STATIC_IPS, "IPS PATCH");
         WORD_L(IDC_STATIC_LUA, "LUA SCRIPT");
 
         SetDlgItemText(hDlg, IDC_EDIT_SAVE, State_Dir);
         SetDlgItemText(hDlg, IDC_EDIT_SRAM, SRAM_Dir);
-        SetDlgItemText(hDlg, IDC_EDIT_BRAM, BRAM_Dir);
         SetDlgItemText(hDlg, IDC_EDIT_PATCH, Patch_Dir);
         SetDlgItemText(hDlg, IDC_EDIT_IPS, IPS_Dir);
         SetDlgItemText(hDlg, IDC_EDIT_MOVIE, Movie_Dir);
@@ -5126,12 +4559,6 @@ LRESULT CALLBACK DirectoriesProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
             GetDlgItemText(hDlg, IDC_EDIT_SRAM, Str_Tmp2, 1024);
             if (Change_Dir(Str_Tmp, Str_Tmp2, "SRAM backup directory", "SRAM backup files\0*.srm\0\0", "srm", hDlg))
                 SetDlgItemText(hDlg, IDC_EDIT_SRAM, Str_Tmp);
-            break;
-
-        case ID_CHANGE_BRAM:
-            GetDlgItemText(hDlg, IDC_EDIT_BRAM, Str_Tmp2, 1024);
-            if (Change_Dir(Str_Tmp, Str_Tmp2, "BRAM backup directory", "BRAM backup files\0*.brm\0\0", "brm", hDlg))
-                SetDlgItemText(hDlg, IDC_EDIT_BRAM, Str_Tmp);
             break;
 
         case ID_CHANGE_PATCH:
@@ -5163,7 +4590,6 @@ LRESULT CALLBACK DirectoriesProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
         case ID_OK:
             GetDlgItemText(hDlg, IDC_EDIT_SAVE, State_Dir, 1024);
             GetDlgItemText(hDlg, IDC_EDIT_SRAM, SRAM_Dir, 1024);
-            GetDlgItemText(hDlg, IDC_EDIT_BRAM, BRAM_Dir, 1024);
             GetDlgItemText(hDlg, IDC_EDIT_PATCH, Patch_Dir, 1024);
             GetDlgItemText(hDlg, IDC_EDIT_IPS, IPS_Dir, 1024);
             GetDlgItemText(hDlg, IDC_EDIT_MOVIE, Movie_Dir, 1024);
@@ -5208,36 +4634,16 @@ LRESULT CALLBACK FilesProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         WORD_L(IDD_FILES, "Files configuration");
         WORD_L(IDC_GENESISBIOS_FILE, "Configure Genesis bios file");
-        WORD_L(IDC_32XBIOS_FILES, "Configure 32X bios files");
-        WORD_L(IDC_CDBIOS_FILES, "Configure SEGA CD bios files");
         WORD_L(IDC_MISC_FILES, "Configure misc file");
 
         WORD_L(ID_CANCEL, "&Cancel");
         WORD_L(ID_OK, "&OK");
 
         WORD_L(ID_CHANGE_GENESISBIOS, "Change");
-        WORD_L(ID_CHANGE_32XGBIOS, "Change");
-        WORD_L(ID_CHANGE_32XMBIOS, "Change");
-        WORD_L(ID_CHANGE_32XSBIOS, "Change");
-        WORD_L(ID_CHANGE_USBIOS, "Change");
-        WORD_L(ID_CHANGE_EUBIOS, "Change");
-        WORD_L(ID_CHANGE_JABIOS, "Change");
 
         WORD_L(IDC_STATIC_GENESISBIOS, "Genesis");
-        WORD_L(IDC_STATIC_32XGBIOS, "M68000");
-        WORD_L(IDC_STATIC_32XMBIOS, "Master SH2");
-        WORD_L(IDC_STATIC_32XSBIOS, "Slave SH2");
-        WORD_L(IDC_STATIC_USBIOS, "USA");
-        WORD_L(IDC_STATIC_EUBIOS, "Europe");
-        WORD_L(IDC_STATIC_JABIOS, "Japan");
 
         SetDlgItemText(hDlg, IDC_EDIT_GENESISBIOS, Genesis_Bios);
-        SetDlgItemText(hDlg, IDC_EDIT_32XGBIOS, _32X_Genesis_Bios);
-        SetDlgItemText(hDlg, IDC_EDIT_32XMBIOS, _32X_Master_Bios);
-        SetDlgItemText(hDlg, IDC_EDIT_32XSBIOS, _32X_Slave_Bios);
-        SetDlgItemText(hDlg, IDC_EDIT_USBIOS, US_CD_Bios);
-        SetDlgItemText(hDlg, IDC_EDIT_EUBIOS, EU_CD_Bios);
-        SetDlgItemText(hDlg, IDC_EDIT_JABIOS, JA_CD_Bios);
 
         return true;
         break;
@@ -5254,70 +4660,8 @@ LRESULT CALLBACK FilesProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             DialogsOpen--;
             break;
 
-        case ID_CHANGE_32XGBIOS:
-            GetDlgItemText(hDlg, IDC_EDIT_32XGBIOS, Str_Tmp2, 1024);
-            strcpy(Str_Tmp, "32X_G_bios.bin");
-            DialogsOpen++;
-            if (Change_File_S(Str_Tmp, Str_Tmp2, "32X M68000 bios file", "bios files\0*.bin\0All Files\0*.*\0\0", "bin", hDlg))
-                SetDlgItemText(hDlg, IDC_EDIT_32XGBIOS, Str_Tmp);
-            DialogsOpen--;
-            break;
-
-        case ID_CHANGE_32XMBIOS:
-            GetDlgItemText(hDlg, IDC_EDIT_32XMBIOS, Str_Tmp2, 1024);
-            strcpy(Str_Tmp, "32X_M_bios.bin");
-            DialogsOpen++;
-            if (Change_File_S(Str_Tmp, Str_Tmp2, "32X Master SH2 bios file", "bios files\0*.bin\0All Files\0*.*\0\0", "bin", hDlg))
-                SetDlgItemText(hDlg, IDC_EDIT_32XMBIOS, Str_Tmp);
-            DialogsOpen--;
-            break;
-
-        case ID_CHANGE_32XSBIOS:
-            GetDlgItemText(hDlg, IDC_EDIT_32XSBIOS, Str_Tmp2, 1024);
-            strcpy(Str_Tmp, "32X_S_bios.bin");
-            DialogsOpen++;
-            if (Change_File_S(Str_Tmp, Str_Tmp2, "32X Slave SH2 bios file", "bios files\0*.bin\0All Files\0*.*\0\0", "bin", hDlg))
-                SetDlgItemText(hDlg, IDC_EDIT_32XSBIOS, Str_Tmp);
-            DialogsOpen--;
-            break;
-
-        case ID_CHANGE_USBIOS:
-            GetDlgItemText(hDlg, IDC_EDIT_USBIOS, Str_Tmp2, 1024);
-            strcpy(Str_Tmp, "us_scd1_9210.bin");
-            DialogsOpen++;
-            if (Change_File_S(Str_Tmp, Str_Tmp2, "USA CD bios file", "bios files\0*.bin\0All Files\0*.*\0\0", "bin", hDlg))
-                SetDlgItemText(hDlg, IDC_EDIT_USBIOS, Str_Tmp);
-            DialogsOpen--;
-            break;
-
-        case ID_CHANGE_EUBIOS:
-            GetDlgItemText(hDlg, IDC_EDIT_EUBIOS, Str_Tmp2, 1024);
-            strcpy(Str_Tmp, "eu_mcd1_9210.bin");
-            DialogsOpen++;
-            if (Change_File_S(Str_Tmp, Str_Tmp2, "EUROPEAN CD bios file", "bios files\0*.bin\0All Files\0*.*\0\0", "bin", hDlg))
-                SetDlgItemText(hDlg, IDC_EDIT_EUBIOS, Str_Tmp);
-            DialogsOpen--;
-            break;
-
-        case ID_CHANGE_JABIOS:
-            GetDlgItemText(hDlg, IDC_EDIT_JABIOS, Str_Tmp2, 1024);
-            strcpy(Str_Tmp, "jp_mcd1_9112.bin");
-            DialogsOpen++;
-            if (Change_File_S(Str_Tmp, Str_Tmp2, "JAPAN CD bios file", "bios files\0*.bin\0All Files\0*.*\0\0", "bin", hDlg))
-                SetDlgItemText(hDlg, IDC_EDIT_JABIOS, Str_Tmp);
-            DialogsOpen--;
-            break;
-
         case ID_OK:
             GetDlgItemText(hDlg, IDC_EDIT_GENESISBIOS, Genesis_Bios, 1024);
-
-            GetDlgItemText(hDlg, IDC_EDIT_32XGBIOS, _32X_Genesis_Bios, 1024);
-            GetDlgItemText(hDlg, IDC_EDIT_32XMBIOS, _32X_Master_Bios, 1024);
-            GetDlgItemText(hDlg, IDC_EDIT_32XSBIOS, _32X_Slave_Bios, 1024);
-
-            GetDlgItemText(hDlg, IDC_EDIT_USBIOS, US_CD_Bios, 1024);
-            GetDlgItemText(hDlg, IDC_EDIT_EUBIOS, EU_CD_Bios, 1024);
-            GetDlgItemText(hDlg, IDC_EDIT_JABIOS, JA_CD_Bios, 1024);
 
         case ID_CANCEL:
         case IDCANCEL:
@@ -5587,19 +4931,6 @@ void GensOpenFile(const char* filename)
                 fread(SRAM, 1, 64 * 1024, file);
                 fclose(file);
                 strcpy(Str_Tmp, "SRAM loaded from ");
-                strcat(Str_Tmp, LogicalName);
-                Put_Info(Str_Tmp);
-            }
-        break;
-    case FILETYPE_BRAM:
-        if (SegaCD_Started)
-            if (FILE* file = fopen(PhysicalName, "rb"))
-            {
-                fread(Ram_Backup, 1, 8 * 1024, file);
-                if (BRAM_Ex_State & 0x100)
-                    fread(Ram_Backup_Ex, 1, (8 << BRAM_Ex_Size) * 1024, file);
-                fclose(file);
-                strcpy(Str_Tmp, "BRAM loaded from ");
                 strcat(Str_Tmp, LogicalName);
                 Put_Info(Str_Tmp);
             }
@@ -6440,139 +5771,7 @@ void CheatWrite(unsigned int address, T value)
         M68K_WBC(address++, (unsigned char)((value >> (i << 3)) & 0xff));
     }
 }
-LRESULT CALLBACK VolumeProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    RECT r;
-    RECT r2;
-    int dx1, dy1, dx2, dy2;
-    static unsigned short TempMast, Temp2612, TempPSG, TempDAC, TempPCM, TempCDDA, TempPWM;
 
-    switch (uMsg)
-    {
-    case WM_INITDIALOG:
-        if (Full_Screen)
-        {
-            while (ShowCursor(false) >= 0);
-            while (ShowCursor(true) < 0);
-        }
-
-        GetWindowRect(HWnd, &r);
-        dx1 = (r.right - r.left) / 2;
-        dy1 = (r.bottom - r.top) / 2;
-
-        GetWindowRect(hDlg, &r2);
-        dx2 = (r2.right - r2.left) / 2;
-        dy2 = (r2.bottom - r2.top) / 2;
-
-        SetWindowPos(hDlg, NULL, max(0, r.left + (dx1 - dx2)), max(0, r.top + (dy1 - dy2)), NULL, NULL, SWP_NOSIZE | SWP_NOZORDER | SWP_SHOWWINDOW);
-        for (int i = IDC_MASTVOL; i <= IDC_CDDAVOL; i++)
-        {
-            SendDlgItemMessage(hDlg, i, TBM_SETTICFREQ, (WPARAM)32, 0);
-            SendDlgItemMessage(hDlg, i, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(0, 256));
-            SendDlgItemMessage(hDlg, i, TBM_SETLINESIZE, (WPARAM)0, (LPARAM)1);
-            SendDlgItemMessage(hDlg, i, TBM_SETPAGESIZE, (WPARAM)0, (LPARAM)16);
-        }
-        SendDlgItemMessage(hDlg, IDC_MASTVOL, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(256 - MastVol));
-        SendDlgItemMessage(hDlg, IDC_2612VOL, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(256 - YM2612Vol));
-        SendDlgItemMessage(hDlg, IDC_PSGVOL, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(256 - PSGVol));
-        SendDlgItemMessage(hDlg, IDC_DACVOL, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(256 - DACVol));
-        SendDlgItemMessage(hDlg, IDC_PCMVOL, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(256 - PCMVol));
-        SendDlgItemMessage(hDlg, IDC_CDDAVOL, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(256 - CDDAVol));
-        SendDlgItemMessage(hDlg, IDC_PWMVOL, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(256 - PWMVol));
-        TempMast = MastVol;
-        Temp2612 = YM2612Vol;
-        TempPSG = PSGVol;
-        TempDAC = DACVol;
-        TempPCM = PCMVol;
-        TempCDDA = CDDAVol;
-        TempPWM = PWMVol;
-        return true;
-
-    case WM_COMMAND:
-        switch (wParam)
-        {
-        case IDOK:
-            if (Full_Screen)
-            {
-                while (ShowCursor(true) < 0);
-                while (ShowCursor(false) >= 0);
-            }
-            DialogsOpen--;
-            VolControlHWnd = NULL;
-            EndDialog(hDlg, true);
-            return true;
-        case ID_CANCEL:
-        case IDCANCEL:
-            MastVol = TempMast;
-            YM2612Vol = Temp2612;
-            PSGVol = TempPSG;
-            DACVol = TempDAC;
-            PCMVol = TempPCM;
-            CDDAVol = TempCDDA;
-            PWMVol = TempPWM;
-            if (Full_Screen)
-            {
-                while (ShowCursor(true) < 0);
-                while (ShowCursor(false) >= 0);
-            }
-            DialogsOpen--;
-            VolControlHWnd = NULL;
-            EndDialog(hDlg, true);
-            return true;
-        default:
-            return true;
-        }
-
-    case WM_VSCROLL:
-    {
-        if (LOWORD(wParam) == SB_ENDSCROLL)
-            return true;
-        int i = IDC_MASTVOL;
-        while (GetDlgItem(hDlg, i) != (HWND)lParam)
-            i++;
-        switch (i)
-        {
-        case IDC_MASTVOL:
-            MastVol = 256 - (short)SendDlgItemMessage(hDlg, i, TBM_GETPOS, (WPARAM)0, (LPARAM)0);
-            break;
-        case IDC_2612VOL:
-            YM2612Vol = 256 - (short)SendDlgItemMessage(hDlg, i, TBM_GETPOS, (WPARAM)0, (LPARAM)0);
-            break;
-        case IDC_PSGVOL:
-            PSGVol = 256 - (short)SendDlgItemMessage(hDlg, i, TBM_GETPOS, (WPARAM)0, (LPARAM)0);
-            break;
-        case IDC_DACVOL:
-            DACVol = 256 - (short)SendDlgItemMessage(hDlg, i, TBM_GETPOS, (WPARAM)0, (LPARAM)0);
-            break;
-        case IDC_PCMVOL:
-            PCMVol = 256 - (short)SendDlgItemMessage(hDlg, i, TBM_GETPOS, (WPARAM)0, (LPARAM)0);
-            break;
-        case IDC_CDDAVOL:
-            CDDAVol = 256 - (short)SendDlgItemMessage(hDlg, i, TBM_GETPOS, (WPARAM)0, (LPARAM)0);
-            break;
-        case IDC_PWMVOL:
-            PWMVol = 256 - (short)SendDlgItemMessage(hDlg, i, TBM_GETPOS, (WPARAM)0, (LPARAM)0);
-            break;
-        default:
-            break;
-        }
-        return true;
-    }
-
-    case WM_CLOSE:
-        if (Full_Screen)
-        {
-            while (ShowCursor(true) < 0);
-            while (ShowCursor(false) >= 0);
-        }
-        DialogsOpen--;
-        VolControlHWnd = NULL;
-        EndDialog(hDlg, true);
-        return true;
-    }
-
-    return false;
-}
 LRESULT CALLBACK AboutProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     RECT r;
@@ -6783,7 +5982,6 @@ LRESULT CALLBACK OptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
         WORD_L(IDC_AUTOFIXCHECKSUM, "Auto Fix Checksum");
         WORD_L(IDC_AUTOPAUSE, "Auto Pause");
         WORD_L(IDC_FASTBLUR, "Fast Blur");
-        WORD_L(IDC_SHOWLED, "Show Sega-CD LED");
         WORD_L(IDC_ENABLE_FPS, "Enable");
         WORD_L(IDC_ENABLE_MESSAGE, "Enable");
         WORD_L(IDC_X2_FPS, "Double Sized");
@@ -6807,7 +6005,6 @@ LRESULT CALLBACK OptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
         SendDlgItemMessage(hDlg, IDC_AUTOFIXCHECKSUM, BM_SETCHECK, (WPARAM)(Auto_Fix_CS) ? BST_CHECKED : BST_UNCHECKED, 0);
         SendDlgItemMessage(hDlg, IDC_AUTOPAUSE, BM_SETCHECK, (WPARAM)(Auto_Pause) ? BST_CHECKED : BST_UNCHECKED, 0);
         SendDlgItemMessage(hDlg, IDC_FASTBLUR, BM_SETCHECK, (WPARAM)(Fast_Blur) ? BST_CHECKED : BST_UNCHECKED, 0);
-        SendDlgItemMessage(hDlg, IDC_SHOWLED, BM_SETCHECK, (WPARAM)(Show_LED) ? BST_CHECKED : BST_UNCHECKED, 0);
         SendDlgItemMessage(hDlg, IDC_ENABLE_FPS, BM_SETCHECK, (WPARAM)(Show_FPS) ? BST_CHECKED : BST_UNCHECKED, 0);
         SendDlgItemMessage(hDlg, IDC_X2_FPS, BM_SETCHECK, (WPARAM)(FPS_Style & 0x10) ? BST_CHECKED : BST_UNCHECKED, 0);
         SendDlgItemMessage(hDlg, IDC_TRANS_FPS, BM_SETCHECK, (WPARAM)(FPS_Style & 0x8) ? BST_CHECKED : BST_UNCHECKED, 0);
@@ -6865,7 +6062,6 @@ LRESULT CALLBACK OptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             Auto_Fix_CS = (SendDlgItemMessage(hDlg, IDC_AUTOFIXCHECKSUM, BM_GETCHECK, 0, 0) == BST_CHECKED) ? 1 : 0;
             Auto_Pause = (SendDlgItemMessage(hDlg, IDC_AUTOPAUSE, BM_GETCHECK, 0, 0) == BST_CHECKED) ? 1 : 0;
             Fast_Blur = (SendDlgItemMessage(hDlg, IDC_FASTBLUR, BM_GETCHECK, 0, 0) == BST_CHECKED) ? 1 : 0;
-            Show_LED = (SendDlgItemMessage(hDlg, IDC_SHOWLED, BM_GETCHECK, 0, 0) == BST_CHECKED) ? 1 : 0;
             Show_FPS = (SendDlgItemMessage(hDlg, IDC_ENABLE_FPS, BM_GETCHECK, 0, 0) == BST_CHECKED) ? 1 : 0;
             res = SendDlgItemMessage(hDlg, IDC_X2_FPS, BM_GETCHECK, 0, 0);
             FPS_Style = (FPS_Style & ~0x10) | ((res == BST_CHECKED) ? 0x10 : 0);
@@ -7163,9 +6359,6 @@ LRESULT CALLBACK ControllerProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 int SaveFlags()
 {
     int flags = Z80_State & 0x1;
-    flags |= PCM_Enable << 4;
-    flags |= PWM_Enable << 5;
-    flags |= CDDA_Enable << 6;
     flags |= ((Sound_Rate / 22050) << 10);
     flags |= LeftRightEnabled << 16;
     return flags;
@@ -7176,9 +6369,6 @@ void LoadFlags(int flags)
         Z80_State |= 0x1;
     else
         Z80_State &= ~0x1;
-    PCM_Enable = (flags >> 4) & 1;
-    PWM_Enable = (flags >> 5) & 1;
-    CDDA_Enable = (flags >> 6) & 1;
     Change_Sample_Rate(HWnd, (flags >> 10) & 0x3);
     LeftRightEnabled = (flags >> 16) & 1;
     return;
