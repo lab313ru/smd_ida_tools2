@@ -234,7 +234,7 @@ int Init_DDraw(HWND hWnd)
 
     if (Full_Screen && !(FS_No_Res_Change))
     {
-        if (FAILED(lpDD->SetDisplayMode(Res_X, Res_Y, 16, 0, 0)))
+        if (FAILED(lpDD->SetDisplayMode(Res_X, Res_Y, 32, 0, 0)))
             return Init_Fail(hWnd, "Error with lpDD->SetDisplayMode !");
     }
 
