@@ -124,15 +124,29 @@ static const char *register_classes[] =
     NULL
 };
 
+static struct apply_codemap_req : public exec_request_t {
+private:
+  const std::map<int32_t, int32_t>& _changed;
+public:
+  apply_codemap_req(const std::map<int32_t, int32_t>& changed) : _changed(changed) {};
+
+  int idaapi execute(void) override {
+    for (auto i = _changed.cbegin(); i != _changed.cend(); ++i) {
+      auto_make_code((ea_t)i->first);
+      plan_ea((ea_t)i->first);
+      show_addr((ea_t)i->first);
+    }
+
+    return 0;
+  }
+};
+
 static void apply_codemap(const std::map<int32_t, int32_t>& changed)
 {
   if (changed.empty()) return;
 
-  for (auto i = changed.cbegin(); i != changed.cend(); ++i) {
-    auto_make_code((ea_t)i->first);
-    plan_ea((ea_t)i->first);
-    show_addr((ea_t)i->first);
-  }
+  apply_codemap_req req(changed);
+  execute_sync(req, MFF_FAST);
 }
 
 
@@ -143,7 +157,7 @@ static void pause_execution()
       if (client) {
         client->pause();
       }
-    } catch (TException&) {
+    } catch (...) {
 
     }
 }
@@ -155,7 +169,7 @@ static void continue_execution()
         client->resume();
       }
     }
-    catch (TException&) {
+    catch (...) {
 
     }
 }
@@ -167,7 +181,7 @@ static void finish_execution()
         client->exit_emulation();
       }
     }
-    catch (TException&) {
+    catch (...) {
 
     }
 }
@@ -175,9 +189,6 @@ static void finish_execution()
 void stop_server() {
   try {
     srv->stop();
-  }
-  catch (TException&) {
-
   }
   catch (...) {
     
@@ -237,16 +248,21 @@ public:
 };
 
 static void init_ida_server() {
-  ::std::shared_ptr<DbgClientHandler> handler(new DbgClientHandler());
-  ::std::shared_ptr<TProcessor> processor(new DbgClientProcessor(handler));
-  ::std::shared_ptr<TNonblockingServerTransport> serverTransport(new TNonblockingServerSocket(9091));
-  ::std::shared_ptr<TFramedTransportFactory> transportFactory(new TFramedTransportFactory());
-  ::std::shared_ptr<TProtocolFactory> protocolFactory(new TBinaryProtocolFactory());
+  try {
+    ::std::shared_ptr<DbgClientHandler> handler(new DbgClientHandler());
+    ::std::shared_ptr<TProcessor> processor(new DbgClientProcessor(handler));
+    ::std::shared_ptr<TNonblockingServerTransport> serverTransport(new TNonblockingServerSocket(9091));
+    ::std::shared_ptr<TFramedTransportFactory> transportFactory(new TFramedTransportFactory());
+    ::std::shared_ptr<TProtocolFactory> protocolFactory(new TBinaryProtocolFactory());
 
-  srv = ::std::shared_ptr<TNonblockingServer>(new TNonblockingServer(processor, protocolFactory, serverTransport));
-  ::std::shared_ptr<ThreadFactory> tf(new ThreadFactory());
-  ::std::shared_ptr<Thread> thread = tf->newThread(srv);
-  thread->start();
+    srv = ::std::shared_ptr<TNonblockingServer>(new TNonblockingServer(processor, protocolFactory, serverTransport));
+    ::std::shared_ptr<ThreadFactory> tf(new ThreadFactory());
+    ::std::shared_ptr<Thread> thread = tf->newThread(srv);
+    thread->start();
+  }
+  catch (...) {
+
+  }
 }
 
 static void init_emu_client() {
@@ -266,7 +282,7 @@ static void init_emu_client() {
       cli_transport->open();
       break;
     }
-    catch (TException&) {
+    catch (...) {
       
     }
   }
@@ -327,13 +343,12 @@ static drc_t idaapi s_start_process(const char* path,
     try {
       if (client) {
         client->start_emulation();
+        return DRC_OK;
       }
     }
-    catch (TException&) {
-
+    catch (...) {
+      return DRC_FAILED;
     }
-
-    return DRC_OK;
 }
 
 // rebase database if the debugged program has been rebased by the system
@@ -433,7 +448,6 @@ static void idaapi stopped_at_debug_event(bool dlls_added)
 // The following functions manipulate threads.
 // 1-ok, 0-failed, -1-network error
 // These functions are called from debthread
-
 static drc_t idaapi s_set_resume_mode(thid_t tid, resume_mode_t resmod) // Run one instruction in the thread
 {
     switch (resmod)
@@ -442,10 +456,11 @@ static drc_t idaapi s_set_resume_mode(thid_t tid, resume_mode_t resmod) // Run o
         try {
           if (client) {
             client->step_into();
+            return DRC_OK;
           }
         }
-        catch (TException&) {
-
+        catch (...) {
+          return DRC_FAILED;
         }
 
         break;
@@ -453,15 +468,14 @@ static drc_t idaapi s_set_resume_mode(thid_t tid, resume_mode_t resmod) // Run o
         try {
           if (client) {
             client->step_over();
+            return DRC_OK;
           }
         }
-        catch (TException&) {
-
+        catch (...) {
+          return DRC_FAILED;
         }
         break;
     }
-
-    return DRC_OK;
 }
 
 // Read thread registers
@@ -480,48 +494,48 @@ static drc_t idaapi read_registers(thid_t tid, int clsmask, regval_t *values, qs
         try {
           if (client) {
             client->get_gp_regs(regs);
+
+            values[R_D0].ival = regs.D0;
+            values[R_D1].ival = regs.D1;
+            values[R_D2].ival = regs.D2;
+            values[R_D3].ival = regs.D3;
+            values[R_D4].ival = regs.D4;
+            values[R_D5].ival = regs.D5;
+            values[R_D6].ival = regs.D6;
+            values[R_D7].ival = regs.D7;
+
+            values[R_A0].ival = regs.A0;
+            values[R_A1].ival = regs.A1;
+            values[R_A2].ival = regs.A2;
+            values[R_A3].ival = regs.A3;
+            values[R_A4].ival = regs.A4;
+            values[R_A5].ival = regs.A5;
+            values[R_A6].ival = regs.A6;
+            values[R_A7].ival = regs.A7;
+
+            values[R_PC].ival = regs.PC;
+            values[R_SP].ival = regs.SP;
+            values[R_SR].ival = regs.SR;
           }
         }
-        catch (TException&) {
-
+        catch (...) {
+          return DRC_FAILED;
         }
-
-        values[R_D0].ival = regs.D0;
-        values[R_D1].ival = regs.D1;
-        values[R_D2].ival = regs.D2;
-        values[R_D3].ival = regs.D3;
-        values[R_D4].ival = regs.D4;
-        values[R_D5].ival = regs.D5;
-        values[R_D6].ival = regs.D6;
-        values[R_D7].ival = regs.D7;
-
-        values[R_A0].ival = regs.A0;
-        values[R_A1].ival = regs.A1;
-        values[R_A2].ival = regs.A2;
-        values[R_A3].ival = regs.A3;
-        values[R_A4].ival = regs.A4;
-        values[R_A5].ival = regs.A5;
-        values[R_A6].ival = regs.A6;
-        values[R_A7].ival = regs.A7;
-
-        values[R_PC].ival = regs.PC;
-        values[R_SP].ival = regs.SP;
-        values[R_SR].ival = regs.SR;
 
         DmaInfo dma;
 
         try {
           if (client) {
             client->get_dma_info(dma);
+
+            values[R_VDP_DMA_LEN].ival = dma.Len;
+            values[R_VDP_DMA_SRC].ival = dma.Src;
+            values[R_VDP_WRITE_ADDR].ival = dma.Dst;
           }
         }
-        catch (TException&) {
-
+        catch (...) {
+          return DRC_FAILED;
         }
-
-        values[R_VDP_DMA_LEN].ival = dma.Len;
-        values[R_VDP_DMA_SRC].ival = dma.Src;
-        values[R_VDP_WRITE_ADDR].ival = dma.Dst;
     }
 
     if (clsmask & RC_VDP)
@@ -531,36 +545,36 @@ static drc_t idaapi read_registers(thid_t tid, int clsmask, regval_t *values, qs
         try {
           if (client) {
             client->get_vdp_regs(regs);
+
+            values[R_V00].ival = regs.V00;
+            values[R_V01].ival = regs.V01;
+            values[R_V02].ival = regs.V02;
+            values[R_V03].ival = regs.V03;
+            values[R_V04].ival = regs.V04;
+            values[R_V05].ival = regs.V05;
+            values[R_V06].ival = regs.V06;
+            values[R_V07].ival = regs.V07;
+            values[R_V08].ival = regs.V08;
+            values[R_V09].ival = regs.V09;
+            values[R_V10].ival = regs.V0A;
+            values[R_V11].ival = regs.V0B;
+            values[R_V12].ival = regs.V0C;
+            values[R_V13].ival = regs.V0D;
+            values[R_V14].ival = regs.V0E;
+            values[R_V15].ival = regs.V0F;
+            values[R_V16].ival = regs.V10;
+            values[R_V17].ival = regs.V11;
+            values[R_V18].ival = regs.V12;
+            values[R_V19].ival = regs.V13;
+            values[R_V20].ival = regs.V14;
+            values[R_V21].ival = regs.V15;
+            values[R_V22].ival = regs.V16;
+            values[R_V23].ival = regs.V17;
           }
         }
-        catch (TException&) {
-
+        catch (...) {
+          return DRC_FAILED;
         }
-
-        values[R_V00].ival = regs.V00;
-        values[R_V01].ival = regs.V01;
-        values[R_V02].ival = regs.V02;
-        values[R_V03].ival = regs.V03;
-        values[R_V04].ival = regs.V04;
-        values[R_V05].ival = regs.V05;
-        values[R_V06].ival = regs.V06;
-        values[R_V07].ival = regs.V07;
-        values[R_V08].ival = regs.V08;
-        values[R_V09].ival = regs.V09;
-        values[R_V10].ival = regs.V0A;
-        values[R_V11].ival = regs.V0B;
-        values[R_V12].ival = regs.V0C;
-        values[R_V13].ival = regs.V0D;
-        values[R_V14].ival = regs.V0E;
-        values[R_V15].ival = regs.V0F;
-        values[R_V16].ival = regs.V10;
-        values[R_V17].ival = regs.V11;
-        values[R_V18].ival = regs.V12;
-        values[R_V19].ival = regs.V13;
-        values[R_V20].ival = regs.V14;
-        values[R_V21].ival = regs.V15;
-        values[R_V22].ival = regs.V16;
-        values[R_V23].ival = regs.V17;
     }
 
     return DRC_OK;
@@ -584,8 +598,8 @@ static drc_t idaapi write_register(thid_t tid, int regidx, const regval_t *value
           client->set_gp_reg(reg);
         }
       }
-      catch (TException&) {
-
+      catch (...) {
+        return DRC_FAILED;
       }
     } else if (regidx >= R_V00 && regidx <= R_V23) {
       VdpRegister reg;
@@ -597,8 +611,8 @@ static drc_t idaapi write_register(thid_t tid, int regidx, const regval_t *value
           client->set_vdp_reg(reg);
         }
       }
-      catch (TException&) {
-
+      catch (...) {
+        return DRC_FAILED;
       }
     }
 
@@ -676,16 +690,17 @@ static ssize_t idaapi read_memory(ea_t ea, void *buffer, size_t size, qstring *e
     try {
       if (client) {
         client->read_memory(mem, (int32_t)ea, (int32_t)size);
+
+        memcpy(&((unsigned char*)buffer)[0], mem.c_str(), size);
       }
     }
-    catch (TException&) {
-
+    catch (...) {
+      return 0;
     }
-
-    memcpy(&((unsigned char*)buffer)[0], mem.c_str(), size);
 
     return size;
 }
+
 // Write process memory
 // Returns number of written bytes, -1-fatal error
 // This function is called from debthread
@@ -698,8 +713,8 @@ static ssize_t idaapi write_memory(ea_t ea, const void *buffer, size_t size, qst
         client->write_memory((int32_t)ea, mem);
       }
     }
-    catch (TException&) {
-
+    catch (...) {
+      return 0;
     }
 
     return size;
@@ -778,8 +793,8 @@ static drc_t idaapi update_bpts(int* nbpts, update_bpt_info_t *bpts, int nadd, i
             client->add_breakpoint(bp);
           }
         }
-        catch (TException&) {
-
+        catch (...) {
+          return DRC_FAILED;
         }
 
         if (type2 != 0)
@@ -791,8 +806,8 @@ static drc_t idaapi update_bpts(int* nbpts, update_bpt_info_t *bpts, int nadd, i
                 client->add_breakpoint(bp);
               }
             }
-            catch (TException&) {
-
+            catch (...) {
+              return DRC_FAILED;
             }
         }
 
@@ -845,8 +860,8 @@ static drc_t idaapi update_bpts(int* nbpts, update_bpt_info_t *bpts, int nadd, i
             client->del_breakpoint(bp);
           }
         }
-        catch (TException&) {
-
+        catch (...) {
+          return DRC_FAILED;
         }
 
         if (type2 != 0)
@@ -858,8 +873,8 @@ static drc_t idaapi update_bpts(int* nbpts, update_bpt_info_t *bpts, int nadd, i
                 client->del_breakpoint(bp);
               }
             }
-            catch (TException&) {
-
+            catch (...) {
+              return DRC_FAILED;
             }
         }
 
@@ -921,8 +936,8 @@ static drc_t idaapi update_lowcnds(int* nupdated, const lowcnd_t *lowcnds, int n
             client->update_breakpoint(bp);
           }
         }
-        catch (TException&) {
-
+        catch (...) {
+          return DRC_FAILED;
         }
 
         if (type2 != 0)
@@ -934,8 +949,8 @@ static drc_t idaapi update_lowcnds(int* nupdated, const lowcnd_t *lowcnds, int n
                 client->update_breakpoint(bp);
               }
             }
-            catch (TException&) {
-
+            catch (...) {
+              return DRC_FAILED;
             }
         }
     }
@@ -960,8 +975,8 @@ static bool idaapi update_call_stack(thid_t tid, call_stack_t *trace)
         client->get_callstack(cs);
       }
     }
-    catch (TException&) {
-
+    catch (...) {
+      return false;
     }
 
     trace->resize(cs.size());
