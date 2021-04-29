@@ -633,6 +633,8 @@ static drc_t idaapi write_register(thid_t tid, int regidx, const regval_t *value
 // This function is called from debthread
 static drc_t idaapi get_memory_info(meminfo_vec_t &areas, qstring *errbuf)
 {
+    areas.clear();
+
     memory_info_t info;
 
     // Don't remove this loop

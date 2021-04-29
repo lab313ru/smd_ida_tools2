@@ -65,6 +65,7 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
+      <ExceptionHandling>Async</ExceptionHandling>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -82,16 +83,17 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;__NT__;__IDP__;__X64__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>d:\idasdk76\include\;$(SolutionDir)\;$(ProjectDir)\ida\;$(SolutionDir)\thrift\;$(SolutionDir)\libevent\include\;C:\local\boost_1_75_0\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>d:\idasdk75\include\;$(SolutionDir)\;$(ProjectDir)\ida\;$(SolutionDir)\thrift\;$(SolutionDir)\libevent\include\;C:\local\boost_1_75_0\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <ExceptionHandling>Async</ExceptionHandling>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>d:\idasdk76\lib\x64_win_vc_32\;$(SolutionDir)\thrift\;$(SolutionDir)\libevent\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>d:\idasdk75\lib\x64_win_vc_32\;$(SolutionDir)\thrift\;$(SolutionDir)\libevent\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>ida.lib;thrift_64.lib;thriftnb_64.lib;event_64.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
