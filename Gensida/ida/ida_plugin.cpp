@@ -208,7 +208,70 @@ static void print_op(ea_t ea, op_t* op)
 
 #endif
 
-typedef const regval_t& (idaapi* getreg_func_t)(const char* name, const regval_t* regvalues);
+static ssize_t idaapi hook_linea_linef(void* user_data, int notification_code, va_list va)
+{
+  switch (notification_code)
+  {
+  case processor_t::ev_ana_insn:
+  {
+    insn_t* out = va_arg(va, insn_t*);
+
+    uchar b = get_byte(out->ea);
+
+    if (b == 0xA0 || b == 0xF0)
+    {
+      switch (b)
+      {
+      case 0xA0:
+        out->itype = M68K_linea;
+        out->Op1.addr = get_dword(0x0A * sizeof(uint32));
+        break;
+      case 0xF0:
+        out->itype = M68K_linef;
+        out->Op1.addr = get_dword(0x0B * sizeof(uint32));
+        break;
+      }
+
+      out->size = 2;
+
+      out->Op1.type = o_near;
+      out->Op1.offb = 1;
+      out->Op1.dtype = dt_dword;
+      out->Op1.phrase = 0x0A;
+      out->Op1.specflag1 = 2;
+
+      out->Op2.type = o_imm;
+      out->Op2.offb = 1;
+      out->Op2.dtype = dt_byte;
+      out->Op2.value = get_byte(out->ea + 1);
+
+      return out->size;
+    }
+  } break;
+  case processor_t::ev_emu_insn:
+  {
+    insn_t* insn = va_arg(va, insn_t*);
+
+    if (insn->itype == M68K_linea || insn->itype == M68K_linef)
+    {
+      insn->add_cref(insn->Op1.addr, 0, fl_CN);
+      insn->add_cref(insn->ea + insn->size, insn->Op1.offb, fl_F);
+      return 1;
+    }
+  } break;
+  case processor_t::ev_out_mnem:
+  {
+    outctx_t* outctx = va_arg(va, outctx_t*);
+    if (outctx->insn.itype == M68K_linea || outctx->insn.itype == M68K_linef)
+    {
+      outctx->out_custom_mnem((outctx->insn.itype == M68K_linef) ? "line_f" : "line_a");
+      return 1;
+    }
+  } break;
+  }
+
+  return 0;
+}
 
 struct m68k_events_visitor_t : public post_event_visitor_t
 {
@@ -219,40 +282,6 @@ struct m68k_events_visitor_t : public post_event_visitor_t
     case processor_t::ev_ana_insn:
     {
       insn_t* out = va_arg(va, insn_t*);
-
-      uint16 itype = 0;
-      ea_t value = out->ea;
-      uchar b = get_byte(out->ea);
-
-      if (b == 0xA0 || b == 0xF0)
-      {
-        switch (b)
-        {
-        case 0xA0:
-          itype = M68K_linea;
-          value = get_dword(0x0A * sizeof(uint32));
-          break;
-        case 0xF0:
-          itype = M68K_linef;
-          value = get_dword(0x0B * sizeof(uint32));
-          break;
-        }
-
-        out->itype = itype;
-        out->size = 2;
-
-        out->Op1.type = o_near;
-        out->Op1.offb = 1;
-        out->Op1.dtype = dt_dword;
-        out->Op1.addr = value;
-        out->Op1.phrase = 0x0A;
-        out->Op1.specflag1 = 2;
-
-        out->Op2.type = o_imm;
-        out->Op2.offb = 1;
-        out->Op2.dtype = dt_byte;
-        out->Op2.value = get_byte(out->ea + 1);
-      }
 
 #ifdef _DEBUG
       print_insn(out);
@@ -290,7 +319,7 @@ struct m68k_events_visitor_t : public post_event_visitor_t
             (op.addr != 0 && op.addr <= 0xA00000) &&
             op.specflag1 == 2) // lea table(pc),Ax; jsr func(pc); jmp label(pc)
           {
-            short diff = op.addr - value;
+            short diff = op.addr - out->ea;
             if (diff >= SHRT_MIN && diff <= SHRT_MAX)
             {
               out->Op1.type = o_displ;
@@ -342,13 +371,6 @@ struct m68k_events_visitor_t : public post_event_visitor_t
         }
       }
 
-      if (insn->itype == M68K_linea || insn->itype == M68K_linef)
-      {
-        insn->add_cref(insn->Op1.addr, 0, fl_CN);
-        insn->add_cref(insn->ea + insn->size, insn->Op1.offb, fl_F);
-        return 1;
-      }
-
       if (insn->itype == 0x7F && insn->Op1.type == o_imm && insn->Op1.value & 0xFF0000 && insn->Op1.dtype == dt_word) { // movea
         insn->Op1.value &= 0xFFFF;
 
@@ -357,24 +379,13 @@ struct m68k_events_visitor_t : public post_event_visitor_t
         return 1;
       }
     } break;
-    case processor_t::ev_out_mnem:
-    {
-      outctx_t* outctx = va_arg(va, outctx_t*);
-      if (outctx->insn.itype != M68K_linea && outctx->insn.itype != M68K_linef)
-        break;
-
-      const char* mnem = (outctx->insn.itype == M68K_linef) ? "line_f" : "line_a";
-
-      outctx->out_custom_mnem(mnem);
-      return 1;
-    } break;
     case processor_t::ev_get_idd_opinfo:
     {
       idd_opinfo_t* opinf = va_arg(va, idd_opinfo_t*);
       ea_t ea = va_arg(va, ea_t);
       int n = va_arg(va, int);
       int thread_id = va_arg(va, int);
-      getreg_func_t getreg = va_arg(va, getreg_func_t);
+      processor_t::regval_getter_t* getreg = va_arg(va, processor_t::regval_getter_t *);
       const regval_t* regvalues = va_arg(va, const regval_t*);
 
       opinf->ea = BADADDR;
@@ -1127,6 +1138,7 @@ static plugmod_t* idaapi init(void)
         bool res = register_action(smd_constant_action);
 
         hook_to_notification_point(HT_UI, hook_ui, NULL);
+        hook_to_notification_point(HT_IDP, hook_linea_linef, nullptr);
         register_post_event_visitor(HT_IDP, &ctx, nullptr);
         hook_to_notification_point(HT_DBG, hook_dbg, NULL);
 
@@ -1144,6 +1156,7 @@ static void idaapi term(void)
     {
         unhook_from_notification_point(HT_UI, hook_ui);
         unregister_post_event_visitor(HT_IDP, &ctx);
+        unhook_from_notification_point(HT_DBG, hook_linea_linef);
         unhook_from_notification_point(HT_DBG, hook_dbg);
 
         unregister_action(smd_constant_name);
