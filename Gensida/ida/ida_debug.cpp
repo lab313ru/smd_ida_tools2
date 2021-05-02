@@ -182,7 +182,14 @@ static void finish_execution()
       }
     }
     catch (...) {
+      ::std::lock_guard<::std::mutex> lock(list_mutex);
 
+      debug_event_t ev;
+      ev.pid = 1;
+      ev.handled = true;
+      ev.set_exit_code(PROCESS_EXITED, 0);
+
+      events.enqueue(ev, IN_BACK);
     }
 }
 
