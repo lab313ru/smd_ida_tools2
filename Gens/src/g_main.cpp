@@ -1488,6 +1488,8 @@ public:
     if (index >= VdpRegsEnum::V00 && index <= VdpRegsEnum::V17) {
       return VDP_Reg.regs[index];
     }
+
+    return 0;
   }
 
   void get_vdp_regs(VdpRegisters& _return) {

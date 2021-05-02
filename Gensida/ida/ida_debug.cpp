@@ -124,7 +124,7 @@ static const char *register_classes[] =
     NULL
 };
 
-static struct apply_codemap_req : public exec_request_t {
+struct apply_codemap_req : public exec_request_t {
 private:
   const std::map<int32_t, int32_t>& _changed;
 public:
@@ -343,12 +343,13 @@ static drc_t idaapi s_start_process(const char* path,
     try {
       if (client) {
         client->start_emulation();
-        return DRC_OK;
       }
     }
     catch (...) {
       return DRC_FAILED;
     }
+
+    return DRC_OK;
 }
 
 // rebase database if the debugged program has been rebased by the system
@@ -476,6 +477,8 @@ static drc_t idaapi s_set_resume_mode(thid_t tid, resume_mode_t resmod) // Run o
         }
         break;
     }
+
+    return DRC_FAILED;
 }
 
 // Read thread registers
