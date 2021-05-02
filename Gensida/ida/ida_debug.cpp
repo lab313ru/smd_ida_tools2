@@ -31,13 +31,13 @@ using namespace ::apache::thrift::concurrency;
 #include <vector>
 #include <iostream>
 
-::std::shared_ptr<DbgServerClient> client;
-::std::shared_ptr<TNonblockingServer> srv;
-::std::shared_ptr<TTransport> cli_transport;
+static ::std::shared_ptr<DbgServerClient> client;
+static ::std::shared_ptr<TNonblockingServer> srv;
+static ::std::shared_ptr<TTransport> cli_transport;
 
 typedef qvector<std::pair<uint32, bool>> codemap_t;
 
-::std::mutex list_mutex;
+static ::std::mutex list_mutex;
 static eventlist_t events;
 
 #define BREAKPOINTS_BASE 0x00D00000
