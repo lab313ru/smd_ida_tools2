@@ -1437,6 +1437,8 @@ public:
       case GpRegsEnum::SP: return main68k_context.areg[GpRegsEnum::A7-GpRegsEnum::A0];
       }
     }
+
+    return 0;
   }
 
   void get_gp_regs(GpRegisters& _return) {
