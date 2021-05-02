@@ -1437,8 +1437,6 @@ public:
       case GpRegsEnum::SP: return main68k_context.areg[GpRegsEnum::A7-GpRegsEnum::A0];
       }
     }
-
-    throw new TException("Unknown GP register");
   }
 
   void get_gp_regs(GpRegisters& _return) {
@@ -1462,8 +1460,6 @@ public:
 
     _return.PC = M68kDW.last_pc & 0xFFFFFF;
     _return.SR = main68k_context.sr;
-
-
   }
 
   void set_gp_reg(const GpRegister& reg) {
@@ -1477,21 +1473,21 @@ public:
       switch (reg.index) {
       case GpRegsEnum::PC:
         main68k_context.pc = reg.value & 0xFFFFFF;
+        break;
       case GpRegsEnum::SR:
         main68k_context.sr = reg.value & 0xFFFF;
+        break;
       case GpRegsEnum::SP:
         main68k_context.areg[GpRegsEnum::A7 - GpRegsEnum::A0] = reg.value;
+        break;
       }
     }
-    throw new TException("Unknown GP register");
   }
 
   int16_t get_vdp_reg(const VdpRegsEnum::type index) {
     if (index >= VdpRegsEnum::V00 && index <= VdpRegsEnum::V17) {
       return VDP_Reg.regs[index];
     }
-    
-    throw new TException("Unknown VDP register");
   }
 
   void get_vdp_regs(VdpRegisters& _return) {
@@ -1525,8 +1521,6 @@ public:
     if (reg.index >= VdpRegsEnum::V00 && reg.index <= VdpRegsEnum::V17) {
       VDP_Reg.regs[reg.index] = reg.value;
     }
-
-    throw new TException("Unknown VDP register");
   }
 
   void get_dma_info(DmaInfo& _return) {
