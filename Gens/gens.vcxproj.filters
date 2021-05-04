@@ -230,7 +230,7 @@
     <ClCompile Include="src\pcm.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\cpu_z80.c">
+    <ClCompile Include="src\cpu_z80.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\cpu_68k.c">

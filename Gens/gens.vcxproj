@@ -203,7 +203,7 @@
     <ClCompile Include="src\cblit.cpp" />
     <ClCompile Include="src\corehooks.cpp" />
     <ClCompile Include="src\cpu_68k.c" />
-    <ClCompile Include="src\cpu_z80.c" />
+    <ClCompile Include="src\cpu_z80.cpp" />
     <ClCompile Include="src\debugwindow.cpp" />
     <ClCompile Include="src\drawutil.cpp" />
     <ClCompile Include="src\gens.cpp" />
