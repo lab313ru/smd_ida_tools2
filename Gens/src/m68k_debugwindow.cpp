@@ -168,15 +168,15 @@ void M68kDebugWindow::DoStepOver()
     }
     else if ((opc & 0xFF00) == 0x6100) // bsr
     {
-		int off = 1;
+        int off = 1;
 
         switch (opc & 0xFF)
         {
         case 0x00: off++; break;
-		case 0xFF: off += 2; break;
+        case 0xFF: off += 2; break;
         }
 
-		StepOver = last_pc + off * 2;
+        StepOver = last_pc + off * 2;
     }
     else
     {
