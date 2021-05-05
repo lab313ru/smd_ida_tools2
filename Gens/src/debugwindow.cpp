@@ -24,7 +24,6 @@ extern ::std::shared_ptr<DbgClientClient> client;
 bool handled_ida_event;
 
 void Handle_Gens_Messages();
-LRESULT CALLBACK EditBreakProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 extern int Gens_Running;
 extern "C" int Clear_Sound_Buffer(void);
 
@@ -32,7 +31,6 @@ DebugWindow::DebugWindow()
 {
     DebugStop = false;
     HWnd = NULL;
-    DLGPROC DebugProc = NULL;
 
     StepInto = false;
     StepOver = -1;
@@ -57,7 +55,7 @@ void DebugWindow::Breakpoint(int pc)
             changed.clear();
           }
         }
-        catch (TException&) {
+        catch (...) {
 
         }
     }
