@@ -456,7 +456,7 @@ void HexSwitchRegion(HexParams *Hex) {
     RECT r;
     GetClientRect(Hex->Hwnd, &r);
     Hex->SI.nPage = r.bottom / Hex->CellHeight - 1;
-    for (int i = 0; i < REGION_COUNT, HexRegions[i].Active; i++)
+    for (int i = 0; i < REGION_COUNT && HexRegions[i].Active; i++)
         CheckMenuItem(HexRegionsMenu, IDC_C_HEX_REGION + i,
         (Hex->CurrentRegion.Array == HexRegions[i].Array) ? MF_CHECKED : MF_UNCHECKED);
     Hex->OffsetVisibleFirst = 0;
@@ -572,7 +572,7 @@ LRESULT CALLBACK HexEditorProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
         HexRegionsMenu = CreatePopupMenu();
         InsertMenu(HexEditorMenu, GetMenuItemCount(HexEditorMenu) + 1, MF_BYPOSITION | MF_POPUP | MF_STRING,
             (UINT)HexRegionsMenu, "&Region");
-        for (int i = 0; i < REGION_COUNT, HexRegions[i].Active; i++)
+        for (int i = 0; i < REGION_COUNT && HexRegions[i].Active; i++)
             InsertMenu(HexRegionsMenu, i,
             (Hex->CurrentRegion.Array == HexRegions[i].Array) ? MF_CHECKED : MF_UNCHECKED,
                 IDC_C_HEX_REGION + i, HexRegions[i].Name);
