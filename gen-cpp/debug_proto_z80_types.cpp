@@ -782,3 +782,115 @@ void DbgBreakpoint::printTo(std::ostream& out) const {
 }
 
 
+SoundBankRange::~SoundBankRange() noexcept {
+}
+
+
+void SoundBankRange::__set_bank_min(const int16_t val) {
+  this->bank_min = val;
+}
+
+void SoundBankRange::__set_bank_max(const int16_t val) {
+  this->bank_max = val;
+}
+std::ostream& operator<<(std::ostream& out, const SoundBankRange& obj)
+{
+  obj.printTo(out);
+  return out;
+}
+
+
+uint32_t SoundBankRange::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  ::apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_I16) {
+          xfer += iprot->readI16(this->bank_min);
+          this->__isset.bank_min = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 2:
+        if (ftype == ::apache::thrift::protocol::T_I16) {
+          xfer += iprot->readI16(this->bank_max);
+          this->__isset.bank_max = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t SoundBankRange::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  ::apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("SoundBankRange");
+
+  xfer += oprot->writeFieldBegin("bank_min", ::apache::thrift::protocol::T_I16, 1);
+  xfer += oprot->writeI16(this->bank_min);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("bank_max", ::apache::thrift::protocol::T_I16, 2);
+  xfer += oprot->writeI16(this->bank_max);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(SoundBankRange &a, SoundBankRange &b) {
+  using ::std::swap;
+  swap(a.bank_min, b.bank_min);
+  swap(a.bank_max, b.bank_max);
+  swap(a.__isset, b.__isset);
+}
+
+SoundBankRange::SoundBankRange(const SoundBankRange& other8) {
+  bank_min = other8.bank_min;
+  bank_max = other8.bank_max;
+  __isset = other8.__isset;
+}
+SoundBankRange& SoundBankRange::operator=(const SoundBankRange& other9) {
+  bank_min = other9.bank_min;
+  bank_max = other9.bank_max;
+  __isset = other9.__isset;
+  return *this;
+}
+void SoundBankRange::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "SoundBankRange(";
+  out << "bank_min=" << to_string(bank_min);
+  out << ", " << "bank_max=" << to_string(bank_max);
+  out << ")";
+}
+
+

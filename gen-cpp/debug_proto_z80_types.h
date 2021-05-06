@@ -68,6 +68,8 @@ class GpRegisters;
 
 class DbgBreakpoint;
 
+class SoundBankRange;
+
 typedef struct _GpRegister__isset {
   _GpRegister__isset() : index(false), value(false) {}
   bool index :1;
@@ -321,6 +323,54 @@ class DbgBreakpoint : public virtual ::apache::thrift::TBase {
 void swap(DbgBreakpoint &a, DbgBreakpoint &b);
 
 std::ostream& operator<<(std::ostream& out, const DbgBreakpoint& obj);
+
+typedef struct _SoundBankRange__isset {
+  _SoundBankRange__isset() : bank_min(false), bank_max(false) {}
+  bool bank_min :1;
+  bool bank_max :1;
+} _SoundBankRange__isset;
+
+class SoundBankRange : public virtual ::apache::thrift::TBase {
+ public:
+
+  SoundBankRange(const SoundBankRange&);
+  SoundBankRange& operator=(const SoundBankRange&);
+  SoundBankRange() : bank_min(0), bank_max(0) {
+  }
+
+  virtual ~SoundBankRange() noexcept;
+  int16_t bank_min;
+  int16_t bank_max;
+
+  _SoundBankRange__isset __isset;
+
+  void __set_bank_min(const int16_t val);
+
+  void __set_bank_max(const int16_t val);
+
+  bool operator == (const SoundBankRange & rhs) const
+  {
+    if (!(bank_min == rhs.bank_min))
+      return false;
+    if (!(bank_max == rhs.bank_max))
+      return false;
+    return true;
+  }
+  bool operator != (const SoundBankRange &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const SoundBankRange & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  virtual void printTo(std::ostream& out) const;
+};
+
+void swap(SoundBankRange &a, SoundBankRange &b);
+
+std::ostream& operator<<(std::ostream& out, const SoundBankRange& obj);
 
 
 

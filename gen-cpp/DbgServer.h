@@ -40,6 +40,7 @@ class DbgServerIf {
   virtual void step_into() = 0;
   virtual void step_over() = 0;
   virtual void get_callstack(std::vector<int32_t> & _return) = 0;
+  virtual void get_sound_banks(std::map<int32_t, SoundBankRange> & _return) = 0;
 };
 
 class DbgServerIfFactory {
@@ -122,6 +123,9 @@ class DbgServerNull : virtual public DbgServerIf {
     return;
   }
   void get_callstack(std::vector<int32_t> & /* _return */) {
+    return;
+  }
+  void get_sound_banks(std::map<int32_t, SoundBankRange> & /* _return */) {
     return;
   }
 };
@@ -1666,6 +1670,98 @@ class DbgServer_get_callstack_presult {
 
 };
 
+
+class DbgServer_get_sound_banks_args {
+ public:
+
+  DbgServer_get_sound_banks_args(const DbgServer_get_sound_banks_args&);
+  DbgServer_get_sound_banks_args& operator=(const DbgServer_get_sound_banks_args&);
+  DbgServer_get_sound_banks_args() {
+  }
+
+  virtual ~DbgServer_get_sound_banks_args() noexcept;
+
+  bool operator == (const DbgServer_get_sound_banks_args & /* rhs */) const
+  {
+    return true;
+  }
+  bool operator != (const DbgServer_get_sound_banks_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const DbgServer_get_sound_banks_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class DbgServer_get_sound_banks_pargs {
+ public:
+
+
+  virtual ~DbgServer_get_sound_banks_pargs() noexcept;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _DbgServer_get_sound_banks_result__isset {
+  _DbgServer_get_sound_banks_result__isset() : success(false) {}
+  bool success :1;
+} _DbgServer_get_sound_banks_result__isset;
+
+class DbgServer_get_sound_banks_result {
+ public:
+
+  DbgServer_get_sound_banks_result(const DbgServer_get_sound_banks_result&);
+  DbgServer_get_sound_banks_result& operator=(const DbgServer_get_sound_banks_result&);
+  DbgServer_get_sound_banks_result() {
+  }
+
+  virtual ~DbgServer_get_sound_banks_result() noexcept;
+  std::map<int32_t, SoundBankRange>  success;
+
+  _DbgServer_get_sound_banks_result__isset __isset;
+
+  void __set_success(const std::map<int32_t, SoundBankRange> & val);
+
+  bool operator == (const DbgServer_get_sound_banks_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    return true;
+  }
+  bool operator != (const DbgServer_get_sound_banks_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const DbgServer_get_sound_banks_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _DbgServer_get_sound_banks_presult__isset {
+  _DbgServer_get_sound_banks_presult__isset() : success(false) {}
+  bool success :1;
+} _DbgServer_get_sound_banks_presult__isset;
+
+class DbgServer_get_sound_banks_presult {
+ public:
+
+
+  virtual ~DbgServer_get_sound_banks_presult() noexcept;
+  std::map<int32_t, SoundBankRange> * success;
+
+  _DbgServer_get_sound_banks_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
 class DbgServerClient : virtual public DbgServerIf {
  public:
   DbgServerClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
@@ -1745,6 +1841,9 @@ class DbgServerClient : virtual public DbgServerIf {
   void get_callstack(std::vector<int32_t> & _return);
   void send_get_callstack();
   void recv_get_callstack(std::vector<int32_t> & _return);
+  void get_sound_banks(std::map<int32_t, SoundBankRange> & _return);
+  void send_get_sound_banks();
+  void recv_get_sound_banks(std::map<int32_t, SoundBankRange> & _return);
  protected:
   std::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
   std::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
@@ -1778,6 +1877,7 @@ class DbgServerProcessor : public ::apache::thrift::TDispatchProcessor {
   void process_step_into(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_step_over(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_get_callstack(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_get_sound_banks(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
  public:
   DbgServerProcessor(::std::shared_ptr<DbgServerIf> iface) :
     iface_(iface) {
@@ -1799,6 +1899,7 @@ class DbgServerProcessor : public ::apache::thrift::TDispatchProcessor {
     processMap_["step_into"] = &DbgServerProcessor::process_step_into;
     processMap_["step_over"] = &DbgServerProcessor::process_step_over;
     processMap_["get_callstack"] = &DbgServerProcessor::process_get_callstack;
+    processMap_["get_sound_banks"] = &DbgServerProcessor::process_get_sound_banks;
   }
 
   virtual ~DbgServerProcessor() {}
@@ -1993,6 +2094,16 @@ class DbgServerMultiface : virtual public DbgServerIf {
     return;
   }
 
+  void get_sound_banks(std::map<int32_t, SoundBankRange> & _return) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->get_sound_banks(_return);
+    }
+    ifaces_[i]->get_sound_banks(_return);
+    return;
+  }
+
 };
 
 // The 'concurrent' client is a thread safe client that correctly handles
@@ -2079,6 +2190,9 @@ class DbgServerConcurrentClient : virtual public DbgServerIf {
   void get_callstack(std::vector<int32_t> & _return);
   int32_t send_get_callstack();
   void recv_get_callstack(std::vector<int32_t> & _return, const int32_t seqid);
+  void get_sound_banks(std::map<int32_t, SoundBankRange> & _return);
+  int32_t send_get_sound_banks();
+  void recv_get_sound_banks(std::map<int32_t, SoundBankRange> & _return, const int32_t seqid);
  protected:
   std::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
   std::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;

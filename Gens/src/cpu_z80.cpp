@@ -12,12 +12,7 @@ extern "C" {
 static int bank_counter = 0;
 static int m68k_bank_base = 0;
 
-typedef struct bank_min_t {
-  unsigned short bank_min;
-  unsigned short bank_max;
-} bank_min_t;
-
-static std::map<int, bank_min_t> banked;
+std::map<int, bank_min_t> z80_banks;
 
 static void __fastcall Z80_WriteB_Bank_DebugCallback(unsigned int Adr, unsigned char Data)
 {
@@ -30,7 +25,7 @@ static void __fastcall Z80_WriteB_Bank_DebugCallback(unsigned int Adr, unsigned 
       //printf("Bank = %.8X\n", Bank_Z80);
       m68k_bank_base = Bank_Z80;
 
-      banked[m68k_bank_base] = { 0xFFFF, 0x8000 };
+      z80_banks[m68k_bank_base] = { 0xFFFF, 0x8000 };
     }
 
     if (bank_counter == 9) {
@@ -43,12 +38,12 @@ static unsigned char __fastcall Z80_ReadB_68K_Ram_DebugCallback(unsigned int Adr
 {
   unsigned char res = Z80_ReadB_68K_Ram(Adr);
 
-  if (Adr < banked[m68k_bank_base].bank_min) {
-    banked[m68k_bank_base].bank_min = Adr;
+  if (Adr < z80_banks[m68k_bank_base].bank_min) {
+    z80_banks[m68k_bank_base].bank_min = Adr;
   }
 
-  if (Adr > banked[m68k_bank_base].bank_max) {
-    banked[m68k_bank_base].bank_max = Adr;
+  if (Adr > z80_banks[m68k_bank_base].bank_max) {
+    z80_banks[m68k_bank_base].bank_max = Adr;
   }
 
   return res;
@@ -58,12 +53,12 @@ static unsigned short __fastcall Z80_ReadW_68K_Ram_DebugCallback(unsigned int Ad
 {
   unsigned short res = Z80_ReadW_68K_Ram(Adr);
 
-  if (Adr < banked[m68k_bank_base].bank_min) {
-    banked[m68k_bank_base].bank_min = Adr;
+  if (Adr < z80_banks[m68k_bank_base].bank_min) {
+    z80_banks[m68k_bank_base].bank_min = Adr;
   }
 
-  if (Adr > banked[m68k_bank_base].bank_max) {
-    banked[m68k_bank_base].bank_max = Adr;
+  if (Adr > z80_banks[m68k_bank_base].bank_max) {
+    z80_banks[m68k_bank_base].bank_max = Adr;
   }
 
   return res;

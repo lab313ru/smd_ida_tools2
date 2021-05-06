@@ -1439,7 +1439,7 @@ public:
   DbgServerHandler() {
   }
 
-  int32_t get_gp_reg(const GpRegsEnum::type index) {
+  int32_t get_gp_reg(const GpRegsEnum::type index) override {
 #ifdef DEBUG_68K
     if (index >= GpRegsEnum::D0 && index <= GpRegsEnum::D7) { // Dx
       return main68k_context.dreg[index];
@@ -1482,7 +1482,7 @@ public:
     return 0;
   }
 
-  void get_gp_regs(GpRegisters& _return) {
+  void get_gp_regs(GpRegisters& _return) override {
 #ifdef DEBUG_68K
     _return.D0 = main68k_context.dreg[0];
     _return.D1 = main68k_context.dreg[1];
@@ -1527,7 +1527,7 @@ public:
 #endif
   }
 
-  void set_gp_reg(const GpRegister& reg) {
+  void set_gp_reg(const GpRegister& reg) override {
 #ifdef DEBUG_68K
     if (reg.index >= GpRegsEnum::D0 && reg.index <= GpRegsEnum::D7) { // Dx
       main68k_context.dreg[reg.index] = reg.value;
@@ -1574,7 +1574,7 @@ public:
   }
 
 #ifdef DEBUG_68K
-  int16_t get_vdp_reg(const VdpRegsEnum::type index) {
+  int16_t get_vdp_reg(const VdpRegsEnum::type index) override {
     if (index >= VdpRegsEnum::V00 && index <= VdpRegsEnum::V17) {
       return VDP_Reg.regs[index];
     }
@@ -1582,7 +1582,7 @@ public:
     return 0;
   }
 
-  void get_vdp_regs(VdpRegisters& _return) {
+  void get_vdp_regs(VdpRegisters& _return) override {
     _return.V00 = VDP_Reg.regs[0];
     _return.V01 = VDP_Reg.regs[1];
     _return.V02 = VDP_Reg.regs[2];
@@ -1609,13 +1609,13 @@ public:
     _return.V17 = VDP_Reg.regs[23];
   }
 
-  void set_vdp_reg(const VdpRegister& reg) {
+  void set_vdp_reg(const VdpRegister& reg) override {
     if (reg.index >= VdpRegsEnum::V00 && reg.index <= VdpRegsEnum::V17) {
       VDP_Reg.regs[reg.index] = reg.value;
     }
   }
 
-  void get_dma_info(DmaInfo& _return) {
+  void get_dma_info(DmaInfo& _return) override {
     _return.Len = (BYTE)(VDP_Reg.regs[VdpRegsEnum::V13]) | ((BYTE)(VDP_Reg.regs[VdpRegsEnum::V14]) << 8);
     
     _return.Src = (BYTE)(VDP_Reg.regs[VdpRegsEnum::V15]) | ((BYTE)(VDP_Reg.regs[VdpRegsEnum::V16]) << 8);
@@ -1640,7 +1640,7 @@ public:
   }
   #endif
 
-  void read_memory(std::string& _return, const int32_t address, const int32_t size) {
+  void read_memory(std::string& _return, const int32_t address, const int32_t size) override {
     _return.clear();
 
     for (int32_t i = 0; i < size; ++i)
@@ -1684,7 +1684,7 @@ public:
     }
   }
 
-  void write_memory(const int32_t address, const std::string& data) {
+  void write_memory(const int32_t address, const std::string& data) override {
     for (size_t i = 0; i < data.size(); ++i)
     {
 #ifdef DEBUG_68K
@@ -1721,7 +1721,7 @@ public:
     }
   }
 
-  void get_breakpoints(std::vector<DbgBreakpoint>& _return) {
+  void get_breakpoints(std::vector<DbgBreakpoint>& _return) override {
 #ifdef DEBUG_68K
     for (auto i = M68kDW.Breakpoints.cbegin(); i != M68kDW.Breakpoints.cend(); ++i) {
 #else
@@ -1740,7 +1740,7 @@ public:
     }
   }
 
-  void add_breakpoint(const DbgBreakpoint& bpt) {
+  void add_breakpoint(const DbgBreakpoint& bpt) override {
 #ifdef DEBUG_68K
     Breakpoint b((bp_type)bpt.type, bpt.bstart & 0xFFFFFF, bpt.bend & 0xFFFFFF, true, bpt.is_vdp, false);
     M68kDW.Breakpoints.push_back(b);
@@ -1750,7 +1750,7 @@ public:
 #endif
   }
 
-  void toggle_breakpoint(const DbgBreakpoint& bpt) {
+  void toggle_breakpoint(const DbgBreakpoint& bpt) override {
 #ifdef DEBUG_68K
     for (auto i = M68kDW.Breakpoints.begin(); i != M68kDW.Breakpoints.end(); ++i) {
 #else
@@ -1769,7 +1769,7 @@ public:
     }
   }
 
-  void update_breakpoint(const DbgBreakpoint& bpt) {
+  void update_breakpoint(const DbgBreakpoint& bpt) override {
 #ifdef DEBUG_68K
     for (auto i = M68kDW.Breakpoints.begin(); i != M68kDW.Breakpoints.end(); ++i) {
 #else
@@ -1789,7 +1789,7 @@ public:
     }
   }
 
-  void del_breakpoint(const DbgBreakpoint& bpt) {
+  void del_breakpoint(const DbgBreakpoint& bpt) override {
 #ifdef DEBUG_68K
     for (auto i = M68kDW.Breakpoints.begin(); i != M68kDW.Breakpoints.end(); ++i) {
 #else
@@ -1811,7 +1811,7 @@ public:
     }
   }
 
-  void clear_breakpoints() {
+  void clear_breakpoints() override {
 #ifdef DEBUG_68K
     M68kDW.Breakpoints.clear();
 #else
@@ -1819,7 +1819,7 @@ public:
 #endif
   }
 
-  void pause() {
+  void pause() override {
 #ifdef DEBUG_68K
     M68kDW.DebugStop = true;
 #else
@@ -1833,7 +1833,7 @@ public:
     toggle_pause();
   }
 
-  void resume() {
+  void resume() override {
 #ifdef DEBUG_68K
     M68kDW.DebugStop = false;
 #else
@@ -1847,7 +1847,7 @@ public:
     toggle_pause();
   }
 
-  void start_emulation() {
+  void start_emulation() override {
     init_ida_client();
 
     try {
@@ -1867,7 +1867,7 @@ public:
     }
   }
 
-  void exit_emulation() {
+  void exit_emulation() override {
     try {
       if (client) {
 #ifdef DEBUG_68K
@@ -1886,7 +1886,7 @@ public:
     SendMessageA(HWnd, WM_CLOSE, 0, 0);
   }
 
-  void step_into() {
+  void step_into() override {
     Paused = 0;
 #ifdef DEBUG_68K
     M68kDW.StepInto = 1;
@@ -1897,7 +1897,7 @@ public:
 #endif
   }
 
-  void step_over() {
+  void step_over() override {
     Paused = 0;
 #ifdef DEBUG_68K
     M68kDW.DoStepOver();
@@ -1908,7 +1908,7 @@ public:
 #endif
   }
 
-  void get_callstack(std::vector<int32_t>& _return) {
+  void get_callstack(std::vector<int32_t>& _return) override {
 #ifdef DEBUG_68K
     for (auto i = M68kDW.callstack.cbegin(); i != M68kDW.callstack.cend(); ++i) {
 #else
@@ -1918,6 +1918,16 @@ public:
     }
   }
 
+  void get_sound_banks(std::map<int32_t, SoundBankRange>& _return) override {
+    _return.clear();
+
+    for (auto i = z80_banks.cbegin(); i != z80_banks.cend(); ++i) {
+      SoundBankRange bnk;
+      bnk.bank_min = i->second.bank_min;
+      bnk.bank_max = i->second.bank_max;
+      _return[i->first] = bnk;
+    }
+  }
 };
 
 void stop_server() {
@@ -6562,3 +6572,4 @@ void LoadFlags(int flags)
 #pragma comment(linker,"\"/manifestdependency:type='win32' \
 name='Microsoft.Windows.Common-Controls' version='6.0.0.0' \
 processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
+

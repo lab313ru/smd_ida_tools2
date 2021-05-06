@@ -12,4 +12,13 @@ extern "C" {
 };
 #endif
 
+#include <map>
+
+typedef struct bank_min_t {
+  unsigned short bank_min;
+  unsigned short bank_max;
+} bank_min_t;
+
+extern std::map<int, bank_min_t> z80_banks;
+
 #endif

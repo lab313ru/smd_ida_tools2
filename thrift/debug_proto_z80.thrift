@@ -61,6 +61,11 @@ struct DbgBreakpoint {
   5:bool is_forbid,
 }
 
+struct SoundBankRange {
+  1:i16 bank_min,
+  2:i16 bank_max,
+}
+
 service DbgServer {
   i32 get_gp_reg(1:GpRegsEnum index),
   GpRegisters get_gp_regs(),
@@ -85,6 +90,7 @@ service DbgServer {
   void step_over(),
 
   list<i32> get_callstack(),
+  map<i32,SoundBankRange> get_sound_banks(),
 }
 
 service DbgClient {

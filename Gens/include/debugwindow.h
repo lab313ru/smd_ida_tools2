@@ -41,7 +41,7 @@ typedef std::vector<Breakpoint> bp_list;
 #ifdef DEBUG_68K
 #define MAX_ROM_SIZE 0x800000
 #else
-#define MAX_ROM_SIZE 0x2000
+#define MAX_ROM_SIZE 0x10000 // including possible z80 code in 0x8000 - 0xFFFF
 #endif
 
 struct DebugWindow
