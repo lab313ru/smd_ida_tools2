@@ -64,14 +64,22 @@ static const char *const SRReg[] =
     NULL,
     "T"
 #else
-  "C",
-  "N",
-  "P",
+  "CF",
+  "NF",
+  "PF",
   NULL,
-  "H",
+  "HF",
   NULL,
-  "Z",
-  "S",
+  "ZF",
+  "SF",
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
 #endif
 };
 
@@ -131,7 +139,7 @@ register_info_t registers[] =
     { "SrcHi", NULL, RC_VDP, dt_byte, NULL, 0 },
 #else
     { "A", 0, RC_GENERAL, dt_byte, NULL, 0 },
-    { "AF", 0, RC_GENERAL, dt_word, NULL, 0 },
+    { "AF", 0, RC_GENERAL, dt_word, SRReg, 0xD7 },
     { "AF'", 0, RC_GENERAL, dt_word, NULL, 0 },
     { "B", 0, RC_GENERAL, dt_byte, NULL, 0 },
     { "C", 0, RC_GENERAL, dt_byte, NULL, 0 },
