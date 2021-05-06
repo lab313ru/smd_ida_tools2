@@ -55,7 +55,11 @@ using namespace ::apache::thrift::concurrency;
 #include "parsecmdline.h"
 #include <errno.h>
 #include <vector>
+#ifdef DEBUG_68K
 #include "m68k_debugwindow.h"
+#else
+#include "z80_debugwindow.h"
+#endif
 #include "plane_explorer_kmod.h"
 #include "tracer.h"
 
@@ -1355,19 +1359,26 @@ void RedirectIOToConsole()
 }
 #endif
 
+#ifdef DEBUG_68K
 #define BREAKPOINTS_BASE 0x00D00000
 extern bool IsHardwareAddressValid(unsigned int address);
 extern bool WriteValueAtHardwareAddress(unsigned int address, unsigned int value, unsigned int size, bool hookless = false);
+#endif
 
 void stop_client() {
   try {
     if (client) {
+#ifdef DEBUG_68K
       client->stop_event(M68kDW.changed);
       M68kDW.changed.clear();
+#else
+      client->stop_event(Z80DW.changed);
+      Z80DW.changed.clear();
+#endif
     }
     cli_transport->close();
   }
-  catch (TException&) {
+  catch (...) {
 
   }
 }
@@ -1383,7 +1394,7 @@ static void init_ida_client() {
       cli_transport->open();
       break;
     }
-    catch (TException&) {
+    catch (...) {
       Sleep(10);
     }
   }
@@ -1410,11 +1421,16 @@ private:
 
       try {
         if (client) {
+#ifdef DEBUG_68K
           client->pause_event(M68kDW.last_pc, M68kDW.changed);
           M68kDW.changed.clear();
+#else
+          client->pause_event(Z80DW.last_pc, Z80DW.changed);
+          Z80DW.changed.clear();
+#endif
         }
       }
-      catch (TException&) {
+      catch (...) {
 
       }
     }
@@ -1424,6 +1440,7 @@ public:
   }
 
   int32_t get_gp_reg(const GpRegsEnum::type index) {
+#ifdef DEBUG_68K
     if (index >= GpRegsEnum::D0 && index <= GpRegsEnum::D7) { // Dx
       return main68k_context.dreg[index];
     }
@@ -1437,11 +1454,36 @@ public:
       case GpRegsEnum::SP: return main68k_context.areg[GpRegsEnum::A7-GpRegsEnum::A0];
       }
     }
+#else
+    switch (index) {
+    case GpRegsEnum::AF: return M_Z80.AF.w.AF;
+    case GpRegsEnum::AF2: return M_Z80.AF2.w.AF2;
+    case GpRegsEnum::BC: return M_Z80.BC.w.BC;
+    case GpRegsEnum::BC2: return M_Z80.BC2.w.BC2;
+    case GpRegsEnum::DE: return M_Z80.DE.w.DE;
+    case GpRegsEnum::DE2: return M_Z80.DE2.w.DE2;
+    case GpRegsEnum::HL: return M_Z80.HL.w.HL;
+    case GpRegsEnum::HL2: return M_Z80.HL2.w.HL2;
+
+    case GpRegsEnum::IX: return M_Z80.IX.w.IX;
+    case GpRegsEnum::IY: return M_Z80.IY.w.IY;
+    case GpRegsEnum::I: return M_Z80.I;
+    case GpRegsEnum::R: return M_Z80.R.w.R;
+
+    case GpRegsEnum::PC: return M_Z80.PC.w.PC;
+
+    case GpRegsEnum::SP: return M_Z80.SP.w.SP;
+    case GpRegsEnum::IP: return Z80DW.last_pc;
+
+    case GpRegsEnum::BANK: return Bank_Z80;
+    }
+#endif
 
     return 0;
   }
 
   void get_gp_regs(GpRegisters& _return) {
+#ifdef DEBUG_68K
     _return.D0 = main68k_context.dreg[0];
     _return.D1 = main68k_context.dreg[1];
     _return.D2 = main68k_context.dreg[2];
@@ -1462,9 +1504,31 @@ public:
 
     _return.PC = M68kDW.last_pc & 0xFFFFFF;
     _return.SR = main68k_context.sr;
+#else
+    _return.AF = M_Z80.AF.w.AF;
+    _return.AF2 = M_Z80.AF2.w.AF2;
+    _return.BC = M_Z80.BC.w.BC;
+    _return.BC2 = M_Z80.BC2.w.BC2;
+    _return.DE = M_Z80.DE.w.DE;
+    _return.DE2 = M_Z80.DE2.w.DE2;
+    _return.HL = M_Z80.HL.w.HL;
+    _return.HL2 = M_Z80.HL2.w.HL2;
+
+    _return.IX = M_Z80.IX.w.IX;
+    _return.IY = M_Z80.IY.w.IY;
+    _return.I = M_Z80.I;
+    _return.R = M_Z80.R.w.R;
+    _return.PC = M_Z80.PC.w.PC;
+
+    _return.SP = M_Z80.SP.w.SP;
+
+    _return.IP = Z80DW.last_pc;
+    _return.BANK = Bank_Z80;
+#endif
   }
 
   void set_gp_reg(const GpRegister& reg) {
+#ifdef DEBUG_68K
     if (reg.index >= GpRegsEnum::D0 && reg.index <= GpRegsEnum::D7) { // Dx
       main68k_context.dreg[reg.index] = reg.value;
     }
@@ -1484,8 +1548,32 @@ public:
         break;
       }
     }
+#else
+    switch (reg.index) {
+    case GpRegsEnum::AF: M_Z80.AF.w.AF = reg.value; break;
+    case GpRegsEnum::AF2: M_Z80.AF2.w.AF2 = reg.value; break;
+    case GpRegsEnum::BC: M_Z80.BC.w.BC = reg.value; break;
+    case GpRegsEnum::BC2: M_Z80.BC2.w.BC2 = reg.value; break;
+    case GpRegsEnum::DE: M_Z80.DE.w.DE = reg.value; break;
+    case GpRegsEnum::DE2: M_Z80.DE2.w.DE2 = reg.value; break;
+    case GpRegsEnum::HL: M_Z80.HL.w.HL = reg.value; break;
+    case GpRegsEnum::HL2: M_Z80.HL2.w.HL2 = reg.value; break;
+
+    case GpRegsEnum::IX: M_Z80.IX.w.IX = reg.value; break;
+    case GpRegsEnum::IY: M_Z80.IY.w.IY = reg.value; break;
+    case GpRegsEnum::I: M_Z80.I = reg.value; break;
+    case GpRegsEnum::R: M_Z80.R.w.R = reg.value; break;
+    case GpRegsEnum::PC: M_Z80.PC.w.PC = reg.value; break;
+
+    case GpRegsEnum::SP: M_Z80.SP.w.SP = reg.value; break;
+    case GpRegsEnum::IP: Z80DW.last_pc = reg.value; break;
+
+    case GpRegsEnum::BANK: Bank_Z80 = reg.value; break;
+    }
+#endif
   }
 
+#ifdef DEBUG_68K
   int16_t get_vdp_reg(const VdpRegsEnum::type index) {
     if (index >= VdpRegsEnum::V00 && index <= VdpRegsEnum::V17) {
       return VDP_Reg.regs[index];
@@ -1550,12 +1638,14 @@ public:
       break;
     }
   }
+  #endif
 
   void read_memory(std::string& _return, const int32_t address, const int32_t size) {
     _return.clear();
 
     for (int32_t i = 0; i < size; ++i)
     {
+#ifdef DEBUG_68K
       if ((address + i >= 0xA00000 && address + i < 0xA10000) && IsHardwareAddressValid((uint32)(address + i)))
       {
         // Z80
@@ -1588,12 +1678,16 @@ public:
       else { // else leave the value nil
         _return += '\x00';
       }
+#else
+      _return += Ram_Z80[address + i];
+#endif
     }
   }
 
   void write_memory(const int32_t address, const std::string& data) {
     for (size_t i = 0; i < data.size(); ++i)
     {
+#ifdef DEBUG_68K
       if ((address + i >= 0xA00000 && address + i < 0xA10000) && IsHardwareAddressValid((uint32)(address + i)))
       {
         // Z80
@@ -1621,14 +1715,23 @@ public:
         unsigned int addr = address + i - (BREAKPOINTS_BASE + 0x20000);
         ((UINT8*)VSRam)[(addr ^ 1) & 0xFF] = data[i] & 0xFF;
       }
+#else
+      Ram_Z80[address + i] = data[i] & 0xFF;
+#endif
     }
   }
 
   void get_breakpoints(std::vector<DbgBreakpoint>& _return) {
+#ifdef DEBUG_68K
     for (auto i = M68kDW.Breakpoints.cbegin(); i != M68kDW.Breakpoints.cend(); ++i) {
+#else
+    for (auto i = Z80DW.Breakpoints.cbegin(); i != Z80DW.Breakpoints.cend(); ++i) {
+#endif
       DbgBreakpoint bpt;
       bpt.enabled = i->enabled;
+#ifdef DEBUG_68K
       bpt.is_vdp = i->is_vdp;
+#endif
       bpt.is_forbid = i->is_forbid;
       bpt.bstart = i->start;
       bpt.bend = i->end;
@@ -1638,45 +1741,90 @@ public:
   }
 
   void add_breakpoint(const DbgBreakpoint& bpt) {
+#ifdef DEBUG_68K
     Breakpoint b((bp_type)bpt.type, bpt.bstart & 0xFFFFFF, bpt.bend & 0xFFFFFF, true, bpt.is_vdp, false);
     M68kDW.Breakpoints.push_back(b);
+#else
+    Breakpoint b((bp_type)bpt.type, bpt.bstart & 0xFFFFFF, bpt.bend & 0xFFFFFF, true, false);
+    Z80DW.Breakpoints.push_back(b);
+#endif
   }
 
   void toggle_breakpoint(const DbgBreakpoint& bpt) {
+#ifdef DEBUG_68K
     for (auto i = M68kDW.Breakpoints.begin(); i != M68kDW.Breakpoints.end(); ++i) {
-      if (bpt.type == (BpType::type)i->type && bpt.bstart == i->start && bpt.is_vdp == i->is_vdp) {
+#else
+    for (auto i = Z80DW.Breakpoints.begin(); i != Z80DW.Breakpoints.end(); ++i) {
+#endif
+      if (bpt.type == (BpType::type)i->type && bpt.bstart == i->start) {
+#ifdef DEBUG_68K
+        if (bpt.is_vdp == i->is_vdp) {
+#endif
         i->enabled = !i->enabled;
         break;
+#ifdef DEBUG_68K
+      }
+#endif
       }
     }
   }
 
   void update_breakpoint(const DbgBreakpoint& bpt) {
+#ifdef DEBUG_68K
     for (auto i = M68kDW.Breakpoints.begin(); i != M68kDW.Breakpoints.end(); ++i) {
-      if (bpt.type == (BpType::type)i->type && bpt.bstart == i->start && bpt.is_vdp == i->is_vdp) {
+#else
+    for (auto i = Z80DW.Breakpoints.begin(); i != Z80DW.Breakpoints.end(); ++i) {
+#endif
+      if (bpt.type == (BpType::type)i->type && bpt.bstart == i->start) {
+#ifdef DEBUG_68K
+        if (bpt.is_vdp == i->is_vdp) {
+#endif
         i->enabled = bpt.enabled;
         i->is_forbid = bpt.is_forbid;
         break;
+#ifdef DEBUG_68K
+      }
+#endif
       }
     }
   }
 
   void del_breakpoint(const DbgBreakpoint& bpt) {
-    for (auto i = M68kDW.Breakpoints.begin(); i != M68kDW.Breakpoints.end();) {
-      if (bpt.type == (BpType::type)i->type && bpt.bstart == i->start && bpt.is_vdp == i->is_vdp) {
+#ifdef DEBUG_68K
+    for (auto i = M68kDW.Breakpoints.begin(); i != M68kDW.Breakpoints.end(); ++i) {
+#else
+    for (auto i = Z80DW.Breakpoints.begin(); i != Z80DW.Breakpoints.end(); ++i) {
+#endif
+      if (bpt.type == (BpType::type)i->type && bpt.bstart == i->start) {
+#ifdef DEBUG_68K
+        if (bpt.is_vdp == i->is_vdp) {
         M68kDW.Breakpoints.erase(i);
+#else
+        Z80DW.Breakpoints.erase(i);
+#endif
         break;
+#ifdef DEBUG_68K
+      }
+#endif
       }
       ++i;
     }
   }
 
   void clear_breakpoints() {
+#ifdef DEBUG_68K
     M68kDW.Breakpoints.clear();
+#else
+    Z80DW.Breakpoints.clear();
+#endif
   }
 
   void pause() {
+#ifdef DEBUG_68K
     M68kDW.DebugStop = true;
+#else
+    Z80DW.DebugStop = true;
+#endif
 
     if (Paused) {
       return;
@@ -1686,7 +1834,11 @@ public:
   }
 
   void resume() {
+#ifdef DEBUG_68K
     M68kDW.DebugStop = false;
+#else
+    Z80DW.DebugStop = false;
+#endif
 
     if (!Paused) {
       return;
@@ -1701,11 +1853,16 @@ public:
     try {
       if (client) {
         client->start_event();
+#ifdef DEBUG_68K
         M68kDW.changed.clear();
         client->pause_event(main68k_context.pc, M68kDW.changed);
+#else
+        Z80DW.changed.clear();
+        client->pause_event(M_Z80.PC.w.PC, Z80DW.changed);
+#endif
       }
     }
-    catch (TException&) {
+    catch (...) {
 
     }
   }
@@ -1713,11 +1870,16 @@ public:
   void exit_emulation() {
     try {
       if (client) {
+#ifdef DEBUG_68K
         client->stop_event(M68kDW.changed);
         M68kDW.changed.clear();
+#else
+        client->stop_event(Z80DW.changed);
+        Z80DW.changed.clear();
+#endif
       }
     }
-    catch (TException&) {
+    catch (...) {
 
     }
 
@@ -1726,18 +1888,32 @@ public:
 
   void step_into() {
     Paused = 0;
+#ifdef DEBUG_68K
     M68kDW.StepInto = 1;
     M68kDW.DebugStop = false;
+#else
+    Z80DW.StepInto = 1;
+    Z80DW.DebugStop = false;
+#endif
   }
 
   void step_over() {
     Paused = 0;
+#ifdef DEBUG_68K
     M68kDW.DoStepOver();
     M68kDW.DebugStop = false;
+#else
+    Z80DW.DoStepOver();
+    Z80DW.DebugStop = false;
+#endif
   }
 
   void get_callstack(std::vector<int32_t>& _return) {
+#ifdef DEBUG_68K
     for (auto i = M68kDW.callstack.cbegin(); i != M68kDW.callstack.cend(); ++i) {
+#else
+    for (auto i = Z80DW.callstack.cbegin(); i != Z80DW.callstack.cend(); ++i) {
+#endif
       _return.push_back(*i);
     }
   }
@@ -1762,9 +1938,15 @@ static void init_dbg_server() {
 
   atexit(stop_server);
 
+#ifdef DEBUG_68K
   M68kDW.Breakpoints.clear();
   Breakpoint b(bp_type::BP_PC, main68k_context.pc & 0xFFFFFF, main68k_context.pc & 0xFFFFFF, true, false, false);
   M68kDW.Breakpoints.push_back(b);
+#else
+  Z80DW.Breakpoints.clear();
+  Breakpoint b(bp_type::BP_PC, 0, 0, true, false);
+  Z80DW.Breakpoints.push_back(b);
+#endif
 
   //Paused = 1;
   //Pause_Screen();
@@ -3554,11 +3736,16 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
                 try {
                   if (client) {
+#ifdef DEBUG_68K
                     client->pause_event(M68kDW.last_pc, M68kDW.changed);
                     M68kDW.changed.clear();
+#else
+                    client->pause_event(Z80DW.last_pc, Z80DW.changed);
+                    Z80DW.changed.clear();
+#endif
                   }
                 }
-                catch (TException&) {
+                catch (...) {
 
                 }
             }

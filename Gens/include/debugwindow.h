@@ -1,18 +1,9 @@
 #ifndef DEBUG_WINDOW_H
 #define DEBUG_WINDOW_H
 
-#include <windows.h>
 #include <vector>
 #include <string>
 #include <map>
-
-/*#define WM_DEBUG_DUMMY_EXIT (WM_USER+1000)
-
-#define BRK_PC      0x000001
-#define BRK_READ    0x000002
-#define BRK_WRITE   0x000004
-#define BRK_VDP     0x000010
-#define BRK_FORBID  0x000100*/
 
 typedef unsigned int uint32;
 typedef unsigned short ushort;
@@ -32,15 +23,26 @@ struct Breakpoint
     uint32 end;
 
     bool enabled;
-    bool is_vdp, is_forbid;
+    bool is_forbid;
+
+#ifdef DEBUG_68K
+    bool is_vdp;
 
     Breakpoint(bp_type _type, uint32 _start, uint32 _end, bool _enabled, bool _is_vdp, bool _is_forbid) :
-        type(_type), start(_start), end(_end), enabled(_enabled), is_vdp(_is_vdp), is_forbid(_is_forbid) {};
+      type(_type), start(_start), end(_end), enabled(_enabled), is_vdp(_is_vdp), is_forbid(_is_forbid) {};
+#else
+    Breakpoint(bp_type _type, uint32 _start, uint32 _end, bool _enabled, bool _is_forbid) :
+      type(_type), start(_start), end(_end), enabled(_enabled), is_forbid(_is_forbid) {};
+#endif
 };
 
 typedef std::vector<Breakpoint> bp_list;
 
+#ifdef DEBUG_68K
 #define MAX_ROM_SIZE 0x800000
+#else
+#define MAX_ROM_SIZE 0x2000
+#endif
 
 struct DebugWindow
 {
@@ -55,11 +57,15 @@ struct DebugWindow
     uint32 StepOver;
 
     void Breakpoint(int pc);
-    void SetWhyBreak(LPCSTR lpString);
 
     bool BreakPC(int pc);
+#ifdef DEBUG_68K
     bool BreakRead(int pc, uint32 start, uint32 stop, bool is_vdp);
     bool BreakWrite(int pc, uint32 start, uint32 stop, bool is_vdp);
+#else
+    bool BreakRead(int pc, uint32 start, uint32 stop);
+    bool BreakWrite(int pc, uint32 start, uint32 stop);
+#endif
 
     virtual void DoStepOver();
     virtual void TracePC(int pc);

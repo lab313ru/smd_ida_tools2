@@ -76,11 +76,6 @@ void DebugWindow::Breakpoint(int pc)
     }
 }
 
-void DebugWindow::SetWhyBreak(LPCSTR lpString)
-{
-    std::cout << lpString << std::endl;
-}
-
 bool DebugWindow::BreakPC(int pc)
 {
     for (auto i = Breakpoints.cbegin(); i != Breakpoints.cend(); ++i)
@@ -96,14 +91,21 @@ bool DebugWindow::BreakPC(int pc)
     return false;
 }
 
+#ifdef DEBUG_68K
 bool DebugWindow::BreakRead(int pc, uint32 start, uint32 stop, bool is_vdp)
+#else
+bool DebugWindow::BreakRead(int pc, uint32 start, uint32 stop)
+#endif
 {
     bool brk = false;
 
     for (auto i = Breakpoints.cbegin(); i != Breakpoints.cend(); ++i)
     {
         if (i->type != bp_type::BP_READ) continue;
-        if (!(i->enabled) || (i->is_vdp != is_vdp)) continue;
+        if (!i->enabled) continue;
+#ifdef DEBUG_68K
+        if (i->is_vdp != is_vdp) continue;
+#endif
 
         if (start <= i->end && stop >= i->start)
         {
@@ -128,14 +130,21 @@ bool DebugWindow::BreakRead(int pc, uint32 start, uint32 stop, bool is_vdp)
     return true;
 }
 
+#ifdef DEBUG_68K
 bool DebugWindow::BreakWrite(int pc, uint32 start, uint32 stop, bool is_vdp)
+#else
+bool DebugWindow::BreakWrite(int pc, uint32 start, uint32 stop)
+#endif
 {
     bool brk = false;
 
     for (auto i = Breakpoints.cbegin(); i != Breakpoints.cend(); ++i)
     {
         if (i->type != bp_type::BP_WRITE) continue;
-        if (!(i->enabled) || (i->is_vdp != is_vdp)) continue;
+        if (!i->enabled) continue;
+#ifdef DEBUG_68K
+        if (i->is_vdp != is_vdp) continue;
+#endif
 
         if (start <= i->end && stop >= i->start)
         {

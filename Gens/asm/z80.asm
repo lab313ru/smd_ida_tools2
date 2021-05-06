@@ -94,6 +94,10 @@ bits 32
 	extern @z80log@4
 %endif
 
+	extern @z80TracePC@4
+	extern @z80TraceRead@8
+	extern @z80TraceWrite@8
+
 	
 %macro Z80_CONTEXT 0
 
@@ -390,6 +394,12 @@ bits 32
 	mov [ebp + Z80.AF], zAF
 	mov [ebp + Z80.HL], zxHL
 
+	pusha
+	mov ecx, zxPC
+	sub ecx, [ebp + Z80.BasePC]
+	call @z80TracePC@4
+	popa
+
 %if (GENS_LOG == 1)
 	push eax
 	push ecx
@@ -415,6 +425,11 @@ bits 32
 ; - Data returned in dest or DL if not dest
 
 %macro READ_BYTE 0-1
+
+	pusha
+	mov edx, 1
+	call @z80TraceRead@8
+	popa
 
 %if (GENS_OPT == 1)
 	cmp ecx, 0x3FFF
@@ -474,6 +489,11 @@ ALIGN4
 
 %macro WRITE_BYTE 0-1
 
+	pusha
+	mov edx, 1
+	call @z80TraceWrite@8
+	popa
+
 %if (GENS_OPT == 1)
 	cmp ecx, 0x3FFF
 	ja short %%IO
@@ -517,6 +537,11 @@ ALIGN4
 
 
 %macro READ_WORD 0-1
+
+	pusha
+	mov edx, 2
+	call @z80TraceRead@8
+	popa
 
 %if (GENS_OPT == 1)
 	cmp ecx, 0x3FFF
@@ -576,6 +601,11 @@ ALIGN4
 
 
 %macro WRITE_WORD 0-1
+
+	pusha
+	mov edx, 2
+	call @z80TraceWrite@8
+	popa
 
 %if (GENS_OPT == 1)
 	cmp ecx, 0x3FFF
@@ -5120,6 +5150,12 @@ DECLF z80_Exec, 8
 	mov [ebp + Z80.CycleTD], edi
 	movzx edx, byte [zxPC]
 	mov zxHL, [ebp + Z80.HL]
+
+	pusha
+	mov ecx, zxPC
+	sub ecx, [ebp + Z80.BasePC]
+	call @z80TracePC@4
+	popa
 
 %if (GENS_LOG == 1)
 	push eax

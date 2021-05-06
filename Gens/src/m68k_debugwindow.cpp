@@ -10,7 +10,6 @@ using namespace ::apache::thrift::transport;
 #include "m68k_debugwindow.h"
 #include "mem_m68k.h"
 #include "star_68k.h"
-#include "ram_dump.h"
 #include "resource.h"
 
 extern ::std::shared_ptr<DbgClientClient> client;
@@ -21,6 +20,7 @@ M68kDebugWindow M68kDW;
 
 M68kDebugWindow::M68kDebugWindow()
 {
+  last_pc = 0;
 }
 
 M68kDebugWindow::~M68kDebugWindow()
@@ -29,6 +29,7 @@ M68kDebugWindow::~M68kDebugWindow()
 
 void M68kDebugWindow::TracePC(int pc)
 {
+#ifdef DEBUG_68K
     handled_ida_event = false;
 
     if (last_pc != 0 && pc != 0 && pc < MAX_ROM_SIZE) {
@@ -48,7 +49,7 @@ void M68kDebugWindow::TracePC(int pc)
             changed.clear();
           }
         }
-        catch (TException&) {
+        catch (...) {
 
         }
 
@@ -58,12 +59,6 @@ void M68kDebugWindow::TracePC(int pc)
     if (!br)
     {
         br = BreakPC(last_pc);
-        if (br)
-        {
-            char bwhy[30];
-            sprintf(bwhy, "Breakpoint PC:%06X", last_pc & 0xFFFFFF);
-            SetWhyBreak(bwhy);
-        }
     }
 
     if (br)
@@ -87,34 +82,34 @@ void M68kDebugWindow::TracePC(int pc)
         if (!callstack.empty())
             callstack.pop_back();
     }
+#endif
 }
 
 void M68kDebugWindow::TraceRead(uint32 start, uint32 stop, bool is_vdp)
 {
+#ifdef DEBUG_68K
     handled_ida_event = false;
     if (BreakRead(last_pc, start, stop, is_vdp))
     {
-        char bwhy[33];
-        sprintf(bwhy, "Read: %08X-%08X", start, stop);
-        SetWhyBreak(bwhy);
         Breakpoint(last_pc);
     }
+#endif
 }
 
 void M68kDebugWindow::TraceWrite(uint32 start, uint32 stop, bool is_vdp)
 {
+#ifdef DEBUG_68K
     handled_ida_event = false;
     if (BreakWrite(last_pc, start, stop, is_vdp))
     {
-        char bwhy[33];
-        sprintf(bwhy, "Write: %08X-%08X", start, stop);
-        SetWhyBreak(bwhy);
         Breakpoint(last_pc);
     }
+#endif
 }
 
 void M68kDebugWindow::DoStepOver()
 {
+#ifdef DEBUG_68K
     unsigned short opc = M68K_RW(last_pc);
     if ((opc & 0xFFC0) == 0x4E80) // jsr
     {
@@ -183,4 +178,5 @@ void M68kDebugWindow::DoStepOver()
         StepInto = true;
         StepOver = -1;
     }
+#endif
 }

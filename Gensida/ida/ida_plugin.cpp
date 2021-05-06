@@ -33,6 +33,7 @@ static bool plugin_inited;
 static bool dbg_started;
 static bool my_dbg;
 
+#ifdef DEBUG_68K
 static ssize_t idaapi hook_dbg(void *user_data, int notification_code, va_list va)
 {
     switch (notification_code)
@@ -70,6 +71,7 @@ static int idaapi idp_to_dbg_reg(int idp_reg)
     }
     return reg_idx;
 }
+#endif
 
 #ifdef _DEBUG
 static const char* const optype_names[] =
@@ -208,6 +210,7 @@ static void print_op(ea_t ea, op_t* op)
 
 #endif
 
+#ifdef DEBUG_68K
 static ssize_t idaapi hook_linea_linef(void* user_data, int notification_code, va_list va)
 {
   switch (notification_code)
@@ -1034,6 +1037,7 @@ static void do_cmt_z80_bus_command(ea_t ea, ea_t addr, uint32 val)
     } break;
     }
 }
+#endif
 
 //--------------------------------------------------------------------------
 static void print_version()
@@ -1047,12 +1051,17 @@ static void print_version()
 // Initialize debugger plugin
 static bool init_plugin(void)
 {
+#ifdef DEBUG_68K
     if (ph.id != PLFM_68K)
+#else
+    if (ph.id != PLFM_Z80)
+#endif
         return false;
 
     return true;
 }
 
+#ifdef DEBUG_68K
 struct smd_constant_action_t : public action_handler_t
 {
   virtual int idaapi activate(action_activation_ctx_t* ctx)
@@ -1123,6 +1132,7 @@ static ssize_t idaapi hook_ui(void *user_data, int notification_code, va_list va
 
     return 0;
 }
+#endif
 
 //--------------------------------------------------------------------------
 // Initialize debugger plugin
@@ -1135,12 +1145,14 @@ static plugmod_t* idaapi init(void)
         dbg_started = false;
         my_dbg = false;
 
+#ifdef DEBUG_68K
         bool res = register_action(smd_constant_action);
 
         hook_to_notification_point(HT_UI, hook_ui, NULL);
         hook_to_notification_point(HT_IDP, hook_linea_linef, nullptr);
         register_post_event_visitor(HT_IDP, &ctx, nullptr);
         hook_to_notification_point(HT_DBG, hook_dbg, NULL);
+#endif
 
         print_version();
         return PLUGIN_KEEP;
@@ -1154,12 +1166,14 @@ static void idaapi term(void)
 {
     if (plugin_inited)
     {
+#ifdef DEBUG_68K
         unhook_from_notification_point(HT_UI, hook_ui);
         unregister_post_event_visitor(HT_IDP, &ctx);
         unhook_from_notification_point(HT_DBG, hook_linea_linef);
         unhook_from_notification_point(HT_DBG, hook_dbg);
 
         unregister_action(smd_constant_name);
+#endif
 
         plugin_inited = false;
         dbg_started = false;
@@ -1176,7 +1190,13 @@ char comment[] = NAME " debugger plugin by DrMefistO.";
 char help[] =
 NAME " debugger plugin by DrMefistO.\n"
 "\n"
-"This module lets you debug Genesis roms in IDA.\n";
+"This module lets you debug "
+#ifdef DEBUG_68K
+"Genesis roms "
+#else
+"Z80 Sound Drivers "
+#endif
+"in IDA.\n";
 
 //--------------------------------------------------------------------------
 //

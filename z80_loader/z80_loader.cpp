@@ -268,7 +268,11 @@ void idaapi load_file(linput_t *li, ushort neflags, const char *fileformatname)
 	del_items(0x0000, DELIT_SIMPLE);
   add_sub(0x0000, "start");
 
-	inf.start_ea = inf.start_ip = 0;
+  idainfo* _inf = &inf;
+  //_inf->outflags |= OFLG_LZERO;
+  _inf->baseaddr = _inf->start_cs = 0;
+  _inf->start_ip = _inf->start_ea = _inf->main = 0;
+  _inf->lowoff = 0;
 
 	print_version();
 }

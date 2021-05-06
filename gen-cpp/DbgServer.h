@@ -10,7 +10,7 @@
 #include <thrift/TDispatchProcessor.h>
 #include <thrift/async/TConcurrentClientSyncInfo.h>
 #include <memory>
-#include "debug_proto_types.h"
+#include "debug_proto_z80_types.h"
 
 
 
@@ -25,10 +25,6 @@ class DbgServerIf {
   virtual int32_t get_gp_reg(const GpRegsEnum::type index) = 0;
   virtual void get_gp_regs(GpRegisters& _return) = 0;
   virtual void set_gp_reg(const GpRegister& reg) = 0;
-  virtual int16_t get_vdp_reg(const VdpRegsEnum::type index) = 0;
-  virtual void get_vdp_regs(VdpRegisters& _return) = 0;
-  virtual void set_vdp_reg(const VdpRegister& reg) = 0;
-  virtual void get_dma_info(DmaInfo& _return) = 0;
   virtual void read_memory(std::string& _return, const int32_t address, const int32_t size) = 0;
   virtual void write_memory(const int32_t address, const std::string& data) = 0;
   virtual void get_breakpoints(std::vector<DbgBreakpoint> & _return) = 0;
@@ -81,19 +77,6 @@ class DbgServerNull : virtual public DbgServerIf {
     return;
   }
   void set_gp_reg(const GpRegister& /* reg */) {
-    return;
-  }
-  int16_t get_vdp_reg(const VdpRegsEnum::type /* index */) {
-    int16_t _return = 0;
-    return _return;
-  }
-  void get_vdp_regs(VdpRegisters& /* _return */) {
-    return;
-  }
-  void set_vdp_reg(const VdpRegister& /* reg */) {
-    return;
-  }
-  void get_dma_info(DmaInfo& /* _return */) {
     return;
   }
   void read_memory(std::string& /* _return */, const int32_t /* address */, const int32_t /* size */) {
@@ -428,388 +411,6 @@ class DbgServer_set_gp_reg_presult {
 
 
   virtual ~DbgServer_set_gp_reg_presult() noexcept;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-
-};
-
-typedef struct _DbgServer_get_vdp_reg_args__isset {
-  _DbgServer_get_vdp_reg_args__isset() : index(false) {}
-  bool index :1;
-} _DbgServer_get_vdp_reg_args__isset;
-
-class DbgServer_get_vdp_reg_args {
- public:
-
-  DbgServer_get_vdp_reg_args(const DbgServer_get_vdp_reg_args&);
-  DbgServer_get_vdp_reg_args& operator=(const DbgServer_get_vdp_reg_args&);
-  DbgServer_get_vdp_reg_args() : index((VdpRegsEnum::type)0) {
-  }
-
-  virtual ~DbgServer_get_vdp_reg_args() noexcept;
-  /**
-   * 
-   * @see VdpRegsEnum
-   */
-  VdpRegsEnum::type index;
-
-  _DbgServer_get_vdp_reg_args__isset __isset;
-
-  void __set_index(const VdpRegsEnum::type val);
-
-  bool operator == (const DbgServer_get_vdp_reg_args & rhs) const
-  {
-    if (!(index == rhs.index))
-      return false;
-    return true;
-  }
-  bool operator != (const DbgServer_get_vdp_reg_args &rhs) const {
-    return !(*this == rhs);
-  }
-
-  bool operator < (const DbgServer_get_vdp_reg_args & ) const;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-};
-
-
-class DbgServer_get_vdp_reg_pargs {
- public:
-
-
-  virtual ~DbgServer_get_vdp_reg_pargs() noexcept;
-  /**
-   * 
-   * @see VdpRegsEnum
-   */
-  const VdpRegsEnum::type* index;
-
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-};
-
-typedef struct _DbgServer_get_vdp_reg_result__isset {
-  _DbgServer_get_vdp_reg_result__isset() : success(false) {}
-  bool success :1;
-} _DbgServer_get_vdp_reg_result__isset;
-
-class DbgServer_get_vdp_reg_result {
- public:
-
-  DbgServer_get_vdp_reg_result(const DbgServer_get_vdp_reg_result&);
-  DbgServer_get_vdp_reg_result& operator=(const DbgServer_get_vdp_reg_result&);
-  DbgServer_get_vdp_reg_result() : success(0) {
-  }
-
-  virtual ~DbgServer_get_vdp_reg_result() noexcept;
-  int16_t success;
-
-  _DbgServer_get_vdp_reg_result__isset __isset;
-
-  void __set_success(const int16_t val);
-
-  bool operator == (const DbgServer_get_vdp_reg_result & rhs) const
-  {
-    if (!(success == rhs.success))
-      return false;
-    return true;
-  }
-  bool operator != (const DbgServer_get_vdp_reg_result &rhs) const {
-    return !(*this == rhs);
-  }
-
-  bool operator < (const DbgServer_get_vdp_reg_result & ) const;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-};
-
-typedef struct _DbgServer_get_vdp_reg_presult__isset {
-  _DbgServer_get_vdp_reg_presult__isset() : success(false) {}
-  bool success :1;
-} _DbgServer_get_vdp_reg_presult__isset;
-
-class DbgServer_get_vdp_reg_presult {
- public:
-
-
-  virtual ~DbgServer_get_vdp_reg_presult() noexcept;
-  int16_t* success;
-
-  _DbgServer_get_vdp_reg_presult__isset __isset;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-
-};
-
-
-class DbgServer_get_vdp_regs_args {
- public:
-
-  DbgServer_get_vdp_regs_args(const DbgServer_get_vdp_regs_args&);
-  DbgServer_get_vdp_regs_args& operator=(const DbgServer_get_vdp_regs_args&);
-  DbgServer_get_vdp_regs_args() {
-  }
-
-  virtual ~DbgServer_get_vdp_regs_args() noexcept;
-
-  bool operator == (const DbgServer_get_vdp_regs_args & /* rhs */) const
-  {
-    return true;
-  }
-  bool operator != (const DbgServer_get_vdp_regs_args &rhs) const {
-    return !(*this == rhs);
-  }
-
-  bool operator < (const DbgServer_get_vdp_regs_args & ) const;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-};
-
-
-class DbgServer_get_vdp_regs_pargs {
- public:
-
-
-  virtual ~DbgServer_get_vdp_regs_pargs() noexcept;
-
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-};
-
-typedef struct _DbgServer_get_vdp_regs_result__isset {
-  _DbgServer_get_vdp_regs_result__isset() : success(false) {}
-  bool success :1;
-} _DbgServer_get_vdp_regs_result__isset;
-
-class DbgServer_get_vdp_regs_result {
- public:
-
-  DbgServer_get_vdp_regs_result(const DbgServer_get_vdp_regs_result&);
-  DbgServer_get_vdp_regs_result& operator=(const DbgServer_get_vdp_regs_result&);
-  DbgServer_get_vdp_regs_result() {
-  }
-
-  virtual ~DbgServer_get_vdp_regs_result() noexcept;
-  VdpRegisters success;
-
-  _DbgServer_get_vdp_regs_result__isset __isset;
-
-  void __set_success(const VdpRegisters& val);
-
-  bool operator == (const DbgServer_get_vdp_regs_result & rhs) const
-  {
-    if (!(success == rhs.success))
-      return false;
-    return true;
-  }
-  bool operator != (const DbgServer_get_vdp_regs_result &rhs) const {
-    return !(*this == rhs);
-  }
-
-  bool operator < (const DbgServer_get_vdp_regs_result & ) const;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-};
-
-typedef struct _DbgServer_get_vdp_regs_presult__isset {
-  _DbgServer_get_vdp_regs_presult__isset() : success(false) {}
-  bool success :1;
-} _DbgServer_get_vdp_regs_presult__isset;
-
-class DbgServer_get_vdp_regs_presult {
- public:
-
-
-  virtual ~DbgServer_get_vdp_regs_presult() noexcept;
-  VdpRegisters* success;
-
-  _DbgServer_get_vdp_regs_presult__isset __isset;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-
-};
-
-typedef struct _DbgServer_set_vdp_reg_args__isset {
-  _DbgServer_set_vdp_reg_args__isset() : reg(false) {}
-  bool reg :1;
-} _DbgServer_set_vdp_reg_args__isset;
-
-class DbgServer_set_vdp_reg_args {
- public:
-
-  DbgServer_set_vdp_reg_args(const DbgServer_set_vdp_reg_args&);
-  DbgServer_set_vdp_reg_args& operator=(const DbgServer_set_vdp_reg_args&);
-  DbgServer_set_vdp_reg_args() {
-  }
-
-  virtual ~DbgServer_set_vdp_reg_args() noexcept;
-  VdpRegister reg;
-
-  _DbgServer_set_vdp_reg_args__isset __isset;
-
-  void __set_reg(const VdpRegister& val);
-
-  bool operator == (const DbgServer_set_vdp_reg_args & rhs) const
-  {
-    if (!(reg == rhs.reg))
-      return false;
-    return true;
-  }
-  bool operator != (const DbgServer_set_vdp_reg_args &rhs) const {
-    return !(*this == rhs);
-  }
-
-  bool operator < (const DbgServer_set_vdp_reg_args & ) const;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-};
-
-
-class DbgServer_set_vdp_reg_pargs {
- public:
-
-
-  virtual ~DbgServer_set_vdp_reg_pargs() noexcept;
-  const VdpRegister* reg;
-
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-};
-
-
-class DbgServer_set_vdp_reg_result {
- public:
-
-  DbgServer_set_vdp_reg_result(const DbgServer_set_vdp_reg_result&);
-  DbgServer_set_vdp_reg_result& operator=(const DbgServer_set_vdp_reg_result&);
-  DbgServer_set_vdp_reg_result() {
-  }
-
-  virtual ~DbgServer_set_vdp_reg_result() noexcept;
-
-  bool operator == (const DbgServer_set_vdp_reg_result & /* rhs */) const
-  {
-    return true;
-  }
-  bool operator != (const DbgServer_set_vdp_reg_result &rhs) const {
-    return !(*this == rhs);
-  }
-
-  bool operator < (const DbgServer_set_vdp_reg_result & ) const;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-};
-
-
-class DbgServer_set_vdp_reg_presult {
- public:
-
-
-  virtual ~DbgServer_set_vdp_reg_presult() noexcept;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-
-};
-
-
-class DbgServer_get_dma_info_args {
- public:
-
-  DbgServer_get_dma_info_args(const DbgServer_get_dma_info_args&);
-  DbgServer_get_dma_info_args& operator=(const DbgServer_get_dma_info_args&);
-  DbgServer_get_dma_info_args() {
-  }
-
-  virtual ~DbgServer_get_dma_info_args() noexcept;
-
-  bool operator == (const DbgServer_get_dma_info_args & /* rhs */) const
-  {
-    return true;
-  }
-  bool operator != (const DbgServer_get_dma_info_args &rhs) const {
-    return !(*this == rhs);
-  }
-
-  bool operator < (const DbgServer_get_dma_info_args & ) const;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-};
-
-
-class DbgServer_get_dma_info_pargs {
- public:
-
-
-  virtual ~DbgServer_get_dma_info_pargs() noexcept;
-
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-};
-
-typedef struct _DbgServer_get_dma_info_result__isset {
-  _DbgServer_get_dma_info_result__isset() : success(false) {}
-  bool success :1;
-} _DbgServer_get_dma_info_result__isset;
-
-class DbgServer_get_dma_info_result {
- public:
-
-  DbgServer_get_dma_info_result(const DbgServer_get_dma_info_result&);
-  DbgServer_get_dma_info_result& operator=(const DbgServer_get_dma_info_result&);
-  DbgServer_get_dma_info_result() {
-  }
-
-  virtual ~DbgServer_get_dma_info_result() noexcept;
-  DmaInfo success;
-
-  _DbgServer_get_dma_info_result__isset __isset;
-
-  void __set_success(const DmaInfo& val);
-
-  bool operator == (const DbgServer_get_dma_info_result & rhs) const
-  {
-    if (!(success == rhs.success))
-      return false;
-    return true;
-  }
-  bool operator != (const DbgServer_get_dma_info_result &rhs) const {
-    return !(*this == rhs);
-  }
-
-  bool operator < (const DbgServer_get_dma_info_result & ) const;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-};
-
-typedef struct _DbgServer_get_dma_info_presult__isset {
-  _DbgServer_get_dma_info_presult__isset() : success(false) {}
-  bool success :1;
-} _DbgServer_get_dma_info_presult__isset;
-
-class DbgServer_get_dma_info_presult {
- public:
-
-
-  virtual ~DbgServer_get_dma_info_presult() noexcept;
-  DmaInfo* success;
-
-  _DbgServer_get_dma_info_presult__isset __isset;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
@@ -2099,18 +1700,6 @@ class DbgServerClient : virtual public DbgServerIf {
   void set_gp_reg(const GpRegister& reg);
   void send_set_gp_reg(const GpRegister& reg);
   void recv_set_gp_reg();
-  int16_t get_vdp_reg(const VdpRegsEnum::type index);
-  void send_get_vdp_reg(const VdpRegsEnum::type index);
-  int16_t recv_get_vdp_reg();
-  void get_vdp_regs(VdpRegisters& _return);
-  void send_get_vdp_regs();
-  void recv_get_vdp_regs(VdpRegisters& _return);
-  void set_vdp_reg(const VdpRegister& reg);
-  void send_set_vdp_reg(const VdpRegister& reg);
-  void recv_set_vdp_reg();
-  void get_dma_info(DmaInfo& _return);
-  void send_get_dma_info();
-  void recv_get_dma_info(DmaInfo& _return);
   void read_memory(std::string& _return, const int32_t address, const int32_t size);
   void send_read_memory(const int32_t address, const int32_t size);
   void recv_read_memory(std::string& _return);
@@ -2174,10 +1763,6 @@ class DbgServerProcessor : public ::apache::thrift::TDispatchProcessor {
   void process_get_gp_reg(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_get_gp_regs(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_set_gp_reg(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
-  void process_get_vdp_reg(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
-  void process_get_vdp_regs(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
-  void process_set_vdp_reg(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
-  void process_get_dma_info(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_read_memory(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_write_memory(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_get_breakpoints(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
@@ -2199,10 +1784,6 @@ class DbgServerProcessor : public ::apache::thrift::TDispatchProcessor {
     processMap_["get_gp_reg"] = &DbgServerProcessor::process_get_gp_reg;
     processMap_["get_gp_regs"] = &DbgServerProcessor::process_get_gp_regs;
     processMap_["set_gp_reg"] = &DbgServerProcessor::process_set_gp_reg;
-    processMap_["get_vdp_reg"] = &DbgServerProcessor::process_get_vdp_reg;
-    processMap_["get_vdp_regs"] = &DbgServerProcessor::process_get_vdp_regs;
-    processMap_["set_vdp_reg"] = &DbgServerProcessor::process_set_vdp_reg;
-    processMap_["get_dma_info"] = &DbgServerProcessor::process_get_dma_info;
     processMap_["read_memory"] = &DbgServerProcessor::process_read_memory;
     processMap_["write_memory"] = &DbgServerProcessor::process_write_memory;
     processMap_["get_breakpoints"] = &DbgServerProcessor::process_get_breakpoints;
@@ -2272,44 +1853,6 @@ class DbgServerMultiface : virtual public DbgServerIf {
       ifaces_[i]->set_gp_reg(reg);
     }
     ifaces_[i]->set_gp_reg(reg);
-  }
-
-  int16_t get_vdp_reg(const VdpRegsEnum::type index) {
-    size_t sz = ifaces_.size();
-    size_t i = 0;
-    for (; i < (sz - 1); ++i) {
-      ifaces_[i]->get_vdp_reg(index);
-    }
-    return ifaces_[i]->get_vdp_reg(index);
-  }
-
-  void get_vdp_regs(VdpRegisters& _return) {
-    size_t sz = ifaces_.size();
-    size_t i = 0;
-    for (; i < (sz - 1); ++i) {
-      ifaces_[i]->get_vdp_regs(_return);
-    }
-    ifaces_[i]->get_vdp_regs(_return);
-    return;
-  }
-
-  void set_vdp_reg(const VdpRegister& reg) {
-    size_t sz = ifaces_.size();
-    size_t i = 0;
-    for (; i < (sz - 1); ++i) {
-      ifaces_[i]->set_vdp_reg(reg);
-    }
-    ifaces_[i]->set_vdp_reg(reg);
-  }
-
-  void get_dma_info(DmaInfo& _return) {
-    size_t sz = ifaces_.size();
-    size_t i = 0;
-    for (; i < (sz - 1); ++i) {
-      ifaces_[i]->get_dma_info(_return);
-    }
-    ifaces_[i]->get_dma_info(_return);
-    return;
   }
 
   void read_memory(std::string& _return, const int32_t address, const int32_t size) {
@@ -2491,18 +2034,6 @@ class DbgServerConcurrentClient : virtual public DbgServerIf {
   void set_gp_reg(const GpRegister& reg);
   int32_t send_set_gp_reg(const GpRegister& reg);
   void recv_set_gp_reg(const int32_t seqid);
-  int16_t get_vdp_reg(const VdpRegsEnum::type index);
-  int32_t send_get_vdp_reg(const VdpRegsEnum::type index);
-  int16_t recv_get_vdp_reg(const int32_t seqid);
-  void get_vdp_regs(VdpRegisters& _return);
-  int32_t send_get_vdp_regs();
-  void recv_get_vdp_regs(VdpRegisters& _return, const int32_t seqid);
-  void set_vdp_reg(const VdpRegister& reg);
-  int32_t send_set_vdp_reg(const VdpRegister& reg);
-  void recv_set_vdp_reg(const int32_t seqid);
-  void get_dma_info(DmaInfo& _return);
-  int32_t send_get_dma_info();
-  void recv_get_dma_info(DmaInfo& _return, const int32_t seqid);
   void read_memory(std::string& _return, const int32_t address, const int32_t size);
   int32_t send_read_memory(const int32_t address, const int32_t size);
   void recv_read_memory(std::string& _return, const int32_t seqid);

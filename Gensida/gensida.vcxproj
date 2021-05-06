@@ -1,12 +1,20 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="Debug7|x64">
-      <Configuration>Debug7</Configuration>
+    <ProjectConfiguration Include="Debug7_68k|x64">
+      <Configuration>Debug7_68k</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Release7|x64">
-      <Configuration>Release7</Configuration>
+    <ProjectConfiguration Include="Debug7_z80|x64">
+      <Configuration>Debug7_z80</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release7_68k|x64">
+      <Configuration>Release7_68k</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release7_z80|x64">
+      <Configuration>Release7_z80</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
@@ -17,13 +25,26 @@
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug7|x64'" Label="Configuration">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug7_68k|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release7|x64'" Label="Configuration">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug7_z80|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release7_68k|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release7_z80|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
@@ -35,32 +56,50 @@
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug7|x64'" Label="PropertySheets">
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug7_68k|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release7|x64'" Label="PropertySheets">
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug7_z80|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release7_68k|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release7_z80|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug7|x64'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug7_68k|x64'">
     <TargetName>$(ProjectName)</TargetName>
     <LinkIncremental>true</LinkIncremental>
     <OutDir>c:\Program Files\IDA Pro 7.6\plugins\</OutDir>
     <IntDir>$(Platform)\$(Configuration)_gensida\</IntDir>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release7|x64'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug7_z80|x64'">
+    <TargetName>$(ProjectName)_z80</TargetName>
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>c:\Program Files\IDA Pro 7.6\plugins\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)_gensida_z80\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release7_68k|x64'">
     <TargetName>$(ProjectName)</TargetName>
     <LinkIncremental>false</LinkIncremental>
     <IntDir>$(Platform)\$(Configuration)_gensida\</IntDir>
     <OutDir>c:\Program Files\IDA Pro 7.6\plugins\</OutDir>
   </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug7|x64'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release7_z80|x64'">
+    <TargetName>$(ProjectName)_z80</TargetName>
+    <LinkIncremental>false</LinkIncremental>
+    <IntDir>$(Platform)\$(Configuration)_gensida_z80\</IntDir>
+    <OutDir>c:\Program Files\IDA Pro 7.6\plugins\</OutDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug7_68k|x64'">
     <ClCompile>
       <PrecompiledHeader>
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;__NT__;__IDP__;__X64__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;__NT__;__IDP__;__X64__;DEBUG_68K;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>d:\idasdk76\include\;$(SolutionDir)\;$(ProjectDir)\ida\;$(SolutionDir)\thrift\;$(SolutionDir)\libevent\include\;C:\local\boost_1_75_0\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -74,7 +113,27 @@
       <AdditionalDependencies>ida.lib;thriftd_64.lib;thriftnbd_64.lib;event_64.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release7|x64'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug7_z80|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_DEBUG;__NT__;__IDP__;__X64__;DEBUG_Z80;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>d:\idasdk76\include\;$(SolutionDir)\;$(ProjectDir)\ida\;$(SolutionDir)\thrift\;$(SolutionDir)\libevent\include\;C:\local\boost_1_75_0\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <MinimalRebuild>false</MinimalRebuild>
+      <ExceptionHandling>Async</ExceptionHandling>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>d:\idasdk76\lib\x64_win_vc_32\;$(SolutionDir)\thrift\;$(SolutionDir)\libevent\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ida.lib;thriftd_64.lib;thriftnbd_64.lib;event_64.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release7_68k|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>
@@ -82,7 +141,30 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>NDEBUG;__NT__;__IDP__;__X64__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;__NT__;__IDP__;__X64__;DEBUG_68K;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>d:\idasdk76\include\;$(SolutionDir)\;$(ProjectDir)\ida\;$(SolutionDir)\thrift\;$(SolutionDir)\libevent\include\;C:\local\boost_1_75_0\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <ExceptionHandling>Async</ExceptionHandling>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>d:\idasdk76\lib\x64_win_vc_32\;$(SolutionDir)\thrift\;$(SolutionDir)\libevent\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ida.lib;thrift_64.lib;thriftnb_64.lib;event_64.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release7_z80|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>NDEBUG;__NT__;__IDP__;__X64__;DEBUG_Z80;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>d:\idasdk76\include\;$(SolutionDir)\;$(ProjectDir)\ida\;$(SolutionDir)\thrift\;$(SolutionDir)\libevent\include\;C:\local\boost_1_75_0\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -100,14 +182,28 @@
   <ItemGroup>
     <ClCompile Include="..\gen-cpp\DbgClient.cpp" />
     <ClCompile Include="..\gen-cpp\DbgServer.cpp" />
-    <ClCompile Include="..\gen-cpp\debug_proto_types.cpp" />
+    <ClCompile Include="..\gen-cpp\debug_proto_68k_types.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug7_z80|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release7_z80|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\gen-cpp\debug_proto_z80_types.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release7_68k|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug7_68k|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="ida\ida_debug.cpp" />
     <ClCompile Include="ida\ida_plugin.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\gen-cpp\DbgClient.h" />
     <ClInclude Include="..\gen-cpp\DbgServer.h" />
-    <ClInclude Include="..\gen-cpp\debug_proto_types.h" />
+    <ClInclude Include="..\gen-cpp\debug_proto_68k_types.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug7_z80|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release7_z80|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\gen-cpp\debug_proto_z80_types.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release7_68k|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug7_68k|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="ida\ida_debmod.h" />
     <ClInclude Include="ida\ida_debug.h" />
     <ClInclude Include="ida\ida_plugin.h" />

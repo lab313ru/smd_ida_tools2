@@ -16,7 +16,11 @@
 *.aps
 *.recipe
 *.vcxproj.FileListAbsolute.txt
+DbgClient_server.skeleton.cpp
+DbgServer_server.skeleton.cpp
 Gens/asm/main68k.asm
 Gens/asm/sub68k.asm
 Debug7/
 Release7/
+Debug7_z80/
+Release7_z80/

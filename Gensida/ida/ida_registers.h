@@ -1,10 +1,13 @@
 #pragma once
 
 #define RC_GENERAL 1
+#ifdef DEBUG_68K
 #define RC_VDP 2
+#endif
 
 enum register_t
 {
+#ifdef DEBUG_68K
     R_D0,
     R_D1,
     R_D2,
@@ -55,6 +58,31 @@ enum register_t
     R_V21,
     R_V22,
     R_V23,
+#else
+  R_A,
+  R_AF,
+  R_AF2,
+  R_B,
+  R_C,
+  R_BC,
+  R_BC2,
+  R_DE,
+  R_DE2,
+  R_HL,
+  R_HL2,
+  R_IXH,
+  R_IXL,
+  R_IX,
+  R_IYH,
+  R_IYL,
+  R_IY,
+  R_I,
+  R_R,
+  R_PC,
+  R_SP,
+  R_IP,
+  R_BANK,
+#endif
 };
 
 enum m68k_insn_type_t

@@ -287,7 +287,13 @@
     <ClCompile Include="..\gen-cpp\DbgServer.cpp">
       <Filter>debug</Filter>
     </ClCompile>
-    <ClCompile Include="..\gen-cpp\debug_proto_types.cpp">
+    <ClCompile Include="src\z80_debugwindow.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gen-cpp\debug_proto_z80_types.cpp">
+      <Filter>debug</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gen-cpp\debug_proto_68k_types.cpp">
       <Filter>debug</Filter>
     </ClCompile>
   </ItemGroup>
@@ -544,7 +550,13 @@
     <ClInclude Include="..\gen-cpp\DbgServer.h">
       <Filter>debug</Filter>
     </ClInclude>
-    <ClInclude Include="..\gen-cpp\debug_proto_types.h">
+    <ClInclude Include="include\z80_debugwindow.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gen-cpp\debug_proto_z80_types.h">
+      <Filter>debug</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gen-cpp\debug_proto_68k_types.h">
       <Filter>debug</Filter>
     </ClInclude>
   </ItemGroup>

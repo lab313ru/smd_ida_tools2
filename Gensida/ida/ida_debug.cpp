@@ -40,10 +40,13 @@ typedef qvector<std::pair<uint32, bool>> codemap_t;
 static ::std::mutex list_mutex;
 static eventlist_t events;
 
+#ifdef DEBUG_68K
 #define BREAKPOINTS_BASE 0x00D00000
+#endif
 
 static const char *const SRReg[] =
 {
+#ifdef DEBUG_68K
     "C",
     "V",
     "Z",
@@ -60,10 +63,21 @@ static const char *const SRReg[] =
     "S",
     NULL,
     "T"
+#else
+  "C",
+  "N",
+  "P",
+  NULL,
+  "H",
+  NULL,
+  "Z",
+  "S",
+#endif
 };
 
 register_info_t registers[] =
 {
+#ifdef DEBUG_68K
     { "D0", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
     { "D1", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
     { "D2", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
@@ -115,12 +129,43 @@ register_info_t registers[] =
     { "SrcLo", NULL, RC_VDP, dt_byte, NULL, 0 },
     { "SrcMid", NULL, RC_VDP, dt_byte, NULL, 0 },
     { "SrcHi", NULL, RC_VDP, dt_byte, NULL, 0 },
+#else
+    { "A", 0, RC_GENERAL, dt_byte, NULL, 0 },
+    { "AF", 0, RC_GENERAL, dt_word, NULL, 0 },
+    { "AF'", 0, RC_GENERAL, dt_word, NULL, 0 },
+    { "B", 0, RC_GENERAL, dt_byte, NULL, 0 },
+    { "C", 0, RC_GENERAL, dt_byte, NULL, 0 },
+    { "BC", 0, RC_GENERAL, dt_word, NULL, 0 },
+    { "BC'", 0, RC_GENERAL, dt_word, NULL, 0 },
+    { "DE", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
+    { "DE'", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
+    { "HL", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
+    { "HL'", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
+
+    { "IXH", 0, RC_GENERAL, dt_byte, NULL, 0 },
+    { "IXL", 0, RC_GENERAL, dt_byte, NULL, 0 },
+    { "IX", 0, RC_GENERAL, dt_word, NULL, 0 },
+    { "IYH", 0, RC_GENERAL, dt_byte, NULL, 0 },
+    { "IYL", 0, RC_GENERAL, dt_byte, NULL, 0 },
+    { "IY", 0, RC_GENERAL, dt_word, NULL, 0 },
+    { "I", 0, RC_GENERAL, dt_byte, NULL, 0 },
+    { "R", 0, RC_GENERAL, dt_word, NULL, 0 },
+
+    { "PC", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
+
+    { "SP", REGISTER_ADDRESS | REGISTER_SP, RC_GENERAL, dt_word, NULL, 0 },
+    { "IP", REGISTER_ADDRESS | REGISTER_IP, RC_GENERAL, dt_word, NULL, 0 },
+    
+    { "BANK", 0, RC_GENERAL, dt_dword, NULL, 0 },
+#endif
 };
 
 static const char *register_classes[] =
 {
     "General Registers",
+#ifdef DEBUG_68K
     "VDP Registers",
+#endif
     NULL
 };
 
@@ -148,8 +193,6 @@ static void apply_codemap(const std::map<int32_t, int32_t>& changed)
   apply_codemap_req req(changed);
   execute_sync(req, MFF_FAST);
 }
-
-
 
 static void pause_execution()
 {
@@ -302,7 +345,9 @@ static void init_emu_client() {
 // This function is called from the main thread
 static drc_t idaapi init_debugger(const char* hostname, int portnum, const char* password, qstring *errbuf)
 {
+#ifdef DEBUG_68K
     set_processor_type(ph.psnames[0], SETPROC_LOADER); // reset proc to "M68000"
+#endif
     return DRC_OK;
 }
 
@@ -505,6 +550,7 @@ static drc_t idaapi read_registers(thid_t tid, int clsmask, regval_t *values, qs
           if (client) {
             client->get_gp_regs(regs);
 
+#ifdef DEBUG_68K
             values[R_D0].ival = regs.D0;
             values[R_D1].ival = regs.D1;
             values[R_D2].ival = regs.D2;
@@ -526,12 +572,68 @@ static drc_t idaapi read_registers(thid_t tid, int clsmask, regval_t *values, qs
             values[R_PC].ival = regs.PC;
             values[R_SP].ival = regs.SP;
             values[R_SR].ival = regs.SR;
+#else
+            /*
+            { "A", 0, RC_GENERAL, dt_byte, NULL, 0 },
+    { "AF", 0, RC_GENERAL, dt_word, SRReg, 0xFF },
+    { "AF'", 0, RC_GENERAL, dt_word, NULL, 0 },
+    { "B", 0, RC_GENERAL, dt_byte, NULL, 0 },
+    { "C", 0, RC_GENERAL, dt_byte, NULL, 0 },
+    { "BC", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
+    { "BC'", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
+    { "DE", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
+    { "DE'", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
+    { "HL", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
+    { "HL'", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
+
+    { "IXH", 0, RC_GENERAL, dt_byte, NULL, 0 },
+    { "IXL", 0, RC_GENERAL, dt_byte, NULL, 0 },
+    { "IX", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
+    { "IYH", 0, RC_GENERAL, dt_byte, NULL, 0 },
+    { "IYL", 0, RC_GENERAL, dt_byte, NULL, 0 },
+    { "IY", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
+    { "I", 0, RC_GENERAL, dt_byte, NULL, 0 },
+    { "R", 0, RC_GENERAL, dt_word, NULL, 0 },
+
+    { "SP", REGISTER_ADDRESS | REGISTER_SP, RC_GENERAL, dt_word, NULL, 0 },
+    { "PC", REGISTER_ADDRESS | REGISTER_IP, RC_GENERAL, dt_word, NULL, 0 },
+
+    { "M68K_BANK", REGISTER_READONLY, RC_GENERAL, dt_dword, NULL, 0 },
+            */
+            values[R_A].ival = (regs.AF >> 8) & 0xFF;
+            values[R_AF].ival = regs.AF;
+            values[R_AF2].ival = regs.AF2;
+            values[R_B].ival = (regs.BC >> 8) & 0xFF;
+            values[R_C].ival = (regs.BC >> 0) & 0xFF;
+            values[R_BC].ival = regs.BC;
+            values[R_BC2].ival = regs.BC2;
+            values[R_DE].ival = regs.DE;
+            values[R_DE2].ival = regs.DE2;
+            values[R_HL].ival = regs.HL;
+            values[R_HL2].ival = regs.HL2;
+
+            values[R_IXH].ival = (regs.IX >> 8) & 0xFF;
+            values[R_IXL].ival = (regs.IX >> 0) & 0xFF;
+            values[R_IX].ival = regs.IX;
+            values[R_IYH].ival = (regs.IY >> 8) & 0xFF;
+            values[R_IYL].ival = (regs.IY >> 0) & 0xFF;
+            values[R_IY].ival = regs.IY;
+            values[R_I].ival = regs.I;
+            values[R_R].ival = regs.R;
+            values[R_PC].ival = regs.PC;
+
+            values[R_SP].ival = regs.SP;
+            values[R_IP].ival = regs.IP;
+
+            values[R_BANK].ival = regs.BANK;
+#endif
           }
         }
         catch (...) {
           return DRC_FAILED;
         }
 
+#ifdef DEBUG_68K
         DmaInfo dma;
 
         try {
@@ -546,8 +648,10 @@ static drc_t idaapi read_registers(thid_t tid, int clsmask, regval_t *values, qs
         catch (...) {
           return DRC_FAILED;
         }
+#endif
     }
 
+#ifdef DEBUG_68K
     if (clsmask & RC_VDP)
     {
         VdpRegisters regs;
@@ -586,6 +690,7 @@ static drc_t idaapi read_registers(thid_t tid, int clsmask, regval_t *values, qs
           return DRC_FAILED;
         }
     }
+#endif
 
     return DRC_OK;
 }
@@ -598,7 +703,9 @@ static drc_t idaapi read_registers(thid_t tid, int clsmask, regval_t *values, qs
 // This function is called from debthread
 static drc_t idaapi write_register(thid_t tid, int regidx, const regval_t *value, qstring *errbuf)
 {
+#ifdef DEBUG_68K
     if (regidx >= R_D0 && regidx <= R_SR) {
+#endif
       GpRegister reg;
       reg.index = (GpRegsEnum::type)regidx;
       reg.value = value->ival & 0xFFFFFFFF;
@@ -611,7 +718,9 @@ static drc_t idaapi write_register(thid_t tid, int regidx, const regval_t *value
       catch (...) {
         return DRC_FAILED;
       }
-    } else if (regidx >= R_V00 && regidx <= R_V23) {
+#ifdef DEBUG_68K
+    }
+    else if (regidx >= R_V00 && regidx <= R_V23) {
       VdpRegister reg;
       reg.index = (VdpRegsEnum::type)(regidx - R_V00);
       reg.value = value->ival & 0xFF;
@@ -625,6 +734,7 @@ static drc_t idaapi write_register(thid_t tid, int regidx, const regval_t *value
         return DRC_FAILED;
       }
     }
+#endif
 
     return DRC_OK;
 }
@@ -669,6 +779,7 @@ static drc_t idaapi get_memory_info(meminfo_vec_t &areas, qstring *errbuf)
     }
     // Don't remove this loop
 
+#ifdef DEBUG_68K
     info.name = "DBG_VDP_VRAM";
     info.start_ea = BREAKPOINTS_BASE;
     info.end_ea = info.start_ea + 0x10000;
@@ -686,6 +797,7 @@ static drc_t idaapi get_memory_info(meminfo_vec_t &areas, qstring *errbuf)
     info.end_ea = info.start_ea + 0x10000;
     info.bitness = 1;
     areas.push_back(info);
+#endif
 
     return DRC_OK;
 }
@@ -765,7 +877,9 @@ static drc_t idaapi update_bpts(int* nbpts, update_bpt_info_t *bpts, int nadd, i
 
         BpType::type type1;
         int type2 = 0;
+#ifdef DEBUG_68K
         bool is_vdp = false;
+#endif
 
         switch (bpts[i].type)
         {
@@ -784,12 +898,14 @@ static drc_t idaapi update_bpts(int* nbpts, update_bpt_info_t *bpts, int nadd, i
             break;
         }
 
+#ifdef DEBUG_68K
         if (start >= BREAKPOINTS_BASE && end < BREAKPOINTS_BASE + 0x30000)
         {
             start -= BREAKPOINTS_BASE;
             end -= BREAKPOINTS_BASE;
             is_vdp = true;
         }
+#endif
 
         DbgBreakpoint bp;
         bp.bstart = start & 0xFFFFFF;
@@ -797,7 +913,9 @@ static drc_t idaapi update_bpts(int* nbpts, update_bpt_info_t *bpts, int nadd, i
         bp.type = type1;
 
         bp.enabled = true;
+#ifdef DEBUG_68K
         bp.is_vdp = is_vdp;
+#endif
         bp.is_forbid = false;
 
         try {
@@ -832,7 +950,9 @@ static drc_t idaapi update_bpts(int* nbpts, update_bpt_info_t *bpts, int nadd, i
         ea_t end = bpts[nadd + i].ea + bpts[nadd + i].size - 1;
         BpType::type type1;
         int type2 = 0;
+#ifdef DEBUG_68K
         bool is_vdp = false;
+#endif
 
         switch (bpts[nadd + i].type)
         {
@@ -851,12 +971,14 @@ static drc_t idaapi update_bpts(int* nbpts, update_bpt_info_t *bpts, int nadd, i
             break;
         }
 
+#ifdef DEBUG_68K
         if (start >= BREAKPOINTS_BASE && end < BREAKPOINTS_BASE + 0x30000)
         {
             start -= BREAKPOINTS_BASE;
             end -= BREAKPOINTS_BASE;
             is_vdp = true;
         }
+#endif
 
         DbgBreakpoint bp;
         bp.bstart = start & 0xFFFFFF;
@@ -864,7 +986,9 @@ static drc_t idaapi update_bpts(int* nbpts, update_bpt_info_t *bpts, int nadd, i
         bp.type = type1;
 
         bp.enabled = true;
+#ifdef DEBUG_68K
         bp.is_vdp = is_vdp;
+#endif
         bp.is_forbid = false;
 
         try {
@@ -908,7 +1032,9 @@ static drc_t idaapi update_lowcnds(int* nupdated, const lowcnd_t *lowcnds, int n
         ea_t end = lowcnds[i].ea + lowcnds[i].size - 1;
         BpType::type type1;
         int type2 = 0;
+#ifdef DEBUG_68K
         bool is_vdp = false;
+#endif
 
         switch (lowcnds[i].type)
         {
@@ -927,12 +1053,14 @@ static drc_t idaapi update_lowcnds(int* nupdated, const lowcnd_t *lowcnds, int n
             break;
         }
 
+#ifdef DEBUG_68K
         if (start >= BREAKPOINTS_BASE && end < BREAKPOINTS_BASE + 0x30000)
         {
             start -= BREAKPOINTS_BASE;
             end -= BREAKPOINTS_BASE;
             is_vdp = true;
         }
+#endif
 
         DbgBreakpoint bp;
         bp.bstart = start & 0xFFFFFF;
@@ -940,7 +1068,9 @@ static drc_t idaapi update_lowcnds(int* nupdated, const lowcnd_t *lowcnds, int n
         bp.type = type1;
 
         bp.enabled = true;
+#ifdef DEBUG_68K
         bp.is_vdp = is_vdp;
+#endif
         bp.is_forbid = (lowcnds[i].cndbody.empty() ? false : ((lowcnds[i].cndbody[0] == '1') ? true : false));
 
         try {
@@ -1071,8 +1201,13 @@ static ssize_t idaapi idd_notify(void*, int msgid, va_list va) {
   case debugger_t::ev_get_debapp_attrs:
   {
     debapp_attrs_t* out_pattrs = va_arg(va, debapp_attrs_t*);
+#ifdef DEBUG_68K
     out_pattrs->addrsize = 4;
     out_pattrs->is_be = true;
+#else
+    out_pattrs->addrsize = 2;
+    out_pattrs->is_be = false;
+#endif
     out_pattrs->platform = "sega_md";
     out_pattrs->cbsize = sizeof(debapp_attrs_t);
     retcode = DRC_OK;
@@ -1287,9 +1422,14 @@ static ssize_t idaapi idd_notify(void*, int msgid, va_list va) {
 debugger_t debugger =
 {
     IDD_INTERFACE_VERSION,
-    "GXIDA",
+    NAME,
+#ifdef DEBUG_68K
     0x8000 + 1,
     "m68k",
+#else
+    0x8000 + 2,
+    "z80",
+#endif
     DBG_FLAG_NOHOST | DBG_FLAG_CAN_CONT_BPT | DBG_FLAG_FAKE_ATTACH | DBG_FLAG_SAFE | DBG_FLAG_NOPASSWORD | DBG_FLAG_NOSTARTDIR | DBG_FLAG_NOPARAMETERS | DBG_FLAG_ANYSIZE_HWBPT | DBG_FLAG_DEBTHREAD | DBG_FLAG_PREFER_SWBPTS,
     DBG_HAS_GET_PROCESSES | DBG_HAS_REQUEST_PAUSE | DBG_HAS_SET_RESUME_MODE | DBG_HAS_CHECK_BPT | DBG_HAS_THREAD_SUSPEND | DBG_HAS_THREAD_CONTINUE | DBG_FLAG_LOWCNDS | DBG_FLAG_CONNSTRING,
 

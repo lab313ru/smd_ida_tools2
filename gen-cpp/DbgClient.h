@@ -10,7 +10,7 @@
 #include <thrift/TDispatchProcessor.h>
 #include <thrift/async/TConcurrentClientSyncInfo.h>
 #include <memory>
-#include "debug_proto_types.h"
+#include "debug_proto_z80_types.h"
 
 
 

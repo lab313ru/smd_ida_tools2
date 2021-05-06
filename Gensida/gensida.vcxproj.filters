@@ -21,7 +21,10 @@
     <ClCompile Include="..\gen-cpp\DbgServer.cpp">
       <Filter>thrift</Filter>
     </ClCompile>
-    <ClCompile Include="..\gen-cpp\debug_proto_types.cpp">
+    <ClCompile Include="..\gen-cpp\debug_proto_68k_types.cpp">
+      <Filter>thrift</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gen-cpp\debug_proto_z80_types.cpp">
       <Filter>thrift</Filter>
     </ClCompile>
   </ItemGroup>
@@ -44,7 +47,10 @@
     <ClInclude Include="..\gen-cpp\DbgServer.h">
       <Filter>thrift</Filter>
     </ClInclude>
-    <ClInclude Include="..\gen-cpp\debug_proto_types.h">
+    <ClInclude Include="..\gen-cpp\debug_proto_68k_types.h">
+      <Filter>thrift</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gen-cpp\debug_proto_z80_types.h">
       <Filter>thrift</Filter>
     </ClInclude>
   </ItemGroup>

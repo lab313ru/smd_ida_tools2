@@ -4,8 +4,8 @@
  * DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING
  *  @generated
  */
-#ifndef debug_proto_TYPES_H
-#define debug_proto_TYPES_H
+#ifndef debug_proto_68k_TYPES_H
+#define debug_proto_68k_TYPES_H
 
 #include <iosfwd>
 

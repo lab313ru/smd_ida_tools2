@@ -3932,7 +3932,6 @@ DEFINE_LUA_FUNCTION(input_getcurrentinputstatus, "")
 DEFINE_LUA_FUNCTION(gens_breakpoint, "[message=\"\"]")
 {
     prompt_str = (const char *)(lua_type(L, 1) == LUA_TSTRING ? lua_tostring(L, 1) : "Breakpoint from LUA");
-    M68kDW.SetWhyBreak(prompt_str);
     M68kDW.Breakpoint(M68kDW.last_pc);
     return 0;
 }
