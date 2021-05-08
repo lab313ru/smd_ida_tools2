@@ -369,6 +369,7 @@
     <ClCompile Include="src\vdp_sprites.cpp" />
     <ClCompile Include="src\wave.c" />
     <ClCompile Include="src\ym2612.c" />
+    <ClCompile Include="src\ym2612_debug.cpp" />
     <ClCompile Include="src\z80_debugwindow.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release7_68k|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug7_68k|Win32'">true</ExcludedFromBuild>
@@ -475,6 +476,7 @@
     <ClInclude Include="lua\src\lundump.h" />
     <ClInclude Include="lua\src\lvm.h" />
     <ClInclude Include="lua\src\lzio.h" />
+    <ClInclude Include="resource\resource.h" />
     <ClInclude Include="zlib\crc32.h" />
     <ClInclude Include="zlib\deflate.h" />
     <ClInclude Include="zlib\gzguts.h" />
@@ -511,6 +513,22 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release7_68k|Win32'">$(IntDir)%(Filename).obj;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release7_z80|Win32'">$(IntDir)%(Filename).obj;%(Outputs)</Outputs>
     </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="resource\bitmap1.bmp" />
+    <Image Include="resource\bmp00000.bmp" />
+    <Image Include="resource\bmp00001.bmp" />
+    <Image Include="resource\bmp00002.bmp" />
+    <Image Include="resource\bmp00003.bmp" />
+    <Image Include="resource\bmp00004.bmp" />
+    <Image Include="resource\bmp00005.bmp" />
+    <Image Include="resource\bmp00006.bmp" />
+    <Image Include="resource\bmp00007.bmp" />
+    <Image Include="resource\gens2.ico" />
+    <Image Include="resource\gens_big.bmp" />
+    <Image Include="resource\gens_small.bmp" />
+    <Image Include="resource\lua.ico" />
+    <Image Include="resource\sonic.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

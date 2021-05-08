@@ -60,12 +60,12 @@ struct TabInfo
     HWND hwndDialog;
 };
 
-std::string previousText;
-unsigned int currentControlFocus;
-HWND activeTabWindow;
-std::vector<TabInfo> tabItems;
+static std::string previousText;
+static unsigned int currentControlFocus;
+static HWND activeTabWindow;
+static std::vector<TabInfo> tabItems;
 
-void WndProcDialogImplementSaveFieldWhenLostFocus(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+static void WndProcDialogImplementSaveFieldWhenLostFocus(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
     switch (msg)
     {
@@ -80,7 +80,7 @@ void WndProcDialogImplementSaveFieldWhenLostFocus(HWND hwnd, UINT msg, WPARAM wp
 }
 
 //----------------------------------------------------------------------------------------
-std::string GetDlgItemString(HWND hwnd, int controlID)
+static std::string GetDlgItemString(HWND hwnd, int controlID)
 {
     std::string result;
 
@@ -96,7 +96,7 @@ std::string GetDlgItemString(HWND hwnd, int controlID)
 }
 
 //----------------------------------------------------------------------------------------
-unsigned int GetDlgItemHex(HWND hwnd, int controlID)
+static unsigned int GetDlgItemHex(HWND hwnd, int controlID)
 {
     unsigned int value = 0;
 
@@ -114,7 +114,7 @@ unsigned int GetDlgItemHex(HWND hwnd, int controlID)
 }
 
 //----------------------------------------------------------------------------------------
-void UpdateDlgItemHex(HWND hwnd, int controlID, unsigned int width, unsigned int data)
+static void UpdateDlgItemHex(HWND hwnd, int controlID, unsigned int width, unsigned int data)
 {
     const unsigned int maxTextLength = 1024;
     char currentTextTemp[maxTextLength];
@@ -133,7 +133,7 @@ void UpdateDlgItemHex(HWND hwnd, int controlID, unsigned int width, unsigned int
 }
 
 //----------------------------------------------------------------------------------------
-void UpdateDlgItemBin(HWND hwnd, int controlID, unsigned int data)
+static void UpdateDlgItemBin(HWND hwnd, int controlID, unsigned int data)
 {
     const unsigned int maxTextLength = 1024;
     char currentTextTemp[maxTextLength];
@@ -151,7 +151,7 @@ void UpdateDlgItemBin(HWND hwnd, int controlID, unsigned int data)
 }
 
 //----------------------------------------------------------------------------------------
-void msgModeRegistersUPDATE(HWND hwnd)
+static void msgModeRegistersUPDATE(HWND hwnd)
 {
     //Mode registers
     CheckDlgButton(hwnd, IDC_VDP_REGISTERS_VSI, (VDP_Reg.Set1 & mask(7)) ? BST_CHECKED : BST_UNCHECKED);
@@ -190,7 +190,7 @@ void msgModeRegistersUPDATE(HWND hwnd)
 
 #define GET_BITS(number, n, c) ((number & mask(n, c)) >> n)
 //----------------------------------------------------------------------------------------
-void msgOtherRegistersUPDATE(HWND hwnd)
+static void msgOtherRegistersUPDATE(HWND hwnd)
 {
     unsigned int value = 0;
     bool mode4Enabled = !(VDP_Reg.Set2 & mask(2));
@@ -405,7 +405,7 @@ void msgOtherRegistersUPDATE(HWND hwnd)
 #define SET_BIT(number, n, x) (number = (number & ~mask(n)) | (x << n))
 #define SET_BITS(number, n, c, x) (number = (number & ~mask(n, c)) | (x << n))
 //----------------------------------------------------------------------------------------
-INT_PTR msgModeRegistersWM_COMMAND(HWND hwnd, WPARAM wparam, LPARAM lparam)
+static INT_PTR msgModeRegistersWM_COMMAND(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
     if (HIWORD(wparam) == BN_CLICKED)
     {
@@ -516,7 +516,7 @@ INT_PTR msgModeRegistersWM_COMMAND(HWND hwnd, WPARAM wparam, LPARAM lparam)
 }
 
 //----------------------------------------------------------------------------------------
-INT_PTR msgOtherRegistersWM_COMMAND(HWND hwnd, WPARAM wparam, LPARAM lparam)
+static INT_PTR msgOtherRegistersWM_COMMAND(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
     if (HIWORD(wparam) == BN_CLICKED)
     {
@@ -706,7 +706,7 @@ INT_PTR msgOtherRegistersWM_COMMAND(HWND hwnd, WPARAM wparam, LPARAM lparam)
 #undef SET_BITS
 
 //----------------------------------------------------------------------------------------
-INT_PTR WndProcModeRegisters(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+static INT_PTR WndProcModeRegisters(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
     WndProcDialogImplementSaveFieldWhenLostFocus(hwnd, msg, wparam, lparam);
     switch (msg)
@@ -718,7 +718,7 @@ INT_PTR WndProcModeRegisters(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 }
 
 //----------------------------------------------------------------------------------------
-INT_PTR WndProcOtherRegisters(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+static INT_PTR WndProcOtherRegisters(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
     WndProcDialogImplementSaveFieldWhenLostFocus(hwnd, msg, wparam, lparam);
     switch (msg)
@@ -729,7 +729,7 @@ INT_PTR WndProcOtherRegisters(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     return FALSE;
 }
 
-INT_PTR CALLBACK WndProcModeRegistersStatic(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+static INT_PTR CALLBACK WndProcModeRegistersStatic(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
     //Obtain the object pointer
     int state = (int)GetWindowLongPtr(hwnd, GWLP_USERDATA);
@@ -772,7 +772,7 @@ INT_PTR CALLBACK WndProcModeRegistersStatic(HWND hwnd, UINT msg, WPARAM wparam, 
     return result;
 }
 
-INT_PTR CALLBACK WndProcOtherRegistersStatic(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+static INT_PTR CALLBACK WndProcOtherRegistersStatic(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
     //Obtain the object pointer
     int state = (int)GetWindowLongPtr(hwnd, GWLP_USERDATA);
@@ -815,7 +815,7 @@ INT_PTR CALLBACK WndProcOtherRegistersStatic(HWND hwnd, UINT msg, WPARAM wparam,
     return result;
 }
 
-INT_PTR msgRegistersWM_INITDIALOG(HWND hDlg, WPARAM wparam, LPARAM lparam)
+static INT_PTR msgRegistersWM_INITDIALOG(HWND hDlg, WPARAM wparam, LPARAM lparam)
 {
     //Add our set of tab items to the list of tabs
     tabItems.clear();

@@ -296,6 +296,9 @@
     <ClCompile Include="..\gen-cpp\debug_proto_68k_types.cpp">
       <Filter>debug</Filter>
     </ClCompile>
+    <ClCompile Include="src\ym2612_debug.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lua\src\lapi.h">
@@ -559,10 +562,27 @@
     <ClInclude Include="..\gen-cpp\debug_proto_68k_types.h">
       <Filter>debug</Filter>
     </ClInclude>
+    <ClInclude Include="resource\resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource\gens.rc">
       <Filter>resource</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="resource\gens2.ico" />
+    <Image Include="resource\sonic.ico" />
+    <Image Include="resource\lua.ico" />
+    <Image Include="resource\bitmap1.bmp" />
+    <Image Include="resource\bmp00000.bmp" />
+    <Image Include="resource\bmp00002.bmp" />
+    <Image Include="resource\bmp00001.bmp" />
+    <Image Include="resource\bmp00003.bmp" />
+    <Image Include="resource\bmp00004.bmp" />
+    <Image Include="resource\bmp00005.bmp" />
+    <Image Include="resource\bmp00006.bmp" />
+    <Image Include="resource\gens_small.bmp" />
+    <Image Include="resource\gens_big.bmp" />
+    <Image Include="resource\bmp00007.bmp" />
   </ItemGroup>
 </Project>
