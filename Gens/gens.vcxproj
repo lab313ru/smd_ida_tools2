@@ -369,11 +369,11 @@
     <ClCompile Include="src\vdp_sprites.cpp" />
     <ClCompile Include="src\wave.c" />
     <ClCompile Include="src\ym2612.c" />
-    <ClCompile Include="src\ym2612_debug.cpp" />
-    <ClCompile Include="src\z80_debugwindow.cpp">
+    <ClCompile Include="src\ym2612_debug.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release7_68k|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug7_68k|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="src\z80_debugwindow.cpp" />
     <ClCompile Include="zlib\adler32.c" />
     <ClCompile Include="zlib\compress.c" />
     <ClCompile Include="zlib\crc32.c" />

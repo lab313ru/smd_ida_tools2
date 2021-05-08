@@ -34,17 +34,24 @@ extern "C" {
 
 void __fastcall z80TracePC(unsigned int pc)
 {
+#ifdef DEBUG_Z80
   Z80DW.TracePC(pc);
+#endif
+
 }
 
 void __fastcall z80TraceRead(uint32 start, uint32 size)
 {
+#ifdef DEBUG_Z80
   Z80DW.TraceRead(start, start + size - 1);
+#endif
 }
 
 void __fastcall z80TraceWrite(uint32 start, uint32 size)
 {
+#ifdef DEBUG_Z80
   Z80DW.TraceWrite(start, start + size - 1);
+#endif
 }
 
 void Z80DebugWindow::TracePC(int pc)
@@ -103,20 +110,24 @@ void Z80DebugWindow::TracePC(int pc)
 
 void Z80DebugWindow::TraceRead(uint32 start, uint32 stop)
 {
+#ifdef DEBUG_Z80
   handled_ida_event = false;
   if (BreakRead(last_pc, start, stop))
   {
     Breakpoint(last_pc);
   }
+#endif
 }
 
 void Z80DebugWindow::TraceWrite(uint32 start, uint32 stop)
 {
+#ifdef DEBUG_Z80
   handled_ida_event = false;
   if (BreakWrite(last_pc, start, stop))
   {
     Breakpoint(last_pc);
   }
+#endif
 }
 
 void Z80DebugWindow::DoStepOver()

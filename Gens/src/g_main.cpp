@@ -1918,6 +1918,7 @@ public:
     }
   }
 
+#ifdef DEBUG_Z80
   void get_sound_banks(std::map<int32_t, SoundBankRange>& _return) override {
     _return.clear();
 
@@ -1928,6 +1929,7 @@ public:
       _return[i->first] = bnk;
     }
   }
+#endif
 };
 
 void stop_server() {
