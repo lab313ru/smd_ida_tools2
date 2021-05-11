@@ -316,12 +316,7 @@ int Load_State(char *Name)
         {
             if ((len = Load_State_From_Buffer(buf)) == 0)
                 return 0;
-#ifdef SONICMAPHACK
-            fread(&x, 4, 1, f);
-            fread(&xg, 4, 1, f);
-            fread(&y, 4, 1, f);
-            fread(&yg, 4, 1, f);
-#endif
+
             int switched = 0; //Modif N - switched is for displaying "switched to playback" message
             bool truncate = false;
 
@@ -545,12 +540,6 @@ int Save_State(char *Name)
     if ((f = fopen(Name, "wb")) == NULL) return 0;
     if ((len = Save_State_To_Buffer(buf)) == 0) return 0;
     fwrite(State_Buffer, 1, len, f);
-#ifdef SONICMAPHACK
-    fwrite(&x, 4, 1, f);
-    fwrite(&xg, 4, 1, f);
-    fwrite(&y, 4, 1, f);
-    fwrite(&yg, 4, 1, f);
-#endif
 
     //Modif N - bulletproof re-recording (saving)
     if (MainMovie.File && (MainMovie.Status != MOVIE_FINISHED))

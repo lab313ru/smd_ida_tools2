@@ -66,12 +66,9 @@ using namespace ::apache::thrift::concurrency;
 ::std::shared_ptr<DbgClientClient> client;
 ::std::shared_ptr<TNonblockingServer> srv;
 ::std::shared_ptr<TTransport> cli_transport;
-//#include "ida_debmod.h"
-//extern eventlist_t g_events;
 
 extern "C" void Read_To_68K_Space(int adr);
 extern void HexDestroyDialog();
-#define MAPHACK
 
 bool hook_trace = 1;
 
