@@ -36,8 +36,6 @@ static ::std::shared_ptr<TNonblockingServer> srv;
 static ::std::shared_ptr<TTransport> cli_transport;
 
 typedef qvector<std::pair<uint32, bool>> codemap_t;
-
-static ::std::mutex list_mutex;
 static eventlist_t events;
 
 #ifdef DEBUG_68K
@@ -233,8 +231,6 @@ static void finish_execution()
       }
     }
     catch (...) {
-      ::std::lock_guard<::std::mutex> lock(list_mutex);
-
       debug_event_t ev;
       ev.pid = 1;
       ev.handled = true;
@@ -260,8 +256,6 @@ public:
   }
 
   void start_event() {
-    ::std::lock_guard<::std::mutex> lock(list_mutex);
-    
     debug_event_t ev;
     ev.pid = 1;
     ev.tid = 1;
@@ -277,8 +271,6 @@ public:
   }
 
   void pause_event(const int32_t address, const std::map<int32_t, int32_t>& changed) {
-    ::std::lock_guard<::std::mutex> lock(list_mutex);
-
     debug_event_t ev;
     ev.pid = 1;
     ev.tid = 1;
@@ -291,8 +283,6 @@ public:
   }
 
   void stop_event(const std::map<int32_t, int32_t>& changed) {
-    ::std::lock_guard<::std::mutex> lock(list_mutex);
-
     debug_event_t ev;
     ev.pid = 1;
     ev.handled = true;
@@ -394,7 +384,6 @@ static drc_t idaapi s_start_process(const char* path,
   uint32 input_file_crc32,
   qstring* errbuf = NULL)
 {
-    ::std::lock_guard<::std::mutex> lock(list_mutex);
     events.clear();
 
     init_ida_server();
@@ -454,8 +443,6 @@ static gdecode_t idaapi get_debug_event(debug_event_t *event, int timeout_ms)
 {
     while (true)
     {
-        ::std::lock_guard<::std::mutex> lock(list_mutex);
-
         // are there any pending events?
         if (events.retrieve(event))
         {
