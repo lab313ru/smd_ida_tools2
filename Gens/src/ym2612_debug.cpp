@@ -4,6 +4,8 @@
 #include <sstream>
 #include <iomanip>
 
+#include "ym2612.h"
+
 enum class YM2612Channels :unsigned int
 {
   CHANNEL1 = 0,
@@ -24,403 +26,667 @@ enum class YM2612Operators :unsigned int
 
 static YM2612Channels selectedChannel;
 
-typedef std::map<YM2612Operators, bool> OpEnable_t;
-typedef std::map<YM2612Operators, unsigned int> OpData_t;
-
-static std::map<YM2612Channels, OpEnable_t> am_enabled;
-static std::map<YM2612Channels, bool> left_enabled;
-static std::map<YM2612Channels, bool> right_enabled;
-static std::map<YM2612Channels, OpEnable_t> key_enabled;
-static std::map<YM2612Channels, OpData_t> total_levels_data;
-static std::map<YM2612Channels, OpData_t> sustain_levels_data;
-static std::map<YM2612Channels, OpData_t> attack_rate_data;
-static std::map<YM2612Channels, OpData_t> decay_rate_data;
-static std::map<YM2612Channels, OpData_t> sustain_rate_data;
-static std::map<YM2612Channels, OpData_t> release_rate_data;
-static std::map<YM2612Channels, OpData_t> ssg_data;
-static std::map<YM2612Channels, OpData_t> detune_data;
-static std::map<YM2612Channels, OpData_t> multiple_data;
-static std::map<YM2612Channels, OpData_t> key_scale_data;
-static std::map<YM2612Channels, unsigned int> algorithm_data;
-static std::map<YM2612Channels, unsigned int> feedback_data;
-static std::map<YM2612Channels, unsigned int> frequency_data;
-static std::map<YM2612Channels, unsigned int> block_data;
-static std::map<YM2612Channels, unsigned int> ams_data;
-static std::map<YM2612Channels, unsigned int> pms_data;
-static std::map<YM2612Channels, OpData_t> frequency_chn_data;
-static std::map<YM2612Channels, OpData_t> block_chn_data;
-
-static bool timer_a_enabled;
-static bool timer_b_enabled;
-static bool timer_a_load;
-static bool timer_b_load;
-static bool timer_a_overflow;
-static bool timer_b_overflow;
-
-static bool lfo_enabled;
-static bool dac_enabled;
-
-static unsigned int ch3_mode;
-static unsigned int timer_a_data;
-static unsigned int timer_b_data;
-static unsigned int timer_a_current_counter;
-static unsigned int timer_b_current_counter;
-static unsigned int lfo_data;
-static unsigned int dac_data;
-
-static double external_clock_rate;
-static unsigned int fm_clock_divider;
-static unsigned int eg_clock_divider;
-static unsigned int output_clock_divider;
-static unsigned int timer_a_clock_divider;
-static unsigned int timer_b_clock_divider;
-
-
 static std::string previousText;
 static unsigned int currentControlFocus;
 
+static const unsigned int channelCount = 6;
+static const unsigned int operatorCount = 4;
+static const unsigned int partCount = 2;
+static const unsigned int registerCountPerPart = 0x100;
+static const unsigned int registerCountTotal = registerCountPerPart * partCount;
+
+//----------------------------------------------------------------------------------------
+const unsigned int channelAddressOffsets[channelCount] = {
+  0,                         //Channel 1
+  1,                         //Channel 2
+  2,                         //Channel 3
+  registerCountPerPart + 0,  //Channel 4
+  registerCountPerPart + 1,  //Channel 5
+  registerCountPerPart + 2 }; //Channel 6
+
+//----------------------------------------------------------------------------------------
+const unsigned int operatorAddressOffsets[channelCount][operatorCount] = {
+  {channelAddressOffsets[0] + 0x0, channelAddressOffsets[0] + 0x8, channelAddressOffsets[0] + 0x4, channelAddressOffsets[0] + 0xC},  //Channel 1
+  {channelAddressOffsets[1] + 0x0, channelAddressOffsets[1] + 0x8, channelAddressOffsets[1] + 0x4, channelAddressOffsets[1] + 0xC},  //Channel 2
+  {channelAddressOffsets[2] + 0x0, channelAddressOffsets[2] + 0x8, channelAddressOffsets[2] + 0x4, channelAddressOffsets[2] + 0xC},  //Channel 3
+  {channelAddressOffsets[3] + 0x0, channelAddressOffsets[3] + 0x8, channelAddressOffsets[3] + 0x4, channelAddressOffsets[3] + 0xC},  //Channel 4
+  {channelAddressOffsets[4] + 0x0, channelAddressOffsets[4] + 0x8, channelAddressOffsets[4] + 0x4, channelAddressOffsets[4] + 0xC},  //Channel 5
+  {channelAddressOffsets[5] + 0x0, channelAddressOffsets[5] + 0x8, channelAddressOffsets[5] + 0x4, channelAddressOffsets[5] + 0xC},  //Channel 6
+};
+
+//----------------------------------------------------------------------------------------
+const unsigned int channel3OperatorFrequencyAddressOffsets[2][operatorCount] = {
+  {0xA9, 0xAA, 0xA8, 0xA2},
+  {0xAD, 0xAE, 0xAC, 0xA6} };
+
+//----------------------------------------------------------------------------------------
+static inline unsigned int GetChannelBlockAddressOffset(YM2612Channels channelNo) {
+  return channelAddressOffsets[static_cast<int>(channelNo)];
+}
+
+//----------------------------------------------------------------------------------------
+static inline unsigned int GetOperatorBlockAddressOffset(YM2612Channels channelNo, YM2612Operators operatorNo) {
+  return operatorAddressOffsets[static_cast<int>(channelNo)][static_cast<int>(operatorNo)];
+}
+
+//----------------------------------------------------------------------------------------
+static inline unsigned int GetAddressChannel3FrequencyBlock1(YM2612Operators operatorNo) {
+  return channel3OperatorFrequencyAddressOffsets[0][static_cast<int>(operatorNo)];
+}
+
+//----------------------------------------------------------------------------------------
+static inline unsigned int GetAddressChannel3FrequencyBlock2(YM2612Operators operatorNo) {
+  return channel3OperatorFrequencyAddressOffsets[1][static_cast<int>(operatorNo)];
+}
+
+static inline int GetRegisterData(unsigned int location) {
+   return (location < 0x100) ? YM2612.REG[0][location] : YM2612.REG[1][location - 0x100];
+}
+
+//----------------------------------------------------------------------------------------
+static inline void SetRegisterData(unsigned int location, const unsigned char data) {
+  bool firstPart = location < 0x100;
+  YM2612_Write(firstPart ? 0 : 2, firstPart ? location : (location - 0x100));
+  YM2612_Write(firstPart ? 1 : 3, data);
+}
+
+//----------------------------------------------------------------------------------------
+static inline bool GetBit(unsigned int data, unsigned int bitNumber)
+{
+  return (data & (1 << bitNumber)) != 0;
+}
+
+//----------------------------------------------------------------------------------------
+static inline unsigned int SetBit(unsigned int data, unsigned int bitNumber, bool state) {
+  return ((data & ~(1 << bitNumber)) | ((unsigned int)state << bitNumber));
+}
+
+//----------------------------------------------------------------------------------------
+static inline unsigned int GetDataSegment(unsigned int data, unsigned int bitStart, unsigned int abitCount) {
+  return (data >> bitStart) & ((((1 << (abitCount - 1)) - 1) << 1) | 0x01);
+}
+
+//----------------------------------------------------------------------------------------
+static inline unsigned int SetDataSegment(unsigned int data, unsigned int bitStart, unsigned int abitCount, unsigned int adata)
+{
+  unsigned int tempMask = (((1 << (abitCount - 1)) - 1) << 1) | 0x01;
+  data &= ~(tempMask << bitStart);
+  data |= ((adata & tempMask) << bitStart);
+  return data;
+}
+
+//----------------------------------------------------------------------------------------
+static inline unsigned int MaskData(unsigned int data, unsigned char bitsCount) {
+  return data & ((((1 << (bitsCount - 1)) - 1) << 1) | 0x01);
+}
+
+//----------------------------------------------------------------------------------------
+static inline unsigned int SetUpperBits(unsigned int data, unsigned char bitsCount, unsigned int abitCount, unsigned int adata)
+{
+  unsigned int targetMask = (((1 << (abitCount - 1)) - 1) << 1) | 0x01;
+  data &= ~(targetMask << (bitsCount - abitCount));
+  data |= ((adata & targetMask) << (bitsCount - abitCount));
+  return MaskData(data, bitsCount);
+}
+
+//----------------------------------------------------------------------------------------
+static inline unsigned int SetLowerBits(unsigned int data, unsigned char bitsCount, unsigned int abitCount, unsigned int adata) {
+  unsigned int targetMask = (((1 << (abitCount - 1)) - 1) << 1) | 0x01;
+  data &= ~targetMask;
+  data |= (adata & targetMask);
+  return MaskData(data, bitsCount);
+}
+
+//----------------------------------------------------------------------------------------
+static inline unsigned int SetData(unsigned int data, unsigned char bitsCount, unsigned int adata)
+{
+  data = adata;
+  return MaskData(data, bitsCount);
+}
+
+//----------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------
 static inline void SetAmplitudeModulationEnabled(YM2612Channels chn, YM2612Operators op, bool enabled) {
-  am_enabled[chn][op] = enabled;
+  unsigned int operatorAddressOffset = GetOperatorBlockAddressOffset(chn, op);
+  
+  unsigned int registerNo = operatorAddressOffset + 0x60;
+  unsigned char val = GetRegisterData(registerNo);
+  SetRegisterData(registerNo, SetBit(val, 7, enabled));
 }
 
 static inline bool GetAmplitudeModulationEnabled(YM2612Channels chn, YM2612Operators op) {
-  return am_enabled[chn][op];
+  unsigned int operatorAddressOffset = GetOperatorBlockAddressOffset(chn, op);
+
+  unsigned int registerNo = operatorAddressOffset + 0x60;
+  unsigned char val = GetRegisterData(registerNo);
+  return GetBit(val, 7);
 }
 
 static inline void SetOutputLeft(YM2612Channels chn, bool enabled) {
-  left_enabled[chn] = enabled;
+  unsigned int channelAddressOffset = GetChannelBlockAddressOffset(chn);
+
+  unsigned int registerNo = channelAddressOffset + 0xB4;
+  unsigned char val = GetRegisterData(registerNo);
+  SetRegisterData(registerNo, SetBit(val, 7, enabled));
 }
 
 static inline bool GetOutputLeft(YM2612Channels chn) {
-  return left_enabled[chn];
+  unsigned int channelAddressOffset = GetChannelBlockAddressOffset(chn);
+
+  unsigned int registerNo = channelAddressOffset + 0xB4;
+  unsigned char val = GetRegisterData(registerNo);
+  return GetBit(val, 7);
 }
 
 static inline void SetOutputRight(YM2612Channels chn, bool enabled) {
-  right_enabled[chn] = enabled;
+  unsigned int channelAddressOffset = GetChannelBlockAddressOffset(chn);
+
+  unsigned int registerNo = channelAddressOffset + 0xB4;
+  unsigned char val = GetRegisterData(registerNo);
+  SetRegisterData(registerNo, SetBit(val, 6, enabled));
 }
 
 static inline bool GetOutputRight(YM2612Channels chn) {
-  return right_enabled[chn];
+  unsigned int channelAddressOffset = GetChannelBlockAddressOffset(chn);
+
+  unsigned int registerNo = channelAddressOffset + 0xB4;
+  unsigned char val = GetRegisterData(registerNo);
+  return GetBit(val, 6);
 }
 
 static inline void SetTimerAEnable(bool enabled) {
-  timer_a_enabled = enabled;
+  unsigned char val = GetRegisterData(0x27);
+  SetRegisterData(0x27, SetBit(val, 2, enabled));
 }
 
 static inline bool GetTimerAEnable() {
-  return timer_a_enabled;
+  unsigned char val = GetRegisterData(0x27);
+  return GetBit(val, 2);
 }
 
 static inline void SetTimerBEnable(bool enabled) {
-  timer_b_enabled = enabled;
+  unsigned char val = GetRegisterData(0x27);
+  SetRegisterData(0x27, SetBit(val, 3, enabled));
 }
 
 static inline bool GetTimerBEnable() {
-  return timer_b_enabled;
+  unsigned char val = GetRegisterData(0x27);
+  return GetBit(val, 3);
 }
 
 static inline void SetTimerALoad(bool enabled) {
-  timer_a_load = enabled;
+  unsigned char val = GetRegisterData(0x27);
+  SetRegisterData(0x27, SetBit(val, 0, enabled));
 }
 
 static inline bool GetTimerALoad() {
-  return timer_a_load;
+  unsigned char val = GetRegisterData(0x27);
+  return GetBit(val, 0);
 }
 
 static inline void SetTimerBLoad(bool enabled) {
-  timer_b_load = enabled;
+  unsigned char val = GetRegisterData(0x27);
+  SetRegisterData(0x27, SetBit(val, 1, enabled));
 }
 
 static inline bool GetTimerBLoad() {
-  return timer_b_load;
+  unsigned char val = GetRegisterData(0x27);
+  return GetBit(val, 1);
 }
 
 static inline void SetTimerAOverflow(bool enabled) {
-  timer_a_overflow = enabled;
+  YM2612.Status = SetBit(YM2612.Status, 0, enabled);
 }
 
 static inline bool GetTimerAOverflow() {
-  return timer_a_overflow;
+  return GetBit(YM2612.Status, 0);
 }
 
 static inline void SetTimerBOverflow(bool enabled) {
-  timer_b_overflow = enabled;
+  YM2612.Status = SetBit(YM2612.Status, 1, enabled);
 }
 
 static inline bool GetTimerBOverflow() {
-  return timer_b_overflow;
+  return GetBit(YM2612.Status, 1);
 }
 
 static inline void SetLFOEnabled(bool enabled) {
-  lfo_enabled = enabled;
+  unsigned char val = GetRegisterData(0x22);
+  SetRegisterData(0x22, SetBit(val, 3, enabled));
 }
 
 static inline bool GetLFOEnabled() {
-  return lfo_enabled;
+  unsigned char val = GetRegisterData(0x22);
+  return GetBit(val, 3);
 }
 
 static inline void SetDACEnabled(bool enabled) {
-  dac_enabled = enabled;
+  unsigned char val = GetRegisterData(0x2B);
+  SetRegisterData(0x2B, SetBit(val, 7, enabled));
 }
 
 static inline bool GetDACEnabled() {
-  return dac_enabled;
+  unsigned char val = GetRegisterData(0x2B);
+  return GetBit(val, 7);
 }
 
+extern INLINE void KEY_ON(channel_ *CH, int nsl);
+extern INLINE void KEY_OFF(channel_ *CH, int nsl);
+
+#define S0             0    // Stupid typo of the YM2612
+#define S1             2
+#define S2             1
+#define S3             3
+#define RELEASE   3
+
 static inline void SetKeyState(YM2612Channels chn, YM2612Operators op, bool enabled) {
-  key_enabled[chn][op] = enabled;
+  auto ch = &YM2612.CHANNEL[static_cast<int>(chn)];
+  
+  switch (op) {
+  case YM2612Operators::OPERATOR1: {
+    if (enabled) KEY_ON(ch, S0); else KEY_OFF(ch, S0);
+  } break;
+  case YM2612Operators::OPERATOR2: {
+    if (enabled) KEY_ON(ch, S1); else KEY_OFF(ch, S1);
+  } break;
+  case YM2612Operators::OPERATOR3: {
+    if (enabled) KEY_ON(ch, S2); else KEY_OFF(ch, S2);
+  } break;
+  case YM2612Operators::OPERATOR4: {
+    if (enabled) KEY_ON(ch, S3); else KEY_OFF(ch, S3);
+  } break;
+  }
 }
 
 static inline bool GetKeyState(YM2612Channels chn, YM2612Operators op) {
-  return key_enabled[chn][op];
+  auto ch = YM2612.CHANNEL[static_cast<int>(chn)];
+
+  switch (op) {
+  case YM2612Operators::OPERATOR1: {
+    return ch.SLOT[S0].Ecurp == RELEASE;
+  } break;
+  case YM2612Operators::OPERATOR2: {
+    return ch.SLOT[S1].Ecurp == RELEASE;
+  } break;
+  case YM2612Operators::OPERATOR3: {
+    return ch.SLOT[S2].Ecurp == RELEASE;
+  } break;
+  case YM2612Operators::OPERATOR4: {
+    return ch.SLOT[S3].Ecurp == RELEASE;
+  } break;
+  }
 }
 
+#undef S0
+#undef S1
+#undef S2
+#undef S3
+#undef RELEASE
+
 static inline void SetTotalLevelData(YM2612Channels chn, YM2612Operators op, unsigned int data) {
-  total_levels_data[chn][op] = data;
+  unsigned int operatorAddressOffset = GetOperatorBlockAddressOffset(chn, op);
+
+  unsigned int registerNo = operatorAddressOffset + 0x40;
+  unsigned char val = GetRegisterData(registerNo);
+  SetRegisterData(registerNo, SetDataSegment(val, 0, 7, data));
 }
 
 static inline unsigned int GetTotalLevelData(YM2612Channels chn, YM2612Operators op) {
-  return total_levels_data[chn][op];
+  unsigned int operatorAddressOffset = GetOperatorBlockAddressOffset(chn, op);
+
+  unsigned int registerNo = operatorAddressOffset + 0x40;
+  unsigned char val = GetRegisterData(registerNo);
+  return GetDataSegment(val, 0, 7);
 }
 
 static inline void SetSustainLevelData(YM2612Channels chn, YM2612Operators op, unsigned int data) {
-  sustain_levels_data[chn][op] = data;
+  unsigned int operatorAddressOffset = GetOperatorBlockAddressOffset(chn, op);
+
+  unsigned int registerNo = operatorAddressOffset + 0x80;
+  unsigned char val = GetRegisterData(registerNo);
+  SetRegisterData(registerNo, SetDataSegment(val, 4, 4, data));
 }
 
 static inline unsigned int GetSustainLevelData(YM2612Channels chn, YM2612Operators op) {
-  return sustain_levels_data[chn][op];
+  unsigned int operatorAddressOffset = GetOperatorBlockAddressOffset(chn, op);
+
+  unsigned int registerNo = operatorAddressOffset + 0x80;
+  unsigned char val = GetRegisterData(registerNo);
+  return GetDataSegment(val, 4, 4);
 }
 
 static inline void SetAttackRateData(YM2612Channels chn, YM2612Operators op, unsigned int data) {
-  attack_rate_data[chn][op] = data;
+  unsigned int operatorAddressOffset = GetOperatorBlockAddressOffset(chn, op);
+
+  unsigned int registerNo = operatorAddressOffset + 0x50;
+  unsigned char val = GetRegisterData(registerNo);
+  SetRegisterData(registerNo, SetDataSegment(val, 0, 5, data));
 }
 
 static inline unsigned int GetAttackRateData(YM2612Channels chn, YM2612Operators op) {
-  return attack_rate_data[chn][op];
+  unsigned int operatorAddressOffset = GetOperatorBlockAddressOffset(chn, op);
+
+  unsigned int registerNo = operatorAddressOffset + 0x50;
+  unsigned char val = GetRegisterData(registerNo);
+  return GetDataSegment(val, 0, 5);
 }
 
 static inline void SetDecayRateData(YM2612Channels chn, YM2612Operators op, unsigned int data) {
-  decay_rate_data[chn][op] = data;
+  unsigned int operatorAddressOffset = GetOperatorBlockAddressOffset(chn, op);
+
+  unsigned int registerNo = operatorAddressOffset + 0x60;
+  unsigned char val = GetRegisterData(registerNo);
+  SetRegisterData(registerNo, SetDataSegment(val, 0, 5, data));
 }
 
 static inline unsigned int GetDecayRateData(YM2612Channels chn, YM2612Operators op) {
-  return decay_rate_data[chn][op];
+  unsigned int operatorAddressOffset = GetOperatorBlockAddressOffset(chn, op);
+  
+  unsigned int registerNo = operatorAddressOffset + 0x60;
+  unsigned char val = GetRegisterData(registerNo);
+  return GetDataSegment(val, 0, 5);
 }
 
 static inline void SetSustainRateData(YM2612Channels chn, YM2612Operators op, unsigned int data) {
-  sustain_rate_data[chn][op] = data;
+  unsigned int operatorAddressOffset = GetOperatorBlockAddressOffset(chn, op);
+
+  unsigned int registerNo = operatorAddressOffset + 0x70;
+  unsigned char val = GetRegisterData(registerNo);
+  SetRegisterData(registerNo, SetDataSegment(val, 0, 5, data));
 }
 
 static inline unsigned int GetSustainRateData(YM2612Channels chn, YM2612Operators op) {
-  return sustain_rate_data[chn][op];
+  unsigned int operatorAddressOffset = GetOperatorBlockAddressOffset(chn, op);
+
+  unsigned int registerNo = operatorAddressOffset + 0x70;
+  unsigned char val = GetRegisterData(registerNo);
+  return GetDataSegment(val, 0, 5);
 }
 
 static inline void SetReleaseRateData(YM2612Channels chn, YM2612Operators op, unsigned int data) {
-  release_rate_data[chn][op] = data;
+  unsigned int operatorAddressOffset = GetOperatorBlockAddressOffset(chn, op);
+
+  unsigned int registerNo = operatorAddressOffset + 0x80;
+  unsigned char val = GetRegisterData(registerNo);
+  SetRegisterData(registerNo, SetDataSegment(val, 0, 4, data));
 }
 
 static inline unsigned int GetReleaseRateData(YM2612Channels chn, YM2612Operators op) {
-  return release_rate_data[chn][op];
+  unsigned int operatorAddressOffset = GetOperatorBlockAddressOffset(chn, op);
+
+  unsigned int registerNo = operatorAddressOffset + 0x80;
+  unsigned char val = GetRegisterData(registerNo);
+  return GetDataSegment(val, 0, 4);
 }
 
 static inline void SetSSGData(YM2612Channels chn, YM2612Operators op, unsigned int data) {
-  ssg_data[chn][op] = data;
+  unsigned int operatorAddressOffset = GetOperatorBlockAddressOffset(chn, op);
+
+  unsigned int registerNo = operatorAddressOffset + 0x90;
+  unsigned char val = GetRegisterData(registerNo);
+  SetRegisterData(registerNo, SetDataSegment(val, 0, 4, data));
 }
 
 static inline unsigned int GetSSGData(YM2612Channels chn, YM2612Operators op) {
-  return ssg_data[chn][op];
+  unsigned int operatorAddressOffset = GetOperatorBlockAddressOffset(chn, op);
+
+  unsigned int registerNo = operatorAddressOffset + 0x90;
+  unsigned char val = GetRegisterData(registerNo);
+  return GetDataSegment(val, 0, 4);
 }
 
 static inline void SetDetuneData(YM2612Channels chn, YM2612Operators op, unsigned int data) {
-  detune_data[chn][op] = data;
+  unsigned int operatorAddressOffset = GetOperatorBlockAddressOffset(chn, op);
+
+  unsigned int registerNo = operatorAddressOffset + 0x30;
+  unsigned char val = GetRegisterData(registerNo);
+  SetRegisterData(registerNo, SetDataSegment(val, 4, 3, data));
 }
 
 static inline unsigned int GetDetuneData(YM2612Channels chn, YM2612Operators op) {
-  return detune_data[chn][op];
+  unsigned int operatorAddressOffset = GetOperatorBlockAddressOffset(chn, op);
+
+  unsigned int registerNo = operatorAddressOffset + 0x30;
+  unsigned char val = GetRegisterData(registerNo);
+  return GetDataSegment(val, 4, 3);
 }
 
 static inline void SetMultipleData(YM2612Channels chn, YM2612Operators op, unsigned int data) {
-  multiple_data[chn][op] = data;
+  unsigned int operatorAddressOffset = GetOperatorBlockAddressOffset(chn, op);
+
+  unsigned int registerNo = operatorAddressOffset + 0x30;
+  unsigned char val = GetRegisterData(registerNo);
+  SetRegisterData(registerNo, SetDataSegment(val, 0, 4, data));
 }
 
 static inline unsigned int GetMultipleData(YM2612Channels chn, YM2612Operators op) {
-  return multiple_data[chn][op];
+  unsigned int operatorAddressOffset = GetOperatorBlockAddressOffset(chn, op);
+
+  unsigned int registerNo = operatorAddressOffset + 0x30;
+  unsigned char val = GetRegisterData(registerNo);
+  return GetDataSegment(val, 0, 4);
 }
 
 static inline void SetKeyScaleData(YM2612Channels chn, YM2612Operators op, unsigned int data) {
-  key_scale_data[chn][op] = data;
+  unsigned int operatorAddressOffset = GetOperatorBlockAddressOffset(chn, op);
+
+  unsigned int registerNo = operatorAddressOffset + 0x50;
+  unsigned char val = GetRegisterData(registerNo);
+  SetRegisterData(registerNo, SetDataSegment(val, 6, 2, data));
 }
 
 static inline unsigned int GetKeyScaleData(YM2612Channels chn, YM2612Operators op) {
-  return key_scale_data[chn][op];
+  unsigned int operatorAddressOffset = GetOperatorBlockAddressOffset(chn, op);
+
+  unsigned int registerNo = operatorAddressOffset + 0x50;
+  unsigned char val = GetRegisterData(registerNo);
+  return GetDataSegment(val, 6, 2);
 }
 
 static inline void SetAlgorithmData(YM2612Channels chn, unsigned int data) {
-  algorithm_data[chn] = data;
+  unsigned int channelAddressOffset = GetChannelBlockAddressOffset(chn);
+
+  unsigned int registerNo = channelAddressOffset + 0xB0;
+  unsigned char val = GetRegisterData(registerNo);
+  SetRegisterData(registerNo, SetDataSegment(val, 0, 3, data));
 }
 
 static inline unsigned int GetAlgorithmData(YM2612Channels chn) {
-  return algorithm_data[chn];
+  unsigned int channelAddressOffset = GetChannelBlockAddressOffset(chn);
+
+  unsigned int registerNo = channelAddressOffset + 0xB0;
+  unsigned char val = GetRegisterData(registerNo);
+  return GetDataSegment(val, 0, 3);
 }
 
 static inline void SetFeedbackData(YM2612Channels chn, unsigned int data) {
-  feedback_data[chn] = data;
+  unsigned int channelAddressOffset = GetChannelBlockAddressOffset(chn);
+
+  unsigned int registerNo = channelAddressOffset + 0xB0;
+  unsigned char val = GetRegisterData(registerNo);
+  SetRegisterData(registerNo, SetDataSegment(val, 3, 3, data));
 }
 
 static inline unsigned int GetFeedbackData(YM2612Channels chn) {
-  return feedback_data[chn];
+  unsigned int channelAddressOffset = GetChannelBlockAddressOffset(chn);
+
+  unsigned int registerNo = channelAddressOffset + 0xB0;
+  unsigned char val = GetRegisterData(registerNo);
+  return GetDataSegment(val, 3, 3);
 }
 
 static inline void SetFrequencyData(YM2612Channels chn, unsigned int data) {
-  frequency_data[chn] = data;
+  unsigned int channelAddressOffset = GetChannelBlockAddressOffset(chn);
+
+  unsigned int register1 = channelAddressOffset + 0xA0;
+  unsigned int register2 = channelAddressOffset + 0xA4;
+
+  unsigned char val1 = GetRegisterData(register1);
+  SetRegisterData(register1, SetData(val1, 8, GetDataSegment(data, 0, 8)));
+  unsigned char val2 = GetRegisterData(register2);
+  SetRegisterData(register2, SetDataSegment(val2, 0, 3, GetDataSegment(data, 8, 3)));
 }
 
 static inline unsigned int GetFrequencyData(YM2612Channels chn) {
-  return frequency_data[chn];
+  unsigned int channelAddressOffset = GetChannelBlockAddressOffset(chn);
+
+  unsigned int register1 = channelAddressOffset + 0xA0;
+  unsigned int register2 = channelAddressOffset + 0xA4;
+
+  unsigned char val1 = GetRegisterData(register1);
+  unsigned int data = SetLowerBits(0, 11, 8, val1);
+  unsigned char val2 = GetRegisterData(register2);
+  return SetUpperBits(data, 11, 3, GetDataSegment(val2, 0, 3));
 }
 
 static inline void SetBlockData(YM2612Channels chn, unsigned int data) {
-  block_data[chn] = data;
+  unsigned int channelAddressOffset = GetChannelBlockAddressOffset(chn);
+
+  unsigned int registerNo = channelAddressOffset + 0xA4;
+  unsigned char val = GetRegisterData(registerNo);
+  SetRegisterData(registerNo, SetDataSegment(val, 3, 3, data));
 }
 
 static inline unsigned int GetBlockData(YM2612Channels chn) {
-  return block_data[chn];
+  unsigned int channelAddressOffset = GetChannelBlockAddressOffset(chn);
+
+  unsigned int registerNo = channelAddressOffset + 0xA4;
+  unsigned char val = GetRegisterData(registerNo);
+  return GetDataSegment(val, 3, 3);
 }
 
 static inline void SetAMSData(YM2612Channels chn, unsigned int data) {
-  ams_data[chn] = data;
+  unsigned int channelAddressOffset = GetChannelBlockAddressOffset(chn);
+
+  unsigned int registerNo = channelAddressOffset + 0xB4;
+  unsigned char val = GetRegisterData(registerNo);
+  SetRegisterData(registerNo, SetDataSegment(val, 4, 2, data));
 }
 
 static inline unsigned int GetAMSData(YM2612Channels chn) {
-  return ams_data[chn];
+  unsigned int channelAddressOffset = GetChannelBlockAddressOffset(chn);
+
+  unsigned int registerNo = channelAddressOffset + 0xB4;
+  unsigned char val = GetRegisterData(registerNo);
+  return GetDataSegment(val, 4, 2);
 }
 
 static inline void SetPMSData(YM2612Channels chn, unsigned int data) {
-  pms_data[chn] = data;
+  unsigned int channelAddressOffset = GetChannelBlockAddressOffset(chn);
+
+  unsigned int registerNo = channelAddressOffset + 0xB4;
+  unsigned char val = GetRegisterData(registerNo);
+  SetRegisterData(registerNo, SetDataSegment(val, 0, 3, data));
 }
 
 static inline unsigned int GetPMSData(YM2612Channels chn) {
-  return pms_data[chn];
+  unsigned int channelAddressOffset = GetChannelBlockAddressOffset(chn);
+
+  unsigned int registerNo = channelAddressOffset + 0xB4;
+  unsigned char val = GetRegisterData(registerNo);
+  return GetDataSegment(val, 0, 3);
 }
 
 static inline void SetCH3Mode(unsigned int mode) {
-  ch3_mode = mode;
+  unsigned char val = GetRegisterData(0x27);
+  SetRegisterData(0x27, SetDataSegment(val, 6, 2, mode));
 }
 
 static inline unsigned int GetCH3Mode() {
-  return ch3_mode;
+  unsigned char val = GetRegisterData(0x27);
+  return GetDataSegment(val, 6, 2);
 }
 
 static inline void SetFrequencyDataChannel3(YM2612Operators op, unsigned int data) {
-  frequency_chn_data[YM2612Channels::CHANNEL3][op] = data;
+  unsigned int register1 = GetAddressChannel3FrequencyBlock1(op);
+  unsigned int register2 = GetAddressChannel3FrequencyBlock2(op);
+
+  unsigned char val1 = GetRegisterData(register1);
+  SetRegisterData(register1, SetData(val1, 8, GetDataSegment(data, 0, 8)));
+  unsigned char val2 = GetRegisterData(register2);
+  SetRegisterData(register2, SetDataSegment(val2, 0, 3, GetDataSegment(data, 8, 3)));
 }
 
 static inline unsigned int GetFrequencyDataChannel3(YM2612Operators op) {
-  return frequency_chn_data[YM2612Channels::CHANNEL3][op];
+  unsigned int register1 = GetAddressChannel3FrequencyBlock1(op);
+  unsigned int register2 = GetAddressChannel3FrequencyBlock2(op);
+
+  unsigned char val1 = GetRegisterData(register1);
+  unsigned int data = SetLowerBits(0, 11, 8, val1);
+  unsigned char val2 = GetRegisterData(register2);
+  return SetUpperBits(data, 11, 3, GetDataSegment(val2, 0, 3));
 }
 
 static inline void SetBlockDataChannel3(YM2612Operators op, unsigned int data) {
-  block_chn_data[YM2612Channels::CHANNEL3][op] = data;
+  unsigned int registerNo = GetAddressChannel3FrequencyBlock2(op);
+  unsigned char val = GetRegisterData(registerNo);
+  SetRegisterData(registerNo, SetDataSegment(val, 3, 3, data));
 }
 
 static inline unsigned int GetBlockDataChannel3(YM2612Operators op) {
-  return block_chn_data[YM2612Channels::CHANNEL3][op];
+  unsigned int registerNo = GetAddressChannel3FrequencyBlock2(op);
+  unsigned char val = GetRegisterData(registerNo);
+  return GetDataSegment(val, 3, 3);
 }
 
 static inline void SetTimerAData(unsigned int data) {
-  timer_a_data = data;
+  unsigned char val1 = GetRegisterData(0x24);
+  unsigned int data1 = SetData(val1, 8, GetDataSegment(data, 2, 8));
+  SetRegisterData(0x24, data1);				//Set MSBs
+  unsigned char val2 = GetRegisterData(0x25);
+  unsigned int data2 = SetDataSegment(val2, 0, 2, GetDataSegment(data1, 0, 2));
+  SetRegisterData(0x25, data2);	//Set LSBs
 }
 
 static inline unsigned int GetTimerAData() {
-  return timer_a_data;
+  unsigned char val1 = GetRegisterData(0x24);
+  unsigned int data = SetUpperBits(0, 10, 8, val1); //Get MSBs
+  unsigned char val2 = GetRegisterData(0x25);
+  return SetLowerBits(data, 10, 2, GetDataSegment(val2, 0, 2)); //Get LSBs
 }
 
 static inline void SetTimerBData(unsigned int data) {
-  timer_b_data = data;
+  unsigned char val = GetRegisterData(0x26);
+  SetRegisterData(0x26, SetData(val, 8, data));
 }
 
 static inline unsigned int GetTimerBData() {
-  return timer_b_data;
+  return GetRegisterData(0x26);
 }
 
 static inline void SetTimerACurrentCounter(unsigned int data) {
-  timer_a_current_counter = data;
+  YM2612.TimerAcnt = data;
 }
 
 static inline unsigned int GetTimerACurrentCounter() {
-  return timer_a_current_counter;
+  return YM2612.TimerAcnt;
 }
 
 static inline void SetTimerBCurrentCounter(unsigned int data) {
-  timer_b_current_counter = data;
+  YM2612.TimerBcnt = data;
 }
 
 static inline unsigned int GetTimerBCurrentCounter() {
-  return timer_b_current_counter;
+  return YM2612.TimerBcnt;
 }
 
 static inline void SetLFOData(unsigned int data) {
-  lfo_data = data;
+  unsigned char val = GetRegisterData(0x22);
+  SetRegisterData(0x22, SetDataSegment(val, 0, 3, data));
 }
 
 static inline unsigned int GetLFOData() {
-  return lfo_data;
+  unsigned char val = GetRegisterData(0x22);
+  return GetDataSegment(val, 0, 3);
 }
 
 static inline void SetDACData(unsigned int data) {
-  dac_data = data;
+  unsigned char val = GetRegisterData(0x2A);
+  SetRegisterData(0x2A, SetData(val, 8, data));
 }
 
 static inline unsigned int GetDACData() {
-  return dac_data;
-}
-
-static inline void SetExternalClockRate(double clockRate) {
-  external_clock_rate = clockRate;
-}
-
-static inline double GetExternalClockRate() {
-  return external_clock_rate;
-}
-
-static inline void SetFMClockDivider(unsigned int data) {
-  fm_clock_divider = data;
-}
-
-static inline unsigned int GetFMClockDivider() {
-  return fm_clock_divider;
-}
-
-static inline void SetEGClockDivider(unsigned int data) {
-  eg_clock_divider = data;
-}
-
-static inline unsigned int GetEGClockDivider() {
-  return eg_clock_divider;
-}
-
-static inline void SetOutputClockDivider(unsigned int data) {
-  output_clock_divider = data;
-}
-
-static inline unsigned int GetOutputClockDivider() {
-  return output_clock_divider;
-}
-
-static inline void SetTimerAClockDivider(unsigned int data) {
-  timer_a_clock_divider = data;
-}
-
-static inline unsigned int GetTimerAClockDivider() {
-  return timer_a_clock_divider;
-}
-
-static inline void SetTimerBClockDivider(unsigned int data) {
-  timer_b_clock_divider = data;
-}
-
-static inline unsigned int GetTimerBClockDivider() {
-  return timer_b_clock_divider;
+  return GetRegisterData(0x2A);
 }
 
 
@@ -588,20 +854,7 @@ static INT_PTR YM2612_msgWM_COMMAND(HWND hwnd, WPARAM wparam, LPARAM lparam)
     unsigned int controlID = LOWORD(wparam);
     switch (controlID)
     {
-    case IDC_YM2612_DEBUGGER_INFO_OP1: {
-      presenter.OpenOperatorView(channelNo, YM2612Operators::OPERATOR1);
-      break; }
-    case IDC_YM2612_DEBUGGER_INFO_OP2: {
-      presenter.OpenOperatorView(channelNo, YM2612Operators::OPERATOR2);
-      break; }
-    case IDC_YM2612_DEBUGGER_INFO_OP3: {
-      presenter.OpenOperatorView(channelNo, YM2612Operators::OPERATOR3);
-      break; }
-    case IDC_YM2612_DEBUGGER_INFO_OP4: {
-      presenter.OpenOperatorView(channelNo, YM2612Operators::OPERATOR4);
-      break; }
-
-                                     //Channel Select
+    //Channel Select
     case IDC_YM2612_DEBUGGER_CS1: {
       selectedChannel = YM2612Channels::CHANNEL1;
       InvalidateRect(hwnd, NULL, FALSE);
@@ -1024,26 +1277,6 @@ static INT_PTR YM2612_msgWM_COMMAND(HWND hwnd, WPARAM wparam, LPARAM lparam)
     case IDC_YM2612_DEBUGGER_DACDATA: {
       SetDACData(GetDlgItemHex(hwnd, LOWORD(wparam)));
       break; }
-
-                                    //Clock
-    case IDC_YM2612_DEBUGGER_CLOCK: {
-      SetExternalClockRate(GetDlgItemDouble(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_FMDIVIDE: {
-      SetFMClockDivider(GetDlgItemBin(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_EGDIVIDE: {
-      SetEGClockDivider(GetDlgItemBin(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_OUTDIVIDE: {
-      SetOutputClockDivider(GetDlgItemBin(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_TADIVIDE: {
-      SetTimerAClockDivider(GetDlgItemBin(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_TBDIVIDE: {
-      SetTimerBClockDivider(GetDlgItemBin(hwnd, LOWORD(wparam)));
-      break; }
     }
 
     return FALSE;
@@ -1409,31 +1642,6 @@ static INT_PTR YM2612_msgWM_TIMER(HWND hwnd, WPARAM wparam, LPARAM lparam)
   CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_KEY_5, (GetKeyState(YM2612Channels::CHANNEL5, YM2612Operators::OPERATOR1) && GetKeyState(YM2612Channels::CHANNEL5, YM2612Operators::OPERATOR2) && GetKeyState(YM2612Channels::CHANNEL5, YM2612Operators::OPERATOR3) && GetKeyState(YM2612Channels::CHANNEL5, YM2612Operators::OPERATOR4)) ? BST_CHECKED : BST_UNCHECKED);
   CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_KEY_6, (GetKeyState(YM2612Channels::CHANNEL6, YM2612Operators::OPERATOR1) && GetKeyState(YM2612Channels::CHANNEL6, YM2612Operators::OPERATOR2) && GetKeyState(YM2612Channels::CHANNEL6, YM2612Operators::OPERATOR3) && GetKeyState(YM2612Channels::CHANNEL6, YM2612Operators::OPERATOR4)) ? BST_CHECKED : BST_UNCHECKED);
 
-  //Clock
-  if (currentControlFocus != IDC_YM2612_DEBUGGER_CLOCK)
-  {
-    UpdateDlgItemFloat(hwnd, IDC_YM2612_DEBUGGER_CLOCK, (float)GetExternalClockRate());
-  }
-  if (currentControlFocus != IDC_YM2612_DEBUGGER_FMDIVIDE)
-  {
-    UpdateDlgItemBin(hwnd, IDC_YM2612_DEBUGGER_FMDIVIDE, GetFMClockDivider());
-  }
-  if (currentControlFocus != IDC_YM2612_DEBUGGER_EGDIVIDE)
-  {
-    UpdateDlgItemBin(hwnd, IDC_YM2612_DEBUGGER_EGDIVIDE, GetEGClockDivider());
-  }
-  if (currentControlFocus != IDC_YM2612_DEBUGGER_OUTDIVIDE)
-  {
-    UpdateDlgItemBin(hwnd, IDC_YM2612_DEBUGGER_OUTDIVIDE, GetOutputClockDivider());
-  }
-  if (currentControlFocus != IDC_YM2612_DEBUGGER_TADIVIDE)
-  {
-    UpdateDlgItemBin(hwnd, IDC_YM2612_DEBUGGER_TADIVIDE, GetTimerAClockDivider());
-  }
-  if (currentControlFocus != IDC_YM2612_DEBUGGER_TBDIVIDE)
-  {
-    UpdateDlgItemBin(hwnd, IDC_YM2612_DEBUGGER_TBDIVIDE, GetTimerBClockDivider());
-  }
 
   return TRUE;
 }
