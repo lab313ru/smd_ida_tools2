@@ -81,7 +81,7 @@ static inline unsigned int GetAddressChannel3FrequencyBlock2(YM2612Operators ope
 }
 
 static inline int GetRegisterData(unsigned int location) {
-   return (location < 0x100) ? YM2612.REG[0][location] : YM2612.REG[1][location - 0x100];
+   return ((location < 0x100) ? YM2612.REG[0][location] : YM2612.REG[1][location - 0x100]) & 0xFF;
 }
 
 //----------------------------------------------------------------------------------------
@@ -1645,6 +1645,27 @@ static INT_PTR YM2612_Debugger_Update(HWND hwnd)
   CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_KEY_5, (GetKeyState(YM2612Channels::CHANNEL5, YM2612Operators::OPERATOR1) && GetKeyState(YM2612Channels::CHANNEL5, YM2612Operators::OPERATOR2) && GetKeyState(YM2612Channels::CHANNEL5, YM2612Operators::OPERATOR3) && GetKeyState(YM2612Channels::CHANNEL5, YM2612Operators::OPERATOR4)) ? BST_CHECKED : BST_UNCHECKED);
   CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_KEY_6, (GetKeyState(YM2612Channels::CHANNEL6, YM2612Operators::OPERATOR1) && GetKeyState(YM2612Channels::CHANNEL6, YM2612Operators::OPERATOR2) && GetKeyState(YM2612Channels::CHANNEL6, YM2612Operators::OPERATOR3) && GetKeyState(YM2612Channels::CHANNEL6, YM2612Operators::OPERATOR4)) ? BST_CHECKED : BST_UNCHECKED);
 
+  //Update Registers
+  if (currentControlFocus != IDC_YM2612_REGISTERS_STATUS)
+  {
+    UpdateDlgItemHex(hwnd, IDC_YM2612_REGISTERS_STATUS, 2, YM2612.Status);
+  }
+
+  for (unsigned int i = 0; i <= 0xB7; ++i)
+  {
+    if (currentControlFocus != (IDC_YM2612_REGISTERS_00 + i))
+    {
+      UpdateDlgItemHex(hwnd, IDC_YM2612_REGISTERS_00 + i, 2, GetRegisterData(i));
+    }
+  }
+
+  for (unsigned int i = 0; i <= 0xB7; ++i)
+  {
+    if (currentControlFocus != (IDC_YM2612_REGISTERS_P2_00 + i))
+    {
+      UpdateDlgItemHex(hwnd, IDC_YM2612_REGISTERS_P2_00 + i, 2, GetRegisterData(registerCountPerPart + i));
+    }
+  }
 
   return TRUE;
 }
