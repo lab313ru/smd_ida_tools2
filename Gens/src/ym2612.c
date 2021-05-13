@@ -10,8 +10,10 @@
 
 #include <stdio.h>
 #include <math.h>
-#include "ym2612.h"
 #include <memory.h>
+
+#include "ym2612.h"
+#include "ym2612_debug.h"
 
 
 /********************************************
@@ -100,13 +102,6 @@
 #define S2             1
 #define S3             3
 
-
-
-/* Gens */
-
-extern unsigned int Sound_Extrapol[312][2];
-extern int Seg_L[882], Seg_R[882];
-extern int VDP_Current_Line;
 
 /* end */
 
@@ -454,7 +449,7 @@ int SLOT_SET(int adr, unsigned char data)
         case 0x80:
             SL->SLL = SL_TAB[data >> 4];
 
-            SL->RR = &DR_TAB[((data & 0xF) << 2) + 2];
+            SL->RR = &DR_TAB[((enabled_channels[nch] ? (data & 0xF) : 0x0F) << 2) + 2];
 
             SL->EincR = SL->RR[SL->KSR];
             if ((SL->Ecurp == RELEASE) && (SL->Ecnt < ENV_END)) SL->Einc = SL->EincR;
@@ -764,13 +759,13 @@ int YM_SET(int adr, unsigned char data)
 
             YM2612_Special_Update();
 
-            if (data & 0x10) KEY_ON(CH, S0);    // On appuie sur la touche pour le slot 1
+            if (enabled_channels[nch] && (data & 0x10)) KEY_ON(CH, S0);    // On appuie sur la touche pour le slot 1
             else KEY_OFF(CH, S0);               // On relâche la touche pour le slot 1
-            if (data & 0x20) KEY_ON(CH, S1);    // On appuie sur la touche pour le slot 3
+            if (enabled_channels[nch] && (data & 0x20)) KEY_ON(CH, S1);    // On appuie sur la touche pour le slot 3
             else KEY_OFF(CH, S1);               // On relâche la touche pour le slot 3
-            if (data & 0x40) KEY_ON(CH, S2);    // On appuie sur la touche pour le slot 2
+            if (enabled_channels[nch] && (data & 0x40)) KEY_ON(CH, S2);    // On appuie sur la touche pour le slot 2
             else KEY_OFF(CH, S2);               // On relâche la touche pour le slot 2
-            if (data & 0x80) KEY_ON(CH, S3);    // On appuie sur la touche pour le slot 4
+            if (enabled_channels[nch] && (data & 0x80)) KEY_ON(CH, S3);    // On appuie sur la touche pour le slot 4
             else KEY_OFF(CH, S3);               // On relâche la touche pour le slot 4
 
 #if YM_DEBUG_LEVEL > 0

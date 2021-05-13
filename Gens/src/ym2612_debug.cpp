@@ -6,6 +6,7 @@
 
 #include "g_main.h"
 #include "ym2612.h"
+#include "ym2612_debug.h"
 
 enum class YM2612Channels :unsigned int
 {
@@ -35,6 +36,8 @@ static const unsigned int operatorCount = 4;
 static const unsigned int partCount = 2;
 static const unsigned int registerCountPerPart = 0x100;
 static const unsigned int registerCountTotal = registerCountPerPart * partCount;
+
+int enabled_channels[channelCount] = { 1, 1, 1, 1, 1, 1 };
 
 //----------------------------------------------------------------------------------------
 const unsigned int channelAddressOffsets[channelCount] = {
@@ -632,47 +635,6 @@ static inline unsigned int GetBlockDataChannel3(YM2612Operators op) {
   return GetDataSegment(val, 3, 3);
 }
 
-static inline void SetTimerAData(unsigned int data) {
-  unsigned char val1 = GetRegisterData(0x24);
-  unsigned int data1 = SetData(val1, 8, GetDataSegment(data, 2, 8));
-  SetRegisterData(0x24, data1);				//Set MSBs
-  unsigned char val2 = GetRegisterData(0x25);
-  unsigned int data2 = SetDataSegment(val2, 0, 2, GetDataSegment(data1, 0, 2));
-  SetRegisterData(0x25, data2);	//Set LSBs
-}
-
-static inline unsigned int GetTimerAData() {
-  unsigned char val1 = GetRegisterData(0x24);
-  unsigned int data = SetUpperBits(0, 10, 8, val1); //Get MSBs
-  unsigned char val2 = GetRegisterData(0x25);
-  return SetLowerBits(data, 10, 2, GetDataSegment(val2, 0, 2)); //Get LSBs
-}
-
-static inline void SetTimerBData(unsigned int data) {
-  unsigned char val = GetRegisterData(0x26);
-  SetRegisterData(0x26, SetData(val, 8, data));
-}
-
-static inline unsigned int GetTimerBData() {
-  return GetRegisterData(0x26);
-}
-
-static inline void SetTimerACurrentCounter(unsigned int data) {
-  YM2612.TimerAcnt = data;
-}
-
-static inline unsigned int GetTimerACurrentCounter() {
-  return YM2612.TimerAcnt;
-}
-
-static inline void SetTimerBCurrentCounter(unsigned int data) {
-  YM2612.TimerBcnt = data;
-}
-
-static inline unsigned int GetTimerBCurrentCounter() {
-  return YM2612.TimerBcnt;
-}
-
 static inline void SetLFOData(unsigned int data) {
   unsigned char val = GetRegisterData(0x22);
   SetRegisterData(0x22, SetDataSegment(val, 0, 3, data));
@@ -838,14 +800,45 @@ static void WndProcDialogImplementSaveFieldWhenLostFocus(HWND hwnd, UINT msg, WP
 static INT_PTR YM2612_msgWM_INITDIALOG(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
   //Set the channel select radio buttons to their default state
-  CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_CS1, (selectedChannel == YM2612Channels::CHANNEL1) ? BST_CHECKED : BST_UNCHECKED);
-  CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_CS2, (selectedChannel == YM2612Channels::CHANNEL2) ? BST_CHECKED : BST_UNCHECKED);
-  CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_CS3, (selectedChannel == YM2612Channels::CHANNEL3) ? BST_CHECKED : BST_UNCHECKED);
-  CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_CS4, (selectedChannel == YM2612Channels::CHANNEL4) ? BST_CHECKED : BST_UNCHECKED);
-  CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_CS5, (selectedChannel == YM2612Channels::CHANNEL5) ? BST_CHECKED : BST_UNCHECKED);
-  CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_CS6, (selectedChannel == YM2612Channels::CHANNEL6) ? BST_CHECKED : BST_UNCHECKED);
+  CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_CS1, BST_CHECKED);
+  CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_CS2, BST_CHECKED);
+  CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_CS3, BST_CHECKED);
+  CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_CS4, BST_CHECKED);
+  CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_CS5, BST_CHECKED);
+  CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_CS6, BST_CHECKED);
+
+  CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_CS1_CHK, (selectedChannel == YM2612Channels::CHANNEL1) ? BST_CHECKED : BST_UNCHECKED);
+  CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_CS2_CHK, (selectedChannel == YM2612Channels::CHANNEL2) ? BST_CHECKED : BST_UNCHECKED);
+  CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_CS3_CHK, (selectedChannel == YM2612Channels::CHANNEL3) ? BST_CHECKED : BST_UNCHECKED);
+  CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_CS4_CHK, (selectedChannel == YM2612Channels::CHANNEL4) ? BST_CHECKED : BST_UNCHECKED);
+  CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_CS5_CHK, (selectedChannel == YM2612Channels::CHANNEL5) ? BST_CHECKED : BST_UNCHECKED);
+  CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_CS6_CHK, (selectedChannel == YM2612Channels::CHANNEL6) ? BST_CHECKED : BST_UNCHECKED);
+
+  for (auto i = 0; i < channelCount; ++i) {
+    enabled_channels[i] = 1;
+  }
 
   return TRUE;
+}
+
+static void update_channels() {
+  for (auto chn = 0; chn < channelCount; ++chn) {
+    if (!enabled_channels[chn]) {
+      continue;
+    }
+
+    auto ch = static_cast<YM2612Channels>(chn);
+
+    for (auto opr = 0; opr < operatorCount; ++opr) {
+      auto op = static_cast<YM2612Operators>(opr);
+
+      SetReleaseRateData(ch, op, 0x0F);
+
+      SetKeyState(ch, op, false);
+
+      SetTotalLevelData(ch, op, 127);
+    }
+  }
 }
 
 static INT_PTR YM2612_msgWM_COMMAND(HWND hwnd, WPARAM wparam, LPARAM lparam)
@@ -858,28 +851,78 @@ static INT_PTR YM2612_msgWM_COMMAND(HWND hwnd, WPARAM wparam, LPARAM lparam)
     switch (controlID)
     {
     //Channel Select
+    case IDC_YM2612_DEBUGGER_CS1_CHK: {
+      selectedChannel = YM2612Channels::CHANNEL1;
+      InvalidateRect(hwnd, NULL, FALSE);
+      break; }
+    case IDC_YM2612_DEBUGGER_CS2_CHK: {
+      selectedChannel = YM2612Channels::CHANNEL2;
+      InvalidateRect(hwnd, NULL, FALSE);
+      break; }
+    case IDC_YM2612_DEBUGGER_CS3_CHK: {
+      selectedChannel = YM2612Channels::CHANNEL3;
+      InvalidateRect(hwnd, NULL, FALSE);
+      break; }
+    case IDC_YM2612_DEBUGGER_CS4_CHK: {
+      selectedChannel = YM2612Channels::CHANNEL4;
+      InvalidateRect(hwnd, NULL, FALSE);
+      break; }
+    case IDC_YM2612_DEBUGGER_CS5_CHK: {
+      selectedChannel = YM2612Channels::CHANNEL5;
+      InvalidateRect(hwnd, NULL, FALSE);
+      break; }
+    case IDC_YM2612_DEBUGGER_CS6_CHK: {
+      selectedChannel = YM2612Channels::CHANNEL6;
+      InvalidateRect(hwnd, NULL, FALSE);
+      break; }
+
+    //Disable/enable channels
     case IDC_YM2612_DEBUGGER_CS1: {
       selectedChannel = YM2612Channels::CHANNEL1;
+      enabled_channels[0] = IsDlgButtonChecked(hwnd, controlID) == BST_CHECKED;
+
+      update_channels();
+      
       InvalidateRect(hwnd, NULL, FALSE);
       break; }
     case IDC_YM2612_DEBUGGER_CS2: {
       selectedChannel = YM2612Channels::CHANNEL2;
+      enabled_channels[1] = IsDlgButtonChecked(hwnd, controlID) == BST_CHECKED;
+
+      update_channels();
+
       InvalidateRect(hwnd, NULL, FALSE);
       break; }
     case IDC_YM2612_DEBUGGER_CS3: {
       selectedChannel = YM2612Channels::CHANNEL3;
+      enabled_channels[2] = IsDlgButtonChecked(hwnd, controlID) == BST_CHECKED;
+
+      update_channels();
+
       InvalidateRect(hwnd, NULL, FALSE);
       break; }
     case IDC_YM2612_DEBUGGER_CS4: {
       selectedChannel = YM2612Channels::CHANNEL4;
+      enabled_channels[3] = IsDlgButtonChecked(hwnd, controlID) == BST_CHECKED;
+
+      update_channels();
+
       InvalidateRect(hwnd, NULL, FALSE);
       break; }
     case IDC_YM2612_DEBUGGER_CS5: {
       selectedChannel = YM2612Channels::CHANNEL5;
+      enabled_channels[4] = IsDlgButtonChecked(hwnd, controlID) == BST_CHECKED;
+
+      update_channels();
+
       InvalidateRect(hwnd, NULL, FALSE);
       break; }
     case IDC_YM2612_DEBUGGER_CS6: {
       selectedChannel = YM2612Channels::CHANNEL6;
+      enabled_channels[5] = IsDlgButtonChecked(hwnd, controlID) == BST_CHECKED;
+
+      update_channels();
+
       InvalidateRect(hwnd, NULL, FALSE);
       break; }
 
@@ -1257,20 +1300,6 @@ static INT_PTR YM2612_msgWM_COMMAND(HWND hwnd, WPARAM wparam, LPARAM lparam)
       SetBlockDataChannel3(YM2612Operators::OPERATOR4, GetDlgItemHex(hwnd, LOWORD(wparam)));
       break; }
 
-                                         //Timers
-    case IDC_YM2612_DEBUGGER_TIMERA_RATE: {
-      SetTimerAData(GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_TIMERB_RATE: {
-      SetTimerBData(GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_TIMERA_DATA: {
-      SetTimerACurrentCounter(GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_TIMERB_DATA: {
-      SetTimerBCurrentCounter(GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-
                                         //LFO
     case IDC_YM2612_DEBUGGER_LFOFREQ: {
       SetLFOData(GetDlgItemHex(hwnd, LOWORD(wparam)));
@@ -1551,22 +1580,6 @@ static INT_PTR YM2612_Debugger_Update(HWND hwnd)
   CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_TIMERB_LOADED, (GetTimerBLoad()) ? BST_CHECKED : BST_UNCHECKED);
   CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_TIMERA_OVERFLOW, (GetTimerAOverflow()) ? BST_CHECKED : BST_UNCHECKED);
   CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_TIMERB_OVERFLOW, (GetTimerBOverflow()) ? BST_CHECKED : BST_UNCHECKED);
-  if (currentControlFocus != IDC_YM2612_DEBUGGER_TIMERA_RATE)
-  {
-    UpdateDlgItemHex(hwnd, IDC_YM2612_DEBUGGER_TIMERA_RATE, 3, GetTimerAData());
-  }
-  if (currentControlFocus != IDC_YM2612_DEBUGGER_TIMERB_RATE)
-  {
-    UpdateDlgItemHex(hwnd, IDC_YM2612_DEBUGGER_TIMERB_RATE, 2, GetTimerBData());
-  }
-  if (currentControlFocus != IDC_YM2612_DEBUGGER_TIMERA_DATA)
-  {
-    UpdateDlgItemHex(hwnd, IDC_YM2612_DEBUGGER_TIMERA_DATA, 3, GetTimerACurrentCounter());
-  }
-  if (currentControlFocus != IDC_YM2612_DEBUGGER_TIMERB_DATA)
-  {
-    UpdateDlgItemHex(hwnd, IDC_YM2612_DEBUGGER_TIMERB_DATA, 2, GetTimerBCurrentCounter());
-  }
 
   //LFO
   CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_LFOENABLED, (GetLFOEnabled()) ? BST_CHECKED : BST_UNCHECKED);
@@ -1644,28 +1657,6 @@ static INT_PTR YM2612_Debugger_Update(HWND hwnd)
   CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_KEY_4, (GetKeyState(YM2612Channels::CHANNEL4, YM2612Operators::OPERATOR1) && GetKeyState(YM2612Channels::CHANNEL4, YM2612Operators::OPERATOR2) && GetKeyState(YM2612Channels::CHANNEL4, YM2612Operators::OPERATOR3) && GetKeyState(YM2612Channels::CHANNEL4, YM2612Operators::OPERATOR4)) ? BST_CHECKED : BST_UNCHECKED);
   CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_KEY_5, (GetKeyState(YM2612Channels::CHANNEL5, YM2612Operators::OPERATOR1) && GetKeyState(YM2612Channels::CHANNEL5, YM2612Operators::OPERATOR2) && GetKeyState(YM2612Channels::CHANNEL5, YM2612Operators::OPERATOR3) && GetKeyState(YM2612Channels::CHANNEL5, YM2612Operators::OPERATOR4)) ? BST_CHECKED : BST_UNCHECKED);
   CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_KEY_6, (GetKeyState(YM2612Channels::CHANNEL6, YM2612Operators::OPERATOR1) && GetKeyState(YM2612Channels::CHANNEL6, YM2612Operators::OPERATOR2) && GetKeyState(YM2612Channels::CHANNEL6, YM2612Operators::OPERATOR3) && GetKeyState(YM2612Channels::CHANNEL6, YM2612Operators::OPERATOR4)) ? BST_CHECKED : BST_UNCHECKED);
-
-  //Update Registers
-  if (currentControlFocus != IDC_YM2612_REGISTERS_STATUS)
-  {
-    UpdateDlgItemHex(hwnd, IDC_YM2612_REGISTERS_STATUS, 2, YM2612.Status);
-  }
-
-  for (unsigned int i = 0; i <= 0xB7; ++i)
-  {
-    if (currentControlFocus != (IDC_YM2612_REGISTERS_00 + i))
-    {
-      UpdateDlgItemHex(hwnd, IDC_YM2612_REGISTERS_00 + i, 2, GetRegisterData(i));
-    }
-  }
-
-  for (unsigned int i = 0; i <= 0xB7; ++i)
-  {
-    if (currentControlFocus != (IDC_YM2612_REGISTERS_P2_00 + i))
-    {
-      UpdateDlgItemHex(hwnd, IDC_YM2612_REGISTERS_P2_00 + i, 2, GetRegisterData(registerCountPerPart + i));
-    }
-  }
 
   return TRUE;
 }
