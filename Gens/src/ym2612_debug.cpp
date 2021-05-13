@@ -4,6 +4,7 @@
 #include <sstream>
 #include <iomanip>
 
+#include "g_main.h"
 #include "ym2612.h"
 
 enum class YM2612Channels :unsigned int
@@ -270,8 +271,8 @@ static inline bool GetDACEnabled() {
   return GetBit(val, 7);
 }
 
-extern INLINE void KEY_ON(channel_ *CH, int nsl);
-extern INLINE void KEY_OFF(channel_ *CH, int nsl);
+extern "C" INLINE void KEY_ON(channel_ *CH, int nsl);
+extern "C" INLINE void KEY_OFF(channel_ *CH, int nsl);
 
 #define S0             0    // Stupid typo of the YM2612
 #define S1             2
@@ -314,6 +315,8 @@ static inline bool GetKeyState(YM2612Channels chn, YM2612Operators op) {
   case YM2612Operators::OPERATOR4: {
     return ch.SLOT[S3].Ecurp == RELEASE;
   } break;
+  default:
+    return false;
   }
 }
 
@@ -1285,7 +1288,7 @@ static INT_PTR YM2612_msgWM_COMMAND(HWND hwnd, WPARAM wparam, LPARAM lparam)
   return TRUE;
 }
 
-static INT_PTR YM2612_msgWM_TIMER(HWND hwnd, WPARAM wparam, LPARAM lparam)
+static INT_PTR YM2612_Debugger_Update(HWND hwnd)
 {
   YM2612Channels channelNo = selectedChannel;
 
@@ -1646,15 +1649,57 @@ static INT_PTR YM2612_msgWM_TIMER(HWND hwnd, WPARAM wparam, LPARAM lparam)
   return TRUE;
 }
 
-static INT_PTR YM2612WndProcDialog(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+void Update_YM2612_View()
 {
+  if (!YM2612DbgHWnd) return;
+
+  YM2612_Debugger_Update(YM2612DbgHWnd);
+}
+
+LRESULT CALLBACK YM2612WndProcDialog(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+{
+  RECT r, r2;
+  int dx1, dy1, dx2, dy2;
+
   WndProcDialogImplementSaveFieldWhenLostFocus(hwnd, msg, wparam, lparam);
   switch (msg)
   {
-  case WM_INITDIALOG:
+  case WM_INITDIALOG: {
+    YM2612DbgHWnd = hwnd;
+
+    GetWindowRect(HWnd, &r);
+    dx1 = (r.right - r.left) / 2;
+    dy1 = (r.bottom - r.top) / 2;
+
+    GetWindowRect(hwnd, &r2);
+    dx2 = (r2.right - r2.left) / 2;
+    dy2 = (r2.bottom - r2.top) / 2;
+
+    // push it away from the main window if we can
+    const int width = (r.right - r.left);
+    const int width2 = (r2.right - r2.left);
+    if (r.left + width2 + width < GetSystemMetrics(SM_CXSCREEN))
+    {
+      r.right += width;
+      r.left += width;
+    }
+    else if ((int)r.left - (int)width2 > 0)
+    {
+      r.right -= width2;
+      r.left -= width2;
+    }
+
+    SetWindowPos(hwnd, NULL, r.left, r.top, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER | SWP_SHOWWINDOW);
+
     return YM2612_msgWM_INITDIALOG(hwnd, wparam, lparam);
+  }
   case WM_COMMAND:
     return YM2612_msgWM_COMMAND(hwnd, wparam, lparam);
+  case WM_CLOSE:
+    DialogsOpen--;
+    YM2612DbgHWnd = NULL;
+    EndDialog(hwnd, true);
+    return TRUE;
   }
   return FALSE;
 }

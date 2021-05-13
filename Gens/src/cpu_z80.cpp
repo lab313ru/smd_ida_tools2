@@ -4,10 +4,11 @@
 
 extern "C" {
 #include "z80.h"
-#include "cpu_z80.h"
 #include "mem_m68k.h"
 #include "mem_z80.h"
 }
+
+#include "cpu_z80.h"
 
 static int bank_counter = 0;
 static int m68k_bank_base = 0;

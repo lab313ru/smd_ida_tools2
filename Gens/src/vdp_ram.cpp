@@ -1301,7 +1301,7 @@ LRESULT CALLBACK VDPRamProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
         SetParent(GetDlgItem(hDlg, IDC_VDP_PAL_DUMP), hPalGroup);
         SetParent(GetDlgItem(hDlg, IDC_VDP_PAL_LOAD), hPalGroup);
         SetParent(GetDlgItem(hDlg, IDC_VDP_PAL_YY), hPalGroup);
-		SetParent(GetDlgItem(hDlg, IDC_VDP_PAL_RNB), hPalGroup);
+        SetParent(GetDlgItem(hDlg, IDC_VDP_PAL_RNB), hPalGroup);
 
         SetWindowPos(hPalGroup, NULL,
             r.right + 5,

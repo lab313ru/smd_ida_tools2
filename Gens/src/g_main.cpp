@@ -111,6 +111,9 @@ HWND RamSearchHWnd = NULL; // modeless dialog
 HWND RamWatchHWnd = NULL; // modeless dialog
 HWND PlaneExplorerHWnd = NULL; // modeless dialog
 HWND VDPRamHWnd = NULL; // modeless dialog
+#ifdef DEBUG_Z80
+HWND YM2612DbgHWnd = NULL; // modeless dialog
+#endif
 HWND VDPSpritesHWnd = NULL; // modeless dialog
 HWND RamCheatHWnd = NULL; // modeless dialog
 std::vector<HWND> LuaScriptHWnds; // modeless dialogs
@@ -222,6 +225,9 @@ LRESULT CALLBACK RamSearchProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK RamWatchProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK HexEditorProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK VDPRamProc(HWND, UINT, WPARAM, LPARAM);
+#ifdef DEBUG_Z80
+LRESULT CALLBACK YM2612WndProcDialog(HWND, UINT, WPARAM, LPARAM);
+#endif
 LRESULT CALLBACK VDPSpritesProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK RamCheatProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK PromptSpliceFrameProc(HWND, UINT, WPARAM, LPARAM);
@@ -1997,6 +2003,9 @@ int PASCAL WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nC
     DestroyWindow(RamWatchHWnd); RamWatchHWnd = NULL; // modeless dialog
     DestroyWindow(PlaneExplorerHWnd); PlaneExplorerHWnd = NULL; // modeless dialog
     DestroyWindow(VDPRamHWnd); VDPRamHWnd = NULL; // modeless dialog
+#ifdef DEBUG_Z80
+    DestroyWindow(YM2612DbgHWnd); YM2612DbgHWnd = NULL; // modeless dialog
+#endif
     DestroyWindow(VDPSpritesHWnd); VDPSpritesHWnd = NULL; // modeless dialog
     DestroyWindow(RamCheatHWnd); RamCheatHWnd = NULL; // modeless dialog
 
@@ -2883,6 +2892,18 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             else
                 SetForegroundWindow(VDPRamHWnd);
             break;
+
+#ifdef DEBUG_Z80
+        case ID_YM2612_DEBUGGER:
+            if (!YM2612DbgHWnd)
+            {
+              YM2612DbgHWnd = CreateDialog(ghInstance, MAKEINTRESOURCE(IDD_YM2612_DEBUGGER), hWnd, (DLGPROC)YM2612WndProcDialog);
+              DialogsOpen++;
+            }
+            else
+                SetForegroundWindow(YM2612DbgHWnd);
+            break;
+#endif
 
         case ID_VDP_SPRITES:
             if (!VDPSpritesHWnd)
@@ -4328,6 +4349,9 @@ HMENU Build_Main_Menu(void)
     MENU_L(TAS_Tools, i++, Flags, ID_VDP_RAM, "VDP RAM");
     MENU_L(TAS_Tools, i++, Flags, ID_VDP_SPRITES, "VDP Sprites");
     MENU_L(TAS_Tools, i++, Flags, ID_PLANE_EXPLORER, "Plane Explorer");
+#ifdef DEBUG_Z80
+    MENU_L(TAS_Tools, i++, Flags, ID_YM2612_DEBUGGER, "YM2612 Debugger");
+#endif
 
     // MOVIES //
 

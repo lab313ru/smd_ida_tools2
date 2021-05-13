@@ -477,6 +477,7 @@
     <ClInclude Include="lua\src\lvm.h" />
     <ClInclude Include="lua\src\lzio.h" />
     <ClInclude Include="resource\resource.h" />
+    <ClInclude Include="ym2612_debug.h" />
     <ClInclude Include="zlib\crc32.h" />
     <ClInclude Include="zlib\deflate.h" />
     <ClInclude Include="zlib\gzguts.h" />

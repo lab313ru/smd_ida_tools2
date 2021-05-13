@@ -689,6 +689,7 @@
 #define IDC_PLANEEXPLORER_PLANE_B       54005
 #define IDC_PLANEEXPLORER_WINDOW        54006
 #define IDC_PLANEEXPLORER_SPRITES       54007
+#define ID_YM2612_DEBUGGER              55000
 
 #define IDC_EDIT4                       1324
 #define IDC_EDIT12                      1325

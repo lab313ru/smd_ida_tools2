@@ -563,6 +563,9 @@
       <Filter>debug</Filter>
     </ClInclude>
     <ClInclude Include="resource\resource.h" />
+    <ClInclude Include="ym2612_debug.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource\gens.rc">

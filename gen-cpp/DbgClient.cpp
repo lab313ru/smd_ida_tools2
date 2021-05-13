@@ -104,17 +104,17 @@ uint32_t DbgClient_pause_event_args::read(::apache::thrift::protocol::TProtocol*
         if (ftype == ::apache::thrift::protocol::T_MAP) {
           {
             this->changed.clear();
-            uint32_t _size39;
-            ::apache::thrift::protocol::TType _ktype40;
-            ::apache::thrift::protocol::TType _vtype41;
-            xfer += iprot->readMapBegin(_ktype40, _vtype41, _size39);
-            uint32_t _i43;
-            for (_i43 = 0; _i43 < _size39; ++_i43)
+            uint32_t _size48;
+            ::apache::thrift::protocol::TType _ktype49;
+            ::apache::thrift::protocol::TType _vtype50;
+            xfer += iprot->readMapBegin(_ktype49, _vtype50, _size48);
+            uint32_t _i52;
+            for (_i52 = 0; _i52 < _size48; ++_i52)
             {
-              int32_t _key44;
-              xfer += iprot->readI32(_key44);
-              int32_t& _val45 = this->changed[_key44];
-              xfer += iprot->readI32(_val45);
+              int32_t _key53;
+              xfer += iprot->readI32(_key53);
+              int32_t& _val54 = this->changed[_key53];
+              xfer += iprot->readI32(_val54);
             }
             xfer += iprot->readMapEnd();
           }
@@ -147,11 +147,11 @@ uint32_t DbgClient_pause_event_args::write(::apache::thrift::protocol::TProtocol
   xfer += oprot->writeFieldBegin("changed", ::apache::thrift::protocol::T_MAP, 2);
   {
     xfer += oprot->writeMapBegin(::apache::thrift::protocol::T_I32, ::apache::thrift::protocol::T_I32, static_cast<uint32_t>(this->changed.size()));
-    std::map<int32_t, int32_t> ::const_iterator _iter46;
-    for (_iter46 = this->changed.begin(); _iter46 != this->changed.end(); ++_iter46)
+    std::map<int32_t, int32_t> ::const_iterator _iter55;
+    for (_iter55 = this->changed.begin(); _iter55 != this->changed.end(); ++_iter55)
     {
-      xfer += oprot->writeI32(_iter46->first);
-      xfer += oprot->writeI32(_iter46->second);
+      xfer += oprot->writeI32(_iter55->first);
+      xfer += oprot->writeI32(_iter55->second);
     }
     xfer += oprot->writeMapEnd();
   }
@@ -179,11 +179,11 @@ uint32_t DbgClient_pause_event_pargs::write(::apache::thrift::protocol::TProtoco
   xfer += oprot->writeFieldBegin("changed", ::apache::thrift::protocol::T_MAP, 2);
   {
     xfer += oprot->writeMapBegin(::apache::thrift::protocol::T_I32, ::apache::thrift::protocol::T_I32, static_cast<uint32_t>((*(this->changed)).size()));
-    std::map<int32_t, int32_t> ::const_iterator _iter47;
-    for (_iter47 = (*(this->changed)).begin(); _iter47 != (*(this->changed)).end(); ++_iter47)
+    std::map<int32_t, int32_t> ::const_iterator _iter56;
+    for (_iter56 = (*(this->changed)).begin(); _iter56 != (*(this->changed)).end(); ++_iter56)
     {
-      xfer += oprot->writeI32(_iter47->first);
-      xfer += oprot->writeI32(_iter47->second);
+      xfer += oprot->writeI32(_iter56->first);
+      xfer += oprot->writeI32(_iter56->second);
     }
     xfer += oprot->writeMapEnd();
   }
@@ -224,17 +224,17 @@ uint32_t DbgClient_stop_event_args::read(::apache::thrift::protocol::TProtocol* 
         if (ftype == ::apache::thrift::protocol::T_MAP) {
           {
             this->changed.clear();
-            uint32_t _size48;
-            ::apache::thrift::protocol::TType _ktype49;
-            ::apache::thrift::protocol::TType _vtype50;
-            xfer += iprot->readMapBegin(_ktype49, _vtype50, _size48);
-            uint32_t _i52;
-            for (_i52 = 0; _i52 < _size48; ++_i52)
+            uint32_t _size57;
+            ::apache::thrift::protocol::TType _ktype58;
+            ::apache::thrift::protocol::TType _vtype59;
+            xfer += iprot->readMapBegin(_ktype58, _vtype59, _size57);
+            uint32_t _i61;
+            for (_i61 = 0; _i61 < _size57; ++_i61)
             {
-              int32_t _key53;
-              xfer += iprot->readI32(_key53);
-              int32_t& _val54 = this->changed[_key53];
-              xfer += iprot->readI32(_val54);
+              int32_t _key62;
+              xfer += iprot->readI32(_key62);
+              int32_t& _val63 = this->changed[_key62];
+              xfer += iprot->readI32(_val63);
             }
             xfer += iprot->readMapEnd();
           }
@@ -263,11 +263,11 @@ uint32_t DbgClient_stop_event_args::write(::apache::thrift::protocol::TProtocol*
   xfer += oprot->writeFieldBegin("changed", ::apache::thrift::protocol::T_MAP, 1);
   {
     xfer += oprot->writeMapBegin(::apache::thrift::protocol::T_I32, ::apache::thrift::protocol::T_I32, static_cast<uint32_t>(this->changed.size()));
-    std::map<int32_t, int32_t> ::const_iterator _iter55;
-    for (_iter55 = this->changed.begin(); _iter55 != this->changed.end(); ++_iter55)
+    std::map<int32_t, int32_t> ::const_iterator _iter64;
+    for (_iter64 = this->changed.begin(); _iter64 != this->changed.end(); ++_iter64)
     {
-      xfer += oprot->writeI32(_iter55->first);
-      xfer += oprot->writeI32(_iter55->second);
+      xfer += oprot->writeI32(_iter64->first);
+      xfer += oprot->writeI32(_iter64->second);
     }
     xfer += oprot->writeMapEnd();
   }
@@ -291,11 +291,11 @@ uint32_t DbgClient_stop_event_pargs::write(::apache::thrift::protocol::TProtocol
   xfer += oprot->writeFieldBegin("changed", ::apache::thrift::protocol::T_MAP, 1);
   {
     xfer += oprot->writeMapBegin(::apache::thrift::protocol::T_I32, ::apache::thrift::protocol::T_I32, static_cast<uint32_t>((*(this->changed)).size()));
-    std::map<int32_t, int32_t> ::const_iterator _iter56;
-    for (_iter56 = (*(this->changed)).begin(); _iter56 != (*(this->changed)).end(); ++_iter56)
+    std::map<int32_t, int32_t> ::const_iterator _iter65;
+    for (_iter65 = (*(this->changed)).begin(); _iter65 != (*(this->changed)).end(); ++_iter65)
     {
-      xfer += oprot->writeI32(_iter56->first);
-      xfer += oprot->writeI32(_iter56->second);
+      xfer += oprot->writeI32(_iter65->first);
+      xfer += oprot->writeI32(_iter65->second);
     }
     xfer += oprot->writeMapEnd();
   }

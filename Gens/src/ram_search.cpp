@@ -39,6 +39,9 @@
 #include "g_dsound.h"
 #include "ramwatch.h"
 #include "vdp_ram.h"
+#ifdef DEBUG_Z80
+#include "ym2612_debug.h"
+#endif
 #include "plane_explorer_kmod.h"
 #include "vdp_sprites.h"
 #include "luascript.h"
@@ -1318,6 +1321,9 @@ void Update_RAM_Search() //keeps RAM values up to date in the search and watch w
             HexUpdateDialog(HexEditors[i]);
 
     Redraw_VDP_View();
+#ifdef DEBUG_Z80
+    Update_YM2612_View();
+#endif
     Update_Plane_Explorer();
     UpdateSprites_KMod();
 }

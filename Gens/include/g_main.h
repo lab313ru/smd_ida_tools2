@@ -21,6 +21,9 @@ extern "C" {
     extern HWND RamSearchHWnd;
     extern HWND PlaneExplorerHWnd;
     extern HWND VDPRamHWnd;
+#ifdef DEBUG_Z80
+    extern HWND YM2612DbgHWnd;
+#endif
     extern HWND VDPSpritesHWnd;
     extern HMENU Gens_Menu;
     extern HMENU Context_Menu;
