@@ -15,6 +15,9 @@
 *.ipch
 *.aps
 *.recipe
+*.ilk
+*.gs?
+*.cfg
 *.vcxproj.FileListAbsolute.txt
 DbgClient_server.skeleton.cpp
 DbgServer_server.skeleton.cpp
