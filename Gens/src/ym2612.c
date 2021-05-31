@@ -362,6 +362,7 @@ int SLOT_SET(int adr, unsigned char data)
     channel_ *CH;
     slot_ *SL;
     int nch, nsl;
+    int enabled_chn = 1;
 
     if ((nch = adr & 3) == 3) return 1;
     nsl = (adr >> 2) & 3;
@@ -449,7 +450,11 @@ int SLOT_SET(int adr, unsigned char data)
         case 0x80:
             SL->SLL = SL_TAB[data >> 4];
 
-            SL->RR = &DR_TAB[((enabled_channels[nch] ? (data & 0xF) : 0x0F) << 2) + 2];
+#ifdef DEBUG_Z80
+            enabled_chn = enabled_channels[nch];
+#endif
+
+            SL->RR = &DR_TAB[((enabled_chn ? (data & 0xF) : 0x0F) << 2) + 2];
 
             SL->EincR = SL->RR[SL->KSR];
             if ((SL->Ecurp == RELEASE) && (SL->Ecnt < ENV_END)) SL->Einc = SL->EincR;
@@ -653,6 +658,7 @@ int YM_SET(int adr, unsigned char data)
 {
     channel_ *CH;
     int nch;
+    int enabled_chn = 1;
 
     switch(adr)
     {
@@ -759,13 +765,17 @@ int YM_SET(int adr, unsigned char data)
 
             YM2612_Special_Update();
 
-            if (enabled_channels[nch] && (data & 0x10)) KEY_ON(CH, S0);    // On appuie sur la touche pour le slot 1
+#ifdef DEBUG_Z80
+            enabled_chn = enabled_channels[nch];
+#endif
+
+            if (enabled_chn && (data & 0x10)) KEY_ON(CH, S0);    // On appuie sur la touche pour le slot 1
             else KEY_OFF(CH, S0);               // On relâche la touche pour le slot 1
-            if (enabled_channels[nch] && (data & 0x20)) KEY_ON(CH, S1);    // On appuie sur la touche pour le slot 3
+            if (enabled_chn && (data & 0x20)) KEY_ON(CH, S1);    // On appuie sur la touche pour le slot 3
             else KEY_OFF(CH, S1);               // On relâche la touche pour le slot 3
-            if (enabled_channels[nch] && (data & 0x40)) KEY_ON(CH, S2);    // On appuie sur la touche pour le slot 2
+            if (enabled_chn && (data & 0x40)) KEY_ON(CH, S2);    // On appuie sur la touche pour le slot 2
             else KEY_OFF(CH, S2);               // On relâche la touche pour le slot 2
-            if (enabled_channels[nch] && (data & 0x80)) KEY_ON(CH, S3);    // On appuie sur la touche pour le slot 4
+            if (enabled_chn && (data & 0x80)) KEY_ON(CH, S3);    // On appuie sur la touche pour le slot 4
             else KEY_OFF(CH, S3);               // On relâche la touche pour le slot 4
 
 #if YM_DEBUG_LEVEL > 0
