@@ -112,6 +112,9 @@
       <AdditionalLibraryDirectories>d:\idasdk76\lib\x64_win_vc_32\;$(SolutionDir)\thrift\;$(SolutionDir)\libevent\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>ida.lib;thriftd_64.lib;thriftnbd_64.lib;event_64.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>"$(SolutionDir)thrift.exe" --gen cpp -o "$(SolutionDir.TrimEnd('\'))" "$(SolutionDir)thrift\debug_proto_68k.thrift"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug7_z80|x64'">
     <ClCompile>
@@ -132,6 +135,9 @@
       <AdditionalLibraryDirectories>d:\idasdk76\lib\x64_win_vc_32\;$(SolutionDir)\thrift\;$(SolutionDir)\libevent\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>ida.lib;thriftd_64.lib;thriftnbd_64.lib;event_64.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>"$(SolutionDir)thrift.exe" --gen cpp -o "$(SolutionDir.TrimEnd('\'))" "$(SolutionDir)thrift\debug_proto_z80.thrift"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release7_68k|x64'">
     <ClCompile>
@@ -155,6 +161,9 @@
       <AdditionalLibraryDirectories>d:\idasdk76\lib\x64_win_vc_32\;$(SolutionDir)\thrift\;$(SolutionDir)\libevent\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>ida.lib;thrift_64.lib;thriftnb_64.lib;event_64.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>"$(SolutionDir)thrift.exe" --gen cpp -o "$(SolutionDir.TrimEnd('\'))" "$(SolutionDir)thrift\debug_proto_68k.thrift"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release7_z80|x64'">
     <ClCompile>
@@ -178,6 +187,9 @@
       <AdditionalLibraryDirectories>d:\idasdk76\lib\x64_win_vc_32\;$(SolutionDir)\thrift\;$(SolutionDir)\libevent\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>ida.lib;thrift_64.lib;thriftnb_64.lib;event_64.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>"$(SolutionDir)thrift.exe" --gen cpp -o "$(SolutionDir.TrimEnd('\'))" "$(SolutionDir)thrift\debug_proto_z80.thrift"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\gen-cpp\DbgClient.cpp" />

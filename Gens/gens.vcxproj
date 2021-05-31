@@ -108,6 +108,9 @@
       <AdditionalDependencies>winmm.lib;comctl32.lib;libs\lua51.lib;libs\dx7\ddraw.lib;libs\dx7\dinput.lib;libs\dx7\dsound.lib;libs\dx7\dxguid.lib;thriftd_32.lib;thriftnbd_32.lib;event_32.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)\thrift\;$(SolutionDir)\libevent\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <PreBuildEvent>
+      <Command>"$(SolutionDir)thrift.exe" --gen cpp -o "$(SolutionDir.TrimEnd('\'))" "$(SolutionDir)thrift\debug_proto_68k.thrift"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug7_z80|Win32'">
     <ClCompile>
@@ -128,6 +131,9 @@
       <AdditionalDependencies>winmm.lib;comctl32.lib;libs\lua51.lib;libs\dx7\ddraw.lib;libs\dx7\dinput.lib;libs\dx7\dsound.lib;libs\dx7\dxguid.lib;thriftd_32.lib;thriftnbd_32.lib;event_32.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)\thrift\;$(SolutionDir)\libevent\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <PreBuildEvent>
+      <Command>"$(SolutionDir)thrift.exe" --gen cpp -o "$(SolutionDir.TrimEnd('\'))" "$(SolutionDir)thrift\debug_proto_z80.thrift"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release7_68k|Win32'">
     <ClCompile>
@@ -151,6 +157,9 @@
       <AdditionalDependencies>winmm.lib;comctl32.lib;libs\lua51.lib;libs\dx7\ddraw.lib;libs\dx7\dinput.lib;libs\dx7\dsound.lib;libs\dx7\dxguid.lib;thrift_32.lib;thriftnb_32.lib;event_32.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)\thrift\;$(SolutionDir)\libevent\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <PreBuildEvent>
+      <Command>"$(SolutionDir)thrift.exe" --gen cpp -o "$(SolutionDir.TrimEnd('\'))" "$(SolutionDir)thrift\debug_proto_68k.thrift"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release7_z80|Win32'">
     <ClCompile>
@@ -174,6 +183,9 @@
       <AdditionalDependencies>winmm.lib;comctl32.lib;libs\lua51.lib;libs\dx7\ddraw.lib;libs\dx7\dinput.lib;libs\dx7\dsound.lib;libs\dx7\dxguid.lib;thrift_32.lib;thriftnb_32.lib;event_32.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)\thrift\;$(SolutionDir)\libevent\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <PreBuildEvent>
+      <Command>"$(SolutionDir)thrift.exe" --gen cpp -o "$(SolutionDir.TrimEnd('\'))" "$(SolutionDir)thrift\debug_proto_z80.thrift"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <CustomBuild Include="asm\blit.asm">
