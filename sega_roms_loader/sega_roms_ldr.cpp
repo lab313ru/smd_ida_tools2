@@ -334,7 +334,7 @@ static void idaapi load_file(linput_t* li, ushort neflags, const char* fileforma
     if (qlread(li, &_vect, sizeof(_vect)) != sizeof(_vect)) loader_failure(); // trying to read rom vectors
     if (qlread(li, &_hdr, sizeof(_hdr)) != sizeof(_hdr)) loader_failure(); // trying to read rom's header
 
-    file2base(li, 0, 0x0000000, size, FILEREG_NOTPATCHABLE); // load rom to database
+    file2base(li, 0, 0x0000000, size, FILEREG_PATCHABLE); // load rom to database
 
     make_segments(size); // create ROM, RAM, Z80 RAM and etc. segments
     get_vector_addrs(&_vect); // convert addresses of vectors from LE to BE

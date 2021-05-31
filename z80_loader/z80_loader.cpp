@@ -260,7 +260,7 @@ void idaapi load_file(linput_t *li, ushort neflags, const char *fileformatname)
 
 	qlseek(li, 0, SEEK_SET);
 	if (size > 0x2000) loader_failure();
-	file2base(li, 0, 0x0000, size, FILEREG_NOTPATCHABLE); // load driver to database
+	file2base(li, 0, 0x0000, size, FILEREG_PATCHABLE); // load driver to database
 
 	make_segments(); // create segments
 	set_spec_register_names(); // apply names for special addresses of registers
