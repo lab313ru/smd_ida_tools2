@@ -66,6 +66,14 @@ import re
 import os
 
 
+def remove_globals(text):
+    r = re.compile(r'^[ \t]+global[ \t]+\w+$', re.MULTILINE)
+
+    text, n = r.subn(r'', text)
+
+    return text
+
+
 def collect_structs(text):
     structs = dict()
 
@@ -83,8 +91,8 @@ def collect_structs(text):
 def apply_structs(structs_path, text, structs):
     r = re.compile(r'^\w+:(?:[ \t]+)?(.*)[ \t]+(?:(?:(\d+)[ \t]+dup\(\?\))|(?:\?.*))')
 
-    with open(structs_path, 'wb') as w:
-        for ss in sorted(structs.iterkeys()):
+    with open(structs_path, 'w') as w:
+        for ss in sorted(structs.keys()):
             pp = ','.join('p' + str(i) for i, _ in enumerate(structs[ss]))
             w.write('%s macro %s\n' % (ss, pp))
 
@@ -362,7 +370,7 @@ def parse_struct(bin_data, struct_name, structs, equs):
         if p != -1:
             sizes.append(struct_field[p+3:p+4])
         else:
-            print 'Cannot use struct in struct!'
+            print('Cannot use struct in struct!')
 
     data = parse_array(bin_data, sizes, equs)
 
@@ -398,7 +406,7 @@ def apply_bin(text, structs, equs):
             mkdir_p(dd)
 
             fname = m[0]
-            with open(fname, 'wb') as w:
+            with open(fname, 'w') as w:
                 lines = m[2].splitlines()
 
                 data = ''
@@ -414,11 +422,11 @@ def apply_bin(text, structs, equs):
                         data += parse_struct(bin_data, size_or_name, structs, equs)
                 w.write(data)
 
-                print 'Saved bin-file: "%s"' % fname
+                print('Saved bin-file: "%s"' % fname)
 
             if m[3] != '':  # EXEC
                 cmd = (m[3] % fname) if m[3].find('%s') != -1 else m[3]
-                print 'Executing command "%s"' % cmd
+                print('Executing command "%s"' % cmd)
                 os.system(cmd)
 
         text, n = r.subn(r'\g<2>\n    binclude "\g<1>"\n    align 2', text)
@@ -454,10 +462,10 @@ def apply_inc(text):
             mkdir_p(dd)
 
             fname = m[0]
-            with open(fname, 'wb') as w:
+            with open(fname, 'w') as w:
                 w.write('\t' + m[2])
 
-                print 'Saved inc-file: "%s"' % fname
+                print('Saved inc-file: "%s"' % fname)
 
         text, n = r.subn(r'\g<2>:\n    include "\g<1>"\n    align 2', text)
 
@@ -485,9 +493,11 @@ def apply_org(text):
 
 
 def main1(path):
-    with open(path, 'rb') as f:
+    with open(path, 'r') as f:
         text = f.read()
         text = text.replace('\r\n', '\n')
+
+        text = remove_globals(text)
 
         structs = collect_structs(text)
         equs = collect_equs(text)
@@ -502,16 +512,16 @@ def main1(path):
         text = apply_structs(structs_path, text, structs)
 
         equals_path = pre + '_equals.inc'
-        with open(equals_path, 'wb') as w:
-            for equ in sorted(equs.iterkeys()):
+        with open(equals_path, 'w') as w:
+            for equ in sorted(equs.keys()):
                 w.write('%s: equ %s\n' % (equ, equs[equ]))
 
         externs_path = pre + '_externs.inc'
-        with open(externs_path, 'wb') as w:
-            for x in sorted(externs.iterkeys()):
+        with open(externs_path, 'w') as w:
+            for x in sorted(externs.keys()):
                 w.write('%s: equ $%06X\n' % (x, externs[x]))
 
-        with open(path.replace('.asm', '.s'), 'wb') as w:
+        with open(path.replace('.asm', '.s'), 'w') as w:
             w.write('    cpu 68000\n')
             w.write('    supmode on\n')
             w.write('    padding off\n')
@@ -533,7 +543,7 @@ def main1(path):
             text = fix_struct_start_end(text, structs)
             text = remove_ida_comments(text)
 
-            with open('temp.asm', 'wb') as ww:
+            with open('temp.asm', 'w') as ww:
                 ww.write(text)
 
             text = apply_del(text)
@@ -550,7 +560,7 @@ def main1(path):
 
 
 def main2(path):
-    with open(path, 'rb') as f:
+    with open(path, 'r') as f:
         text = f.read()
 
         rams = collect_rams(text)
@@ -558,8 +568,8 @@ def main2(path):
         pre, ext = os.path.splitext(path)
         rams_path = pre + '_rams.inc'
 
-        with open(rams_path, 'wb') as w:
-            for addr in sorted(rams.iterkeys()):
+        with open(rams_path, 'w') as w:
+            for addr in sorted(rams.keys()):
                 w.write('%s: equ $%s\n' % (rams[addr], addr[2:]))
 
 
@@ -569,7 +579,7 @@ def main3(path):
     funcs_path = pre + '_funcs.inc'
 
     if not os.path.exists(funcs_path):
-        with open(funcs_path, 'wb') as w:
+        with open(funcs_path, 'w') as w:
             w.write('\n')
 
 
