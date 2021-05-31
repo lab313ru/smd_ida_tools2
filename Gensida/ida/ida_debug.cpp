@@ -344,7 +344,7 @@ static void init_emu_client() {
 static drc_t idaapi init_debugger(const char* hostname, int portnum, const char* password, qstring *errbuf)
 {
 #ifdef DEBUG_68K
-    set_processor_type(ph.psnames[0], SETPROC_LOADER); // reset proc to "M68000"
+    set_processor_type("68020", SETPROC_LOADER); // reset proc to "M68020"
 #endif
     return DRC_OK;
 }

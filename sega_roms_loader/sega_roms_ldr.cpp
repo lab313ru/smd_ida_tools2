@@ -296,7 +296,7 @@ if (!strneq((const char *)(_hdr.CopyRights), "SEGA", 4)) return 0;
 static void idaapi load_file(linput_t* li, ushort neflags, const char* fileformatname)
 {
     if (ph.id != PLFM_68K) {
-        set_processor_type("68000", SETPROC_LOADER); // Motorola 68000
+        set_processor_type("68020", SETPROC_LOADER); // Motorola 68020
         set_target_assembler(0);
     }
 
