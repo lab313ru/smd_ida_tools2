@@ -307,7 +307,7 @@ struct m68k_events_visitor_t : public post_event_visitor_t
             op.addr &= 0xFFFFFF;
           }
 
-          if ((op.addr & 0xE00000) == 0xE00000) { // RAM mirrors
+          if ((op.addr & 0xFFE00000) == 0xE00000) { // RAM mirrors
             op.addr |= 0x1F0000;
           }
 
@@ -316,7 +316,7 @@ struct m68k_events_visitor_t : public post_event_visitor_t
             op.addr &= 0xC000FF;
           }
 
-          if (out->itype == 0x75 && op.n == 0 && op.phrase == 9 && (op.addr & 0xFF0000) == 0xFF0000) {
+          if (out->itype == 0x75 && op.n == 0 && op.phrase == 9 && (op.addr & 0xFFFF0000) == 0xFF0000) {
             op.type = o_mem;
             //op.specflag1 = 1;
           }
