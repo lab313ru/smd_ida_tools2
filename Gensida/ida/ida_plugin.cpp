@@ -303,25 +303,27 @@ struct m68k_events_visitor_t : public post_event_visitor_t
         case o_near:
         case o_mem:
         {
-          op.addr &= 0xFFFFFF; // for any mirrors
+          if (op.addr >= 0xFFFF0000 && op.addr <= 0xFFFFFFFF) {
+            op.addr &= 0xFFFFFF;
+          }
 
-          if ((op.addr & 0xE00000) == 0xE00000) // RAM mirrors
+          if ((op.addr & 0xE00000) == 0xE00000) { // RAM mirrors
             op.addr |= 0x1F0000;
+          }
 
           if ((op.addr >= 0xC00000 && op.addr <= 0xC0001F) ||
-            (op.addr >= 0xC00020 && op.addr <= 0xC0003F)) // VDP mirrors
+            (op.addr >= 0xC00020 && op.addr <= 0xC0003F)) { // VDP mirrors
             op.addr &= 0xC000FF;
+          }
 
-          if (out->itype == 0x75 && op.n == 0 && op.phrase == 9 && (op.addr & 0xFFFF0000) == 0xFF0000)
-          {
+          if (out->itype == 0x75 && op.n == 0 && op.phrase == 9 && (op.addr & 0xFF0000) == 0xFF0000) {
             op.type = o_mem;
             //op.specflag1 = 1;
           }
           else if ((out->itype == 0x76 || out->itype == 0x75 || out->itype == 0x74) && op.n == 0 &&
             (op.phrase == 0x09 || op.phrase == 0x0A) &&
             (op.addr != 0 && op.addr <= 0xA00000) &&
-            op.specflag1 == 2) // lea table(pc),Ax; jsr func(pc); jmp label(pc)
-          {
+            op.specflag1 == 2) { // lea table(pc),Ax; jsr func(pc); jmp label(pc)
             short diff = op.addr - out->ea;
             if (diff >= SHRT_MIN && diff <= SHRT_MAX)
             {
@@ -545,7 +547,9 @@ struct m68k_events_visitor_t : public post_event_visitor_t
         } break;
         }
 
-        opinf->ea &= 0xFFFFFF;
+        if (opinf->ea >= 0xFFFF0000 && opinf->ea <= 0xFFFFFFFF) {
+          opinf->ea &= 0xFFFFFF;
+        }
 
         return 1;
       }
