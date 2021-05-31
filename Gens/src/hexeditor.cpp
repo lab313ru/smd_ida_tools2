@@ -148,6 +148,12 @@ void HexUpdateDialog(HexParams *Hex, bool ClearBG) {
         InvalidateRect(Hex->Hwnd, NULL, FALSE);
 }
 
+void HexDialog_Updater() {
+  for (auto i = HexEditors.cbegin(); i != HexEditors.cend(); ++i) {
+    HexUpdateDialog(*i);
+  }
+}
+
 void HexUpdateCommon(HexParams *Hex) {
     RECT r;
     if (!IsIconic(Hex->Hwnd)) {

@@ -67,4 +67,6 @@ void WatchPointM68K(UINT Start, UINT Size);
 extern std::vector<HexParams *> HexEditors;
 extern HexParams HexCommon;
 
+void HexDialog_Updater();
+
 #endif

@@ -1311,15 +1311,8 @@ void Update_RAM_Search() //keeps RAM values up to date in the search and watch w
         }
     }
 
-    if (RamWatchHWnd)
-    {
-        Update_RAM_Watch();
-    }
-
-    if (!HexEditors.empty())
-        for (UINT i = 0; i < HexEditors.size(); i++)
-            HexUpdateDialog(HexEditors[i]);
-
+    Update_RAM_Watch();
+    HexDialog_Updater();
     Redraw_VDP_View();
 #ifdef DEBUG_Z80
     Update_YM2612_View();

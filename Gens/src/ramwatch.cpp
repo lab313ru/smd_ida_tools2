@@ -193,6 +193,10 @@ bool InsertWatch(const AddressWatcher& Watch, HWND parent)
 
 void Update_RAM_Watch()
 {
+    if (!RamWatchHWnd) {
+      return;
+    }
+
     // update cached values and detect changes to displayed listview items
     BOOL watchChanged[MAX_WATCH_COUNT] = { 0 };
     for (int i = 0; i < WatchCount; i++)
