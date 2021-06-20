@@ -1,0 +1,151 @@
+syntax = "proto3";
+
+package idadebug;
+
+import "google/protobuf/empty.proto";
+
+enum GpRegsEnum {
+  AF = 0;
+  AF2 = 1;
+  BC = 2;
+  BC2 = 3;
+  DE = 4;
+  DE2 = 5;
+  HL = 6;
+  HL2 = 7;
+
+  IX = 8;
+  IY = 9;
+  I = 10;
+  R = 11;
+  PC = 12;
+
+  SP = 13;
+  IP = 14;
+
+  BANK = 15;
+}
+
+message GpReg {
+  GpRegsEnum reg = 1;
+}
+
+message GpRegs {
+  uint32 AF = 1;
+  uint32 AF2 = 2;
+  uint32 BC = 3;
+  uint32 BC2 = 4;
+  uint32 DE = 5;
+  uint32 DE2 = 6;
+  uint32 HL = 7;
+  uint32 HL2 = 8;
+
+  uint32 IX = 9;
+  uint32 IY = 10;
+  uint32 I = 11;
+  uint32 R = 12;
+  uint32 PC = 13;
+
+  uint32 SP = 14;
+  uint32 IP = 15;
+
+  uint32 BANK = 16;
+}
+
+message GpRegValue {
+  GpRegsEnum index = 1;
+  uint32 value = 2;
+}
+
+message MemoryAS {
+  uint32 address = 1;
+  uint32 size = 2;
+}
+
+message MemoryAD {
+  uint32 address = 1;
+  bytes data = 2;
+}
+
+enum BpType {
+  DUMMY = 0;
+  BP_PC = 1;
+  BP_READ = 2;
+  BP_WRITE = 3;
+}
+
+message DbgBreakpoint {
+  BpType type = 1;
+  uint32 bstart = 2;
+  uint32 bend = 3;
+  bool enabled = 4;
+  bool is_forbid = 5;
+}
+
+message DbgBreakpoints {
+  repeated DbgBreakpoint list = 1;
+}
+
+message Callstack {
+  repeated uint32 callstack = 1;
+}
+
+message AnyRegValue {
+  uint32 value = 1;
+}
+
+message MemData {
+  bytes data = 1;
+}
+
+message SoundBankRange {
+  uint32 bank_min = 1;
+  uint32 bank_max = 2;
+}
+
+message SoundBankMap {
+  map<uint32, SoundBankRange> range = 1;
+}
+
+service DbgServer {
+
+  rpc get_gp_reg(GpReg) returns (AnyRegValue) {}
+  rpc get_gp_regs(google.protobuf.Empty) returns (GpRegs) {}
+  rpc set_gp_reg(GpRegValue) returns (google.protobuf.Empty) {}
+
+  rpc read_memory(MemoryAS) returns (MemData) {}
+  rpc write_memory(MemoryAD) returns (google.protobuf.Empty) {}
+
+  rpc get_breakpoints(google.protobuf.Empty) returns (DbgBreakpoints) {}
+  rpc add_breakpoint(DbgBreakpoint) returns (google.protobuf.Empty) {}
+  rpc toggle_breakpoint(DbgBreakpoint) returns (google.protobuf.Empty) {}
+  rpc update_breakpoint(DbgBreakpoint) returns (google.protobuf.Empty) {}
+  rpc del_breakpoint(DbgBreakpoint) returns (google.protobuf.Empty) {}
+  rpc clear_breakpoints(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  rpc pause(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc resume(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc start_emulation(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc exit_emulation(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  rpc step_into(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc step_over(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  rpc get_callstack(google.protobuf.Empty) returns (Callstack) {}
+  rpc get_sound_banks(google.protobuf.Empty) returns (SoundBankMap) {}
+}
+
+message PauseChanged {
+  uint32 address = 1;
+  map<uint32, uint32> changed = 2;
+}
+
+message Changed {
+  map<uint32, uint32> changed = 1;
+}
+
+service DbgClient {
+  rpc start_event(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc pause_event(PauseChanged) returns (google.protobuf.Empty) {}
+  rpc stop_event(Changed) returns (google.protobuf.Empty) {}
+}
