@@ -25,12 +25,14 @@ using idadebug::GpRegsEnum;
 using idadebug::GpReg;
 using idadebug::GpRegValue;
 using idadebug::GpRegs;
+#ifdef DEBUG_68K
 using idadebug::VdpRegsEnum;
 using idadebug::VdpReg;
 using idadebug::VdpRegValue;
 using idadebug::VdpRegs;
-using idadebug::Changed;
 using idadebug::DmaInfo;
+#endif
+using idadebug::Changed;
 using idadebug::MemData;
 using idadebug::MemoryAS;
 using idadebug::MemoryAD;
@@ -363,6 +365,7 @@ public:
     return true;
   }
 
+#ifdef DEBUG_68K
   bool get_vdp_reg(VdpRegsEnum index, uint8_t* _return) {
     VdpReg reg;
     reg.set_reg(index);
@@ -428,6 +431,7 @@ public:
 
     return true;
   }
+#endif
 
   bool read_memory(uint32_t address, uint32_t size, uint8_t* _result) {
     MemoryAS req;
