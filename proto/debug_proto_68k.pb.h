@@ -147,22 +147,22 @@ enum GpRegsEnum : int {
   D6 = 6,
   D7 = 7,
   A0 = 8,
-  A1 = 9,
-  A2 = 10,
-  A3 = 11,
-  A4 = 12,
-  A5 = 13,
-  A6 = 14,
-  A7 = 15,
-  PC = 16,
-  SR = 17,
-  SP = 18,
+  A1 = 10,
+  A2 = 12,
+  A3 = 14,
+  A4 = 16,
+  A5 = 18,
+  A6 = 20,
+  A7 = 22,
+  PC = 24,
+  SP = 26,
+  SR = 28,
   GpRegsEnum_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::min(),
   GpRegsEnum_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::max()
 };
 bool GpRegsEnum_IsValid(int value);
 constexpr GpRegsEnum GpRegsEnum_MIN = D0;
-constexpr GpRegsEnum GpRegsEnum_MAX = SP;
+constexpr GpRegsEnum GpRegsEnum_MAX = SR;
 constexpr int GpRegsEnum_ARRAYSIZE = GpRegsEnum_MAX + 1;
 
 const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* GpRegsEnum_descriptor();
@@ -522,8 +522,8 @@ class GpRegs PROTOBUF_FINAL :
     kA6FieldNumber = 15,
     kA7FieldNumber = 16,
     kPCFieldNumber = 17,
-    kSRFieldNumber = 18,
-    kSPFieldNumber = 19,
+    kSPFieldNumber = 18,
+    kSRFieldNumber = 19,
   };
   // uint32 D0 = 1;
   void clear_d0();
@@ -678,22 +678,22 @@ class GpRegs PROTOBUF_FINAL :
   void _internal_set_pc(::PROTOBUF_NAMESPACE_ID::uint32 value);
   public:
 
-  // uint32 SR = 18;
-  void clear_sr();
-  ::PROTOBUF_NAMESPACE_ID::uint32 sr() const;
-  void set_sr(::PROTOBUF_NAMESPACE_ID::uint32 value);
-  private:
-  ::PROTOBUF_NAMESPACE_ID::uint32 _internal_sr() const;
-  void _internal_set_sr(::PROTOBUF_NAMESPACE_ID::uint32 value);
-  public:
-
-  // uint32 SP = 19;
+  // uint32 SP = 18;
   void clear_sp();
   ::PROTOBUF_NAMESPACE_ID::uint32 sp() const;
   void set_sp(::PROTOBUF_NAMESPACE_ID::uint32 value);
   private:
   ::PROTOBUF_NAMESPACE_ID::uint32 _internal_sp() const;
   void _internal_set_sp(::PROTOBUF_NAMESPACE_ID::uint32 value);
+  public:
+
+  // uint32 SR = 19;
+  void clear_sr();
+  ::PROTOBUF_NAMESPACE_ID::uint32 sr() const;
+  void set_sr(::PROTOBUF_NAMESPACE_ID::uint32 value);
+  private:
+  ::PROTOBUF_NAMESPACE_ID::uint32 _internal_sr() const;
+  void _internal_set_sr(::PROTOBUF_NAMESPACE_ID::uint32 value);
   public:
 
   // @@protoc_insertion_point(class_scope:idadebug.GpRegs)
@@ -720,8 +720,8 @@ class GpRegs PROTOBUF_FINAL :
   ::PROTOBUF_NAMESPACE_ID::uint32 a6_;
   ::PROTOBUF_NAMESPACE_ID::uint32 a7_;
   ::PROTOBUF_NAMESPACE_ID::uint32 pc_;
-  ::PROTOBUF_NAMESPACE_ID::uint32 sr_;
   ::PROTOBUF_NAMESPACE_ID::uint32 sp_;
+  ::PROTOBUF_NAMESPACE_ID::uint32 sr_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_debug_5fproto_5f68k_2eproto;
 };
@@ -3526,27 +3526,7 @@ inline void GpRegs::set_pc(::PROTOBUF_NAMESPACE_ID::uint32 value) {
   // @@protoc_insertion_point(field_set:idadebug.GpRegs.PC)
 }
 
-// uint32 SR = 18;
-inline void GpRegs::clear_sr() {
-  sr_ = 0u;
-}
-inline ::PROTOBUF_NAMESPACE_ID::uint32 GpRegs::_internal_sr() const {
-  return sr_;
-}
-inline ::PROTOBUF_NAMESPACE_ID::uint32 GpRegs::sr() const {
-  // @@protoc_insertion_point(field_get:idadebug.GpRegs.SR)
-  return _internal_sr();
-}
-inline void GpRegs::_internal_set_sr(::PROTOBUF_NAMESPACE_ID::uint32 value) {
-  
-  sr_ = value;
-}
-inline void GpRegs::set_sr(::PROTOBUF_NAMESPACE_ID::uint32 value) {
-  _internal_set_sr(value);
-  // @@protoc_insertion_point(field_set:idadebug.GpRegs.SR)
-}
-
-// uint32 SP = 19;
+// uint32 SP = 18;
 inline void GpRegs::clear_sp() {
   sp_ = 0u;
 }
@@ -3564,6 +3544,26 @@ inline void GpRegs::_internal_set_sp(::PROTOBUF_NAMESPACE_ID::uint32 value) {
 inline void GpRegs::set_sp(::PROTOBUF_NAMESPACE_ID::uint32 value) {
   _internal_set_sp(value);
   // @@protoc_insertion_point(field_set:idadebug.GpRegs.SP)
+}
+
+// uint32 SR = 19;
+inline void GpRegs::clear_sr() {
+  sr_ = 0u;
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint32 GpRegs::_internal_sr() const {
+  return sr_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint32 GpRegs::sr() const {
+  // @@protoc_insertion_point(field_get:idadebug.GpRegs.SR)
+  return _internal_sr();
+}
+inline void GpRegs::_internal_set_sr(::PROTOBUF_NAMESPACE_ID::uint32 value) {
+  
+  sr_ = value;
+}
+inline void GpRegs::set_sr(::PROTOBUF_NAMESPACE_ID::uint32 value) {
+  _internal_set_sr(value);
+  // @@protoc_insertion_point(field_set:idadebug.GpRegs.SR)
 }
 
 // -------------------------------------------------------------------

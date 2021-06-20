@@ -5,25 +5,26 @@ package idadebug;
 import "google/protobuf/empty.proto";
 
 enum GpRegsEnum {
-  AF = 0;
-  AF2 = 1;
-  BC = 2;
-  BC2 = 3;
-  DE = 4;
-  DE2 = 5;
-  HL = 6;
-  HL2 = 7;
+  DUMMY_REG = 0;
+  AF = 1;
+  AF2 = 2;
+  BC = 3;
+  BC2 = 4;
+  DE = 5;
+  DE2 = 6;
+  HL = 7;
+  HL2 = 8;
 
-  IX = 8;
-  IY = 9;
-  I = 10;
-  R = 11;
-  PC = 12;
+  IX = 9;
+  IY = 10;
+  I = 11;
+  R = 12;
+  PC = 13;
 
-  SP = 13;
-  IP = 14;
+  SP = 14;
+  IP = 15;
 
-  BANK = 15;
+  BANK = 16;
 }
 
 message GpReg {

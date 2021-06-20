@@ -15,17 +15,17 @@ enum GpRegsEnum {
   D7 = 7;
 
   A0 = 8;
-  A1 = 9;
-  A2 = 10;
-  A3 = 11;
-  A4 = 12;
-  A5 = 13;
-  A6 = 14;
-  A7 = 15;
+  A1 = 10;
+  A2 = 12;
+  A3 = 14;
+  A4 = 16;
+  A5 = 18;
+  A6 = 20;
+  A7 = 22;
 
-  PC = 16;
-  SR = 17;
-  SP = 18;
+  PC = 24;
+  SP = 26;
+  SR = 28;
 }
 
 message GpReg {
@@ -52,8 +52,8 @@ message GpRegs {
   uint32 A7 = 16;
 
   uint32 PC = 17;
-  uint32 SR = 18;
-  uint32 SP = 19;
+  uint32 SP = 18;
+  uint32 SR = 19;
 }
 
 message GpRegValue {

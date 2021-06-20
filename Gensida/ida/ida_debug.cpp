@@ -605,11 +605,15 @@ public:
   }
 
   bool exit() {
+    show_wait_box("HIDECANCEL\nFinishing execution...");
+
     Empty req;
     Empty resp;
 
     ClientContext context;
     Status status = stub_->exit_emulation(&context, req, &resp);
+
+    hide_wait_box();
 
     if (!status.ok()) {
       //warning("%s\n", status.error_message().c_str());

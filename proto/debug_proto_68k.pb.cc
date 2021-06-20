@@ -49,8 +49,8 @@ constexpr GpRegs::GpRegs(
   , a6_(0u)
   , a7_(0u)
   , pc_(0u)
-  , sr_(0u)
-  , sp_(0u){}
+  , sp_(0u)
+  , sr_(0u){}
 struct GpRegsDefaultTypeInternal {
   constexpr GpRegsDefaultTypeInternal()
     : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
@@ -324,8 +324,8 @@ const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_debug_5fproto_5f68k_2eproto::o
   PROTOBUF_FIELD_OFFSET(::idadebug::GpRegs, a6_),
   PROTOBUF_FIELD_OFFSET(::idadebug::GpRegs, a7_),
   PROTOBUF_FIELD_OFFSET(::idadebug::GpRegs, pc_),
-  PROTOBUF_FIELD_OFFSET(::idadebug::GpRegs, sr_),
   PROTOBUF_FIELD_OFFSET(::idadebug::GpRegs, sp_),
+  PROTOBUF_FIELD_OFFSET(::idadebug::GpRegs, sr_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::idadebug::GpRegValue, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -515,7 +515,7 @@ const char descriptor_table_protodef_debug_5fproto_5f68k_2eproto[] PROTOBUF_SECT
   "\r\022\n\n\002D7\030\010 \001(\r\022\n\n\002A0\030\t \001(\r\022\n\n\002A1\030\n \001(\r\022\n\n"
   "\002A2\030\013 \001(\r\022\n\n\002A3\030\014 \001(\r\022\n\n\002A4\030\r \001(\r\022\n\n\002A5\030"
   "\016 \001(\r\022\n\n\002A6\030\017 \001(\r\022\n\n\002A7\030\020 \001(\r\022\n\n\002PC\030\021 \001("
-  "\r\022\n\n\002SR\030\022 \001(\r\022\n\n\002SP\030\023 \001(\r\"@\n\nGpRegValue\022"
+  "\r\022\n\n\002SP\030\022 \001(\r\022\n\n\002SR\030\023 \001(\r\"@\n\nGpRegValue\022"
   "#\n\005index\030\001 \001(\0162\024.idadebug.GpRegsEnum\022\r\n\005"
   "value\030\002 \001(\r\",\n\006VdpReg\022\"\n\003reg\030\001 \001(\0162\025.ida"
   "debug.VdpRegsEnum\"\301\002\n\007VdpRegs\022\013\n\003V00\030\001 \001"
@@ -546,9 +546,9 @@ const char descriptor_table_protodef_debug_5fproto_5f68k_2eproto[] PROTOBUF_SECT
   "nged.ChangedEntry\032.\n\014ChangedEntry\022\013\n\003key"
   "\030\001 \001(\r\022\r\n\005value\030\002 \001(\r:\0028\001*\244\001\n\nGpRegsEnum"
   "\022\006\n\002D0\020\000\022\006\n\002D1\020\001\022\006\n\002D2\020\002\022\006\n\002D3\020\003\022\006\n\002D4\020\004"
-  "\022\006\n\002D5\020\005\022\006\n\002D6\020\006\022\006\n\002D7\020\007\022\006\n\002A0\020\010\022\006\n\002A1\020\t"
-  "\022\006\n\002A2\020\n\022\006\n\002A3\020\013\022\006\n\002A4\020\014\022\006\n\002A5\020\r\022\006\n\002A6\020\016"
-  "\022\006\n\002A7\020\017\022\006\n\002PC\020\020\022\006\n\002SR\020\021\022\006\n\002SP\020\022*\345\001\n\013Vdp"
+  "\022\006\n\002D5\020\005\022\006\n\002D6\020\006\022\006\n\002D7\020\007\022\006\n\002A0\020\010\022\006\n\002A1\020\n"
+  "\022\006\n\002A2\020\014\022\006\n\002A3\020\016\022\006\n\002A4\020\020\022\006\n\002A5\020\022\022\006\n\002A6\020\024"
+  "\022\006\n\002A7\020\026\022\006\n\002PC\020\030\022\006\n\002SP\020\032\022\006\n\002SR\020\034*\345\001\n\013Vdp"
   "RegsEnum\022\007\n\003V00\020\000\022\007\n\003V01\020\001\022\007\n\003V02\020\002\022\007\n\003V"
   "03\020\003\022\007\n\003V04\020\004\022\007\n\003V05\020\005\022\007\n\003V06\020\006\022\007\n\003V07\020\007"
   "\022\007\n\003V08\020\010\022\007\n\003V09\020\t\022\007\n\003V0A\020\n\022\007\n\003V0B\020\013\022\007\n\003"
@@ -632,16 +632,16 @@ bool GpRegsEnum_IsValid(int value) {
     case 6:
     case 7:
     case 8:
-    case 9:
     case 10:
-    case 11:
     case 12:
-    case 13:
     case 14:
-    case 15:
     case 16:
-    case 17:
     case 18:
+    case 20:
+    case 22:
+    case 24:
+    case 26:
+    case 28:
       return true;
     default:
       return false;
@@ -907,16 +907,16 @@ GpRegs::GpRegs(const GpRegs& from)
   : ::PROTOBUF_NAMESPACE_ID::Message() {
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::memcpy(&d0_, &from.d0_,
-    static_cast<size_t>(reinterpret_cast<char*>(&sp_) -
-    reinterpret_cast<char*>(&d0_)) + sizeof(sp_));
+    static_cast<size_t>(reinterpret_cast<char*>(&sr_) -
+    reinterpret_cast<char*>(&d0_)) + sizeof(sr_));
   // @@protoc_insertion_point(copy_constructor:idadebug.GpRegs)
 }
 
 void GpRegs::SharedCtor() {
 ::memset(reinterpret_cast<char*>(this) + static_cast<size_t>(
     reinterpret_cast<char*>(&d0_) - reinterpret_cast<char*>(this)),
-    0, static_cast<size_t>(reinterpret_cast<char*>(&sp_) -
-    reinterpret_cast<char*>(&d0_)) + sizeof(sp_));
+    0, static_cast<size_t>(reinterpret_cast<char*>(&sr_) -
+    reinterpret_cast<char*>(&d0_)) + sizeof(sr_));
 }
 
 GpRegs::~GpRegs() {
@@ -946,8 +946,8 @@ void GpRegs::Clear() {
   (void) cached_has_bits;
 
   ::memset(&d0_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&sp_) -
-      reinterpret_cast<char*>(&d0_)) + sizeof(sp_));
+      reinterpret_cast<char*>(&sr_) -
+      reinterpret_cast<char*>(&d0_)) + sizeof(sr_));
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -1077,17 +1077,17 @@ const char* GpRegs::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::int
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
-      // uint32 SR = 18;
+      // uint32 SP = 18;
       case 18:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 144)) {
-          sr_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          sp_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
-      // uint32 SP = 19;
+      // uint32 SR = 19;
       case 19:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 152)) {
-          sp_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          sr_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -1221,16 +1221,16 @@ failure:
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(17, this->_internal_pc(), target);
   }
 
-  // uint32 SR = 18;
-  if (this->sr() != 0) {
-    target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(18, this->_internal_sr(), target);
-  }
-
-  // uint32 SP = 19;
+  // uint32 SP = 18;
   if (this->sp() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(19, this->_internal_sp(), target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(18, this->_internal_sp(), target);
+  }
+
+  // uint32 SR = 19;
+  if (this->sr() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(19, this->_internal_sr(), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -1368,18 +1368,18 @@ size_t GpRegs::ByteSizeLong() const {
         this->_internal_pc());
   }
 
-  // uint32 SR = 18;
-  if (this->sr() != 0) {
-    total_size += 2 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32Size(
-        this->_internal_sr());
-  }
-
-  // uint32 SP = 19;
+  // uint32 SP = 18;
   if (this->sp() != 0) {
     total_size += 2 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32Size(
         this->_internal_sp());
+  }
+
+  // uint32 SR = 19;
+  if (this->sr() != 0) {
+    total_size += 2 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32Size(
+        this->_internal_sr());
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -1464,11 +1464,11 @@ void GpRegs::MergeFrom(const GpRegs& from) {
   if (from.pc() != 0) {
     _internal_set_pc(from._internal_pc());
   }
-  if (from.sr() != 0) {
-    _internal_set_sr(from._internal_sr());
-  }
   if (from.sp() != 0) {
     _internal_set_sp(from._internal_sp());
+  }
+  if (from.sr() != 0) {
+    _internal_set_sr(from._internal_sr());
   }
 }
 
@@ -1494,8 +1494,8 @@ void GpRegs::InternalSwap(GpRegs* other) {
   using std::swap;
   _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(GpRegs, sp_)
-      + sizeof(GpRegs::sp_)
+      PROTOBUF_FIELD_OFFSET(GpRegs, sr_)
+      + sizeof(GpRegs::sr_)
       - PROTOBUF_FIELD_OFFSET(GpRegs, d0_)>(
           reinterpret_cast<char*>(&d0_),
           reinterpret_cast<char*>(&other->d0_));

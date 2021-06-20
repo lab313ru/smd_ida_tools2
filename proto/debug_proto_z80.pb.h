@@ -134,27 +134,28 @@ PROTOBUF_NAMESPACE_CLOSE
 namespace idadebug {
 
 enum GpRegsEnum : int {
-  AF = 0,
-  AF2 = 1,
-  BC = 2,
-  BC2 = 3,
-  DE = 4,
-  DE2 = 5,
-  HL = 6,
-  HL2 = 7,
-  IX = 8,
-  IY = 9,
-  I = 10,
-  R = 11,
-  PC = 12,
-  SP = 13,
-  IP = 14,
-  BANK = 15,
+  DUMMY_REG = 0,
+  AF = 1,
+  AF2 = 2,
+  BC = 3,
+  BC2 = 4,
+  DE = 5,
+  DE2 = 6,
+  HL = 7,
+  HL2 = 8,
+  IX = 9,
+  IY = 10,
+  I = 11,
+  R = 12,
+  PC = 13,
+  SP = 14,
+  IP = 15,
+  BANK = 16,
   GpRegsEnum_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::min(),
   GpRegsEnum_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::max()
 };
 bool GpRegsEnum_IsValid(int value);
-constexpr GpRegsEnum GpRegsEnum_MIN = AF;
+constexpr GpRegsEnum GpRegsEnum_MIN = DUMMY_REG;
 constexpr GpRegsEnum GpRegsEnum_MAX = BANK;
 constexpr int GpRegsEnum_ARRAYSIZE = GpRegsEnum_MAX + 1;
 

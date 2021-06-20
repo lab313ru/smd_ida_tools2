@@ -1916,7 +1916,32 @@ class DbgServerHandler final : public DbgServer::Service {
       main68k_context.dreg[(int)request->index()] = request->value();
     }
     else if (request->index() >= GpRegsEnum::A0 && request->index() <= GpRegsEnum::A7) { // Ax
-      main68k_context.areg[request->index() - GpRegsEnum::A0] = request->value();
+      switch (request->index()) {
+      case GpRegsEnum::A0:
+        main68k_context.areg[0] = request->value();
+        break;
+      case GpRegsEnum::A1:
+        main68k_context.areg[1] = request->value();
+        break;
+      case GpRegsEnum::A2:
+        main68k_context.areg[2] = request->value();
+        break;
+      case GpRegsEnum::A3:
+        main68k_context.areg[3] = request->value();
+        break;
+      case GpRegsEnum::A4:
+        main68k_context.areg[4] = request->value();
+        break;
+      case GpRegsEnum::A5:
+        main68k_context.areg[5] = request->value();
+        break;
+      case GpRegsEnum::A6:
+        main68k_context.areg[6] = request->value();
+        break;
+      case GpRegsEnum::A7:
+        main68k_context.areg[7] = request->value();
+        break;
+      }
     }
     else {
       switch (request->index()) {
@@ -1924,7 +1949,7 @@ class DbgServerHandler final : public DbgServer::Service {
         main68k_context.sr = request->value() & 0xFFFF;
         break;
       case GpRegsEnum::SP:
-        main68k_context.areg[GpRegsEnum::A7 - GpRegsEnum::A0] = request->value();
+        main68k_context.areg[7] = request->value();
         break;
       }
     }
