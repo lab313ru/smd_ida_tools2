@@ -1920,9 +1920,6 @@ class DbgServerHandler final : public DbgServer::Service {
     }
     else {
       switch (request->index()) {
-      case GpRegsEnum::PC:
-        main68k_context.pc = request->value() & 0xFFFFFF;
-        break;
       case GpRegsEnum::SR:
         main68k_context.sr = request->value() & 0xFFFF;
         break;
