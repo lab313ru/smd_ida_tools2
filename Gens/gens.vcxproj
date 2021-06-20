@@ -306,8 +306,22 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\proto\debug_proto_68k.grpc.pb.cc" />
-    <ClCompile Include="..\proto\debug_proto_68k.pb.cc" />
+    <ClCompile Include="..\proto\debug_proto_68k.grpc.pb.cc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug7_z80|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release7_z80|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\proto\debug_proto_68k.pb.cc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug7_z80|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release7_z80|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\proto\debug_proto_z80.grpc.pb.cc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug7_68k|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release7_68k|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\proto\debug_proto_z80.pb.cc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug7_68k|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release7_68k|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="lua\src\lapi.c" />
     <ClCompile Include="lua\src\lauxlib.c" />
     <ClCompile Include="lua\src\lbaselib.c" />
@@ -391,8 +405,22 @@
     <ClCompile Include="zlib\zutil.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\proto\debug_proto_68k.grpc.pb.h" />
-    <ClInclude Include="..\proto\debug_proto_68k.pb.h" />
+    <ClInclude Include="..\proto\debug_proto_68k.grpc.pb.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug7_z80|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release7_z80|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\proto\debug_proto_68k.pb.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug7_z80|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release7_z80|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\proto\debug_proto_z80.grpc.pb.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug7_68k|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release7_68k|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\proto\debug_proto_z80.pb.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug7_68k|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release7_68k|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="include\blit.h" />
     <ClInclude Include="include\corehooks.h" />
     <ClInclude Include="include\cpu_68k.h" />

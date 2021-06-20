@@ -3,7 +3,11 @@
 
 #include <grpcpp/grpcpp.h>
 
+#ifdef DEBUG_68K
 #include "proto/debug_proto_68k.grpc.pb.h"
+#else
+#include "proto/debug_proto_z80.grpc.pb.h"
+#endif
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -18,12 +22,17 @@ using idadebug::GpRegsEnum;
 using idadebug::GpReg;
 using idadebug::GpRegValue;
 using idadebug::GpRegs;
+#ifdef DEBUG_68K
 using idadebug::VdpRegsEnum;
 using idadebug::VdpReg;
 using idadebug::VdpRegValue;
 using idadebug::VdpRegs;
-using idadebug::Changed;
 using idadebug::DmaInfo;
+#else
+using idadebug::SoundBankMap;
+using idadebug::SoundBankRange;
+#endif
+using idadebug::Changed;
 using idadebug::MemData;
 using idadebug::MemoryAS;
 using idadebug::MemoryAD;
@@ -1529,20 +1538,33 @@ class DbgServerHandler final : public DbgServer::Service {
 #ifdef DEBUG_68K
         if (request->is_vdp() == i->is_vdp) {
           M68kDW.Breakpoints.erase(i);
-#else
-          Z80DW.Breakpoints.erase(i);
-#endif
           break;
-#ifdef DEBUG_68K
         }
+#else
+        Z80DW.Breakpoints.erase(i);
+        break;
 #endif
       }
-
-      ++i;
     }
 
     return Status::OK;
   }
+
+#ifdef DEBUG_Z80
+  Status get_sound_banks(ServerContext * context, const Empty * request, SoundBankMap * response) override {
+    response->clear_range();
+
+    for (auto i = z80_banks.cbegin(); i != z80_banks.cend(); ++i) {
+      SoundBankRange bnk;
+      bnk.set_bank_min(i->second.bank_min);
+      bnk.set_bank_max(i->second.bank_max);
+
+      (*response->mutable_range())[i->first] = bnk;
+    }
+
+    return Status::OK;
+  }
+#endif
 
   Status exit_emulation(ServerContext* context, const Empty* request, Empty* response) override {
     if (!client) {
@@ -1581,6 +1603,7 @@ class DbgServerHandler final : public DbgServer::Service {
   }
 
   Status get_callstack(ServerContext* context, const Empty* request, Callstack* response) override {
+    response->clear_callstack();
 #ifdef DEBUG_68K
     for (auto i = M68kDW.callstack.cbegin(); i != M68kDW.callstack.cend(); ++i) {
 #else
@@ -1592,6 +1615,7 @@ class DbgServerHandler final : public DbgServer::Service {
     return Status::OK;
   }
 
+#ifdef DEBUG_68K
   Status get_dma_info(ServerContext* context, const Empty* request, DmaInfo* response) override {
     response->set_len((BYTE)(VDP_Reg.regs[VdpRegsEnum::V13]) | ((BYTE)(VDP_Reg.regs[VdpRegsEnum::V14]) << 8));
     
@@ -1621,6 +1645,7 @@ class DbgServerHandler final : public DbgServer::Service {
 
     return Status::OK;
   }
+#endif
 
   Status get_gp_reg(ServerContext* context, const GpReg* request, AnyRegValue* response) override {
 #ifdef DEBUG_68K
@@ -1649,7 +1674,7 @@ class DbgServerHandler final : public DbgServer::Service {
       }
     }
 #else
-    switch (index) {
+    switch (request->reg()) {
     case GpRegsEnum::AF: {
       response->set_value(M_Z80.AF.w.AF);
       return Status::OK;
@@ -1772,6 +1797,7 @@ class DbgServerHandler final : public DbgServer::Service {
     return Status::OK;
   }
 
+#ifdef DEBUG_68K
   Status get_vdp_reg(ServerContext* context, const VdpReg* request, AnyRegValue* response) override {
     if (request->reg() >= VdpRegsEnum::V00 && request->reg() <= VdpRegsEnum::V17) {
       response->set_value(VDP_Reg.regs[(int)request->reg()]);
@@ -1809,6 +1835,7 @@ class DbgServerHandler final : public DbgServer::Service {
 
     return Status::OK;
   }
+#endif
 
   Status pause(ServerContext* context, const Empty* request, Empty* response) override {
 #ifdef DEBUG_68K
@@ -1860,7 +1887,7 @@ class DbgServerHandler final : public DbgServer::Service {
         _return->push_back('\x00');
       }
 #else
-      _return += Ram_Z80[address + i];
+      _return += Ram_Z80[request->address() + i];
 #endif
     }
 
@@ -1931,6 +1958,7 @@ class DbgServerHandler final : public DbgServer::Service {
     return Status::OK;
   }
 
+#ifdef DEBUG_68K
   Status set_vdp_reg(ServerContext* context, const VdpRegValue* request, Empty* response) override {
     if (request->index() >= VdpRegsEnum::V00 && request->index() <= VdpRegsEnum::V17) {
       VDP_Reg.regs[request->index()] = request->value();
@@ -1938,6 +1966,7 @@ class DbgServerHandler final : public DbgServer::Service {
 
     return Status::OK;
   }
+#endif
 
   Status start_emulation(ServerContext* context, const Empty* request, Empty* response) override {
     init_ida_client();
@@ -2045,25 +2074,12 @@ class DbgServerHandler final : public DbgServer::Service {
         ((UINT8*)VSRam)[(addr ^ 1) & 0xFF] = request->data()[i] & 0xFF;
       }
 #else
-      Ram_Z80[address + i] = data[i] & 0xFF;
+      Ram_Z80[request->address() + i] = request->data()[i] & 0xFF;
 #endif
     }
 
     return Status::OK;
   }
-
-//#ifdef DEBUG_Z80
-//  void get_sound_banks(std::map<int32_t, SoundBankRange>& _return) override {
-//    _return.clear();
-//
-//    for (auto i = z80_banks.cbegin(); i != z80_banks.cend(); ++i) {
-//      SoundBankRange bnk;
-//      bnk.bank_min = i->second.bank_min;
-//      bnk.bank_max = i->second.bank_max;
-//      _return[i->first] = bnk;
-//    }
-//  }
-//#endif
 };
 
 static std::unique_ptr<Server> server;

@@ -293,6 +293,12 @@
     <ClCompile Include="..\proto\debug_proto_68k.pb.cc">
       <Filter>proto</Filter>
     </ClCompile>
+    <ClCompile Include="..\proto\debug_proto_z80.grpc.pb.cc">
+      <Filter>proto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\proto\debug_proto_z80.pb.cc">
+      <Filter>proto</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lua\src\lapi.h">
@@ -551,6 +557,12 @@
       <Filter>proto</Filter>
     </ClInclude>
     <ClInclude Include="..\proto\debug_proto_68k.pb.h">
+      <Filter>proto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\proto\debug_proto_z80.grpc.pb.h">
+      <Filter>proto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\proto\debug_proto_z80.pb.h">
       <Filter>proto</Filter>
     </ClInclude>
   </ItemGroup>

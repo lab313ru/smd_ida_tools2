@@ -6,7 +6,11 @@
 
 #include <grpcpp/grpcpp.h>
 
+#ifdef DEBUG_68K
 #include "proto/debug_proto_68k.grpc.pb.h"
+#else
+#include "proto/debug_proto_z80.grpc.pb.h"
+#endif
 
 using grpc::Channel;
 using grpc::ClientContext;

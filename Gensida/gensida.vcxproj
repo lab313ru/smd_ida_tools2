@@ -135,7 +135,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>d:\idasdk76\lib\x64_win_vc_32\;$(SolutionDir)\thrift\;$(SolutionDir)\libevent\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ida.lib;thriftd_64.lib;thriftnbd_64.lib;event_64.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ida.lib;ws2_32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent />
   </ItemDefinitionGroup>
@@ -183,19 +183,47 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>d:\idasdk76\lib\x64_win_vc_32\;$(SolutionDir)\thrift\;$(SolutionDir)\libevent\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ida.lib;thrift_64.lib;thriftnb_64.lib;event_64.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ida.lib;ws2_32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent />
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\proto\debug_proto_68k.grpc.pb.cc" />
-    <ClCompile Include="..\proto\debug_proto_68k.pb.cc" />
+    <ClCompile Include="..\proto\debug_proto_68k.grpc.pb.cc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release7_z80|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug7_z80|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\proto\debug_proto_68k.pb.cc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release7_z80|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug7_z80|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\proto\debug_proto_z80.grpc.pb.cc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug7_68k|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release7_68k|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\proto\debug_proto_z80.pb.cc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug7_68k|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release7_68k|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="ida\ida_debug.cpp" />
     <ClCompile Include="ida\ida_plugin.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\proto\debug_proto_68k.grpc.pb.h" />
-    <ClInclude Include="..\proto\debug_proto_68k.pb.h" />
+    <ClInclude Include="..\proto\debug_proto_68k.grpc.pb.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release7_z80|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug7_z80|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\proto\debug_proto_68k.pb.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release7_z80|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug7_z80|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\proto\debug_proto_z80.grpc.pb.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug7_68k|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release7_68k|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\proto\debug_proto_z80.pb.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug7_68k|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release7_68k|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="ida\ida_debmod.h" />
     <ClInclude Include="ida\ida_debug.h" />
     <ClInclude Include="ida\ida_plugin.h" />
