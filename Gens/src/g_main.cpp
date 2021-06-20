@@ -1887,7 +1887,7 @@ class DbgServerHandler final : public DbgServer::Service {
         _return->push_back('\x00');
       }
 #else
-      _return += Ram_Z80[request->address() + i];
+      _return->push_back(Ram_Z80[request->address() + i]);
 #endif
     }
 
