@@ -114,16 +114,24 @@ register_info_t registers[] = {
   { "D6", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
   { "D7", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
 
-  { "A0", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
-  { "A1", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
-  { "A2", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
-  { "A3", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
-  { "A4", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
-  { "A5", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
-  { "A6", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
-  { "A7", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
+  { "A0", 0, RC_GENERAL, dt_dword, NULL, 0 },
+  { "A0_ADDR", REGISTER_ADDRESS | REGISTER_READONLY, RC_GENERAL, dt_dword, NULL, 0 },
+  { "A1", 0, RC_GENERAL, dt_dword, NULL, 0 },
+  { "A1_ADDR", REGISTER_ADDRESS | REGISTER_READONLY, RC_GENERAL, dt_dword, NULL, 0 },
+  { "A2", 0, RC_GENERAL, dt_dword, NULL, 0 },
+  { "A2_ADDR", REGISTER_ADDRESS | REGISTER_READONLY, RC_GENERAL, dt_dword, NULL, 0 },
+  { "A3", 0, RC_GENERAL, dt_dword, NULL, 0 },
+  { "A3_ADDR", REGISTER_ADDRESS | REGISTER_READONLY, RC_GENERAL, dt_dword, NULL, 0 },
+  { "A4", 0, RC_GENERAL, dt_dword, NULL, 0 },
+  { "A4_ADDR", REGISTER_ADDRESS | REGISTER_READONLY, RC_GENERAL, dt_dword, NULL, 0 },
+  { "A5", 0, RC_GENERAL, dt_dword, NULL, 0 },
+  { "A5_ADDR", REGISTER_ADDRESS | REGISTER_READONLY, RC_GENERAL, dt_dword, NULL, 0 },
+  { "A6", 0, RC_GENERAL, dt_dword, NULL, 0 },
+  { "A6_ADDR", REGISTER_ADDRESS | REGISTER_READONLY, RC_GENERAL, dt_dword, NULL, 0 },
+  { "A7", 0, RC_GENERAL, dt_dword, NULL, 0 },
+  { "A7_ADDR", REGISTER_ADDRESS | REGISTER_READONLY, RC_GENERAL, dt_dword, NULL, 0 },
 
-  { "PC", REGISTER_ADDRESS | REGISTER_IP, RC_GENERAL, dt_dword, NULL, 0 },
+  { "PC", REGISTER_ADDRESS | REGISTER_IP | REGISTER_READONLY, RC_GENERAL, dt_dword, NULL, 0 },
   { "SP", REGISTER_ADDRESS | REGISTER_SP, RC_GENERAL, dt_dword, NULL, 0 },
   { "SR", NULL, RC_GENERAL, dt_word, SRReg, 0xFFFF },
 
@@ -881,16 +889,24 @@ static drc_t idaapi read_registers(thid_t tid, int clsmask, regval_t *values, qs
     values[R_D7].ival = regs.d7();
 
     values[R_A0].ival = regs.a0();
+    values[R_A0_ADDR].ival = regs.a0() & 0xFFFFFF;
     values[R_A1].ival = regs.a1();
+    values[R_A1_ADDR].ival = regs.a1() & 0xFFFFFF;
     values[R_A2].ival = regs.a2();
+    values[R_A2_ADDR].ival = regs.a2() & 0xFFFFFF;
     values[R_A3].ival = regs.a3();
+    values[R_A3_ADDR].ival = regs.a3() & 0xFFFFFF;
     values[R_A4].ival = regs.a4();
+    values[R_A4_ADDR].ival = regs.a4() & 0xFFFFFF;
     values[R_A5].ival = regs.a5();
+    values[R_A5_ADDR].ival = regs.a5() & 0xFFFFFF;
     values[R_A6].ival = regs.a6();
+    values[R_A6_ADDR].ival = regs.a6() & 0xFFFFFF;
     values[R_A7].ival = regs.a7();
+    values[R_A7_ADDR].ival = regs.a7() & 0xFFFFFF;
 
-    values[R_PC].ival = regs.pc();
-    values[R_SP].ival = regs.sp();
+    values[R_PC].ival = regs.pc() & 0xFFFFFF;
+    values[R_SP].ival = regs.sp() & 0xFFFFFF;
     values[R_SR].ival = regs.sr();
 #else
     values[R_A].ival = (regs.af() >> 8) & 0xFF;
