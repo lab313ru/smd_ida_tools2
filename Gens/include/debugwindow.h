@@ -48,7 +48,7 @@ struct DebugWindow
 {
     DebugWindow();
     std::vector<uint32> callstack;
-    std::map<int32_t, int32_t> changed;
+    std::map<uint32_t, uint32_t> changed;
     bp_list Breakpoints;
 
     bool DebugStop;
@@ -74,5 +74,6 @@ struct DebugWindow
     virtual ~DebugWindow();
 };
 
+extern void send_pause_event(int pc, std::map<uint32_t, uint32_t> changed);
 
 #endif

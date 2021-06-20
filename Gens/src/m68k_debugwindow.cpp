@@ -1,18 +1,7 @@
-#include "gen-cpp/DbgClient.h"
-#include <thrift/protocol/TBinaryProtocol.h>
-#include <thrift/transport/TSocket.h>
-#include <thrift/transport/TBufferTransports.h>
-
-using namespace ::apache::thrift;
-using namespace ::apache::thrift::protocol;
-using namespace ::apache::thrift::transport;
-
 #include "m68k_debugwindow.h"
 #include "mem_m68k.h"
 #include "star_68k.h"
 #include "resource.h"
-
-extern ::std::shared_ptr<DbgClientClient> client;
 
 extern bool handled_ida_event;
 
@@ -43,15 +32,8 @@ void M68kDebugWindow::TracePC(int pc)
     {
         br = true;
 
-        try {
-          if (client) {
-            client->pause_event(pc, changed);
-            changed.clear();
-          }
-        }
-        catch (...) {
-
-        }
+        send_pause_event(pc, changed);
+        changed.clear();
 
         handled_ida_event = true;
     }

@@ -6,7 +6,6 @@
 #define ID_CHANGE_SRAM                  4
 #define ID_CHANGE_PATCH                 7
 #define ID_CHANGE_IPS                   8
-#define IDB_WARNING                     102
 #define ABOUTDIAL                       105
 #define IDD_SETJOYKEYS_6                115
 #define IDD_SETJOYKEYS_3                116
@@ -21,16 +20,8 @@
 #define IDD_DIRECTORIES                 130
 #define IDD_FILES                       131
 #define IDD_OPTION                      132
-#define IDB_RECT_BLANC                  133
-#define IDB_RECT_BLEU                   134
 #define IDD_CONTROLLER                  135
-#define IDB_RECT_ROUGE                  136
-#define IDB_RECT_VERT                   137
-#define IDB_RECT_NOIR                   138
-#define IDB_RECT_CYAN                   139
-#define IDB_RECT_VIOLET                 140
 #define IDD_PROMPT                      140
-#define IDB_RECT_JAUNE                  141
 #define IDB_LOGO_SM                     142
 #define IDB_LOGO_BIG                    143
 #define IDD_COLOR                       144

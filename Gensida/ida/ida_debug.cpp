@@ -1,20 +1,43 @@
-#include "gen-cpp/DbgClient.h"
-#include "gen-cpp/DbgServer.h"
-#include <thrift/protocol/TBinaryProtocol.h>
-#include <thrift/transport/TSocket.h>
-#include <thrift/transport/TBufferTransports.h>
-#include <thrift/server/TNonblockingServer.h>
-#include <thrift/transport/TNonblockingServerSocket.h>
-#include <thrift/concurrency/ThreadFactory.h>
-
-using namespace ::apache::thrift;
-using namespace ::apache::thrift::protocol;
-using namespace ::apache::thrift::transport;
-using namespace ::apache::thrift::server;
-using namespace ::apache::thrift::concurrency;
-
 #include <Windows.h>
 #include <algorithm>
+#include <vector>
+#include <iostream>
+#include <thread>
+
+#include <grpcpp/grpcpp.h>
+
+#include "proto/debug_proto_68k.grpc.pb.h"
+
+using grpc::Channel;
+using grpc::ClientContext;
+using grpc::Server;
+using grpc::ServerBuilder;
+using grpc::ServerContext;
+using grpc::Status;
+using idadebug::DbgServer;
+using idadebug::DbgClient;
+using idadebug::AnyRegValue;
+using idadebug::GpRegsEnum;
+using idadebug::GpReg;
+using idadebug::GpRegValue;
+using idadebug::GpRegs;
+using idadebug::VdpRegsEnum;
+using idadebug::VdpReg;
+using idadebug::VdpRegValue;
+using idadebug::VdpRegs;
+using idadebug::Changed;
+using idadebug::DmaInfo;
+using idadebug::MemData;
+using idadebug::MemoryAS;
+using idadebug::MemoryAD;
+using idadebug::BpType;
+using idadebug::DbgBreakpoint;
+using idadebug::DbgBreakpoints;
+using idadebug::Callstack;
+using idadebug::PauseChanged;
+using google::protobuf::Empty;
+using google::protobuf::Map;
+
 #include <ida.hpp>
 #include <idd.hpp>
 #include <dbg.hpp>
@@ -28,39 +51,34 @@ using namespace ::apache::thrift::concurrency;
 #include "ida_debug.h"
 #include "ida_plugin.h"
 
-#include <vector>
-#include <iostream>
-
-static ::std::shared_ptr<DbgServerClient> client;
-static ::std::shared_ptr<TNonblockingServer> srv;
-static ::std::shared_ptr<TTransport> cli_transport;
 
 typedef qvector<std::pair<uint32, bool>> codemap_t;
 static eventlist_t events;
+
+static std::unique_ptr<Server> server;
 
 #ifdef DEBUG_68K
 #define BREAKPOINTS_BASE 0x00D00000
 #endif
 
-static const char *const SRReg[] =
-{
+static const char *const SRReg[] = {
 #ifdef DEBUG_68K
-    "C",
-    "V",
-    "Z",
-    "N",
-    "X",
-    NULL,
-    NULL,
-    NULL,
-    "I",
-    "I",
-    "I",
-    NULL,
-    NULL,
-    "S",
-    NULL,
-    "T"
+  "C",
+  "V",
+  "Z",
+  "N",
+  "X",
+  NULL,
+  NULL,
+  NULL,
+  "I",
+  "I",
+  "I",
+  NULL,
+  NULL,
+  "S",
+  NULL,
+  "T"
 #else
   "CF",
   "NF",
@@ -81,105 +99,103 @@ static const char *const SRReg[] =
 #endif
 };
 
-register_info_t registers[] =
-{
+register_info_t registers[] = {
 #ifdef DEBUG_68K
-    { "D0", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
-    { "D1", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
-    { "D2", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
-    { "D3", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
-    { "D4", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
-    { "D5", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
-    { "D6", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
-    { "D7", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
+  { "D0", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
+  { "D1", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
+  { "D2", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
+  { "D3", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
+  { "D4", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
+  { "D5", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
+  { "D6", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
+  { "D7", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
 
-    { "A0", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
-    { "A1", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
-    { "A2", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
-    { "A3", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
-    { "A4", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
-    { "A5", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
-    { "A6", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
-    { "A7", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
+  { "A0", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
+  { "A1", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
+  { "A2", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
+  { "A3", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
+  { "A4", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
+  { "A5", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
+  { "A6", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
+  { "A7", REGISTER_ADDRESS, RC_GENERAL, dt_dword, NULL, 0 },
 
-    { "PC", REGISTER_ADDRESS | REGISTER_IP, RC_GENERAL, dt_dword, NULL, 0 },
-    { "SP", REGISTER_ADDRESS | REGISTER_SP, RC_GENERAL, dt_dword, NULL, 0 },
-    { "SR", NULL, RC_GENERAL, dt_word, SRReg, 0xFFFF },
+  { "PC", REGISTER_ADDRESS | REGISTER_IP, RC_GENERAL, dt_dword, NULL, 0 },
+  { "SP", REGISTER_ADDRESS | REGISTER_SP, RC_GENERAL, dt_dword, NULL, 0 },
+  { "SR", NULL, RC_GENERAL, dt_word, SRReg, 0xFFFF },
 
-    { "DMA_LEN", REGISTER_READONLY, RC_GENERAL, dt_word, NULL, 0 },
-    { "DMA_SRC", REGISTER_ADDRESS | REGISTER_READONLY, RC_GENERAL, dt_dword, NULL, 0 },
-    { "VDP_DST", REGISTER_ADDRESS | REGISTER_READONLY, RC_GENERAL, dt_dword, NULL, 0 },
+  { "DMA_LEN", REGISTER_READONLY, RC_GENERAL, dt_word, NULL, 0 },
+  { "DMA_SRC", REGISTER_ADDRESS | REGISTER_READONLY, RC_GENERAL, dt_dword, NULL, 0 },
+  { "VDP_DST", REGISTER_ADDRESS | REGISTER_READONLY, RC_GENERAL, dt_dword, NULL, 0 },
 
-    // VDP Registers
-    { "Set1", NULL, RC_VDP, dt_byte, NULL, 0 },
-    { "Set2", NULL, RC_VDP, dt_byte, NULL, 0 },
-    { "PlaneA", NULL, RC_VDP, dt_byte, NULL, 0 },
-    { "Window", NULL, RC_VDP, dt_byte, NULL, 0 },
-    { "PlaneB", NULL, RC_VDP, dt_byte, NULL, 0 },
-    { "Sprite", NULL, RC_VDP, dt_byte, NULL, 0 },
-    { "Reg6", NULL, RC_VDP, dt_byte, NULL, 0 },
-    { "BgClr", NULL, RC_VDP, dt_byte, NULL, 0 },
-    { "Reg8", NULL, RC_VDP, dt_byte, NULL, 0 },
-    { "Reg9", NULL, RC_VDP, dt_byte, NULL, 0 },
-    { "HInt", NULL, RC_VDP, dt_byte, NULL, 0 },
-    { "Set3", NULL, RC_VDP, dt_byte, NULL, 0 },
-    { "Set4", NULL, RC_VDP, dt_byte, NULL, 0 },
-    { "HScrl", NULL, RC_VDP, dt_byte, NULL, 0 },
-    { "Reg14", NULL, RC_VDP, dt_byte, NULL, 0 },
-    { "WrInc", NULL, RC_VDP, dt_byte, NULL, 0 },
-    { "ScrSz", NULL, RC_VDP, dt_byte, NULL, 0 },
-    { "WinX", NULL, RC_VDP, dt_byte, NULL, 0 },
-    { "WinY", NULL, RC_VDP, dt_byte, NULL, 0 },
-    { "LenLo", NULL, RC_VDP, dt_byte, NULL, 0 },
-    { "LenHi", NULL, RC_VDP, dt_byte, NULL, 0 },
-    { "SrcLo", NULL, RC_VDP, dt_byte, NULL, 0 },
-    { "SrcMid", NULL, RC_VDP, dt_byte, NULL, 0 },
-    { "SrcHi", NULL, RC_VDP, dt_byte, NULL, 0 },
+  // VDP Registers
+  { "Set1", NULL, RC_VDP, dt_byte, NULL, 0 },
+  { "Set2", NULL, RC_VDP, dt_byte, NULL, 0 },
+  { "PlaneA", NULL, RC_VDP, dt_byte, NULL, 0 },
+  { "Window", NULL, RC_VDP, dt_byte, NULL, 0 },
+  { "PlaneB", NULL, RC_VDP, dt_byte, NULL, 0 },
+  { "Sprite", NULL, RC_VDP, dt_byte, NULL, 0 },
+  { "Reg6", NULL, RC_VDP, dt_byte, NULL, 0 },
+  { "BgClr", NULL, RC_VDP, dt_byte, NULL, 0 },
+  { "Reg8", NULL, RC_VDP, dt_byte, NULL, 0 },
+  { "Reg9", NULL, RC_VDP, dt_byte, NULL, 0 },
+  { "HInt", NULL, RC_VDP, dt_byte, NULL, 0 },
+  { "Set3", NULL, RC_VDP, dt_byte, NULL, 0 },
+  { "Set4", NULL, RC_VDP, dt_byte, NULL, 0 },
+  { "HScrl", NULL, RC_VDP, dt_byte, NULL, 0 },
+  { "Reg14", NULL, RC_VDP, dt_byte, NULL, 0 },
+  { "WrInc", NULL, RC_VDP, dt_byte, NULL, 0 },
+  { "ScrSz", NULL, RC_VDP, dt_byte, NULL, 0 },
+  { "WinX", NULL, RC_VDP, dt_byte, NULL, 0 },
+  { "WinY", NULL, RC_VDP, dt_byte, NULL, 0 },
+  { "LenLo", NULL, RC_VDP, dt_byte, NULL, 0 },
+  { "LenHi", NULL, RC_VDP, dt_byte, NULL, 0 },
+  { "SrcLo", NULL, RC_VDP, dt_byte, NULL, 0 },
+  { "SrcMid", NULL, RC_VDP, dt_byte, NULL, 0 },
+  { "SrcHi", NULL, RC_VDP, dt_byte, NULL, 0 },
 #else
-    { "A", 0, RC_GENERAL, dt_byte, NULL, 0 },
-    { "AF", 0, RC_GENERAL, dt_word, SRReg, 0xD7 },
-    { "AF'", 0, RC_GENERAL, dt_word, NULL, 0 },
-    { "B", 0, RC_GENERAL, dt_byte, NULL, 0 },
-    { "C", 0, RC_GENERAL, dt_byte, NULL, 0 },
-    { "BC", 0, RC_GENERAL, dt_word, NULL, 0 },
-    { "BC'", 0, RC_GENERAL, dt_word, NULL, 0 },
-    { "DE", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
-    { "DE'", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
-    { "HL", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
-    { "HL'", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
+  { "A", 0, RC_GENERAL, dt_byte, NULL, 0 },
+  { "AF", 0, RC_GENERAL, dt_word, SRReg, 0xD7 },
+  { "AF'", 0, RC_GENERAL, dt_word, NULL, 0 },
+  { "B", 0, RC_GENERAL, dt_byte, NULL, 0 },
+  { "C", 0, RC_GENERAL, dt_byte, NULL, 0 },
+  { "BC", 0, RC_GENERAL, dt_word, NULL, 0 },
+  { "BC'", 0, RC_GENERAL, dt_word, NULL, 0 },
+  { "DE", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
+  { "DE'", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
+  { "HL", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
+  { "HL'", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
 
-    { "IXH", 0, RC_GENERAL, dt_byte, NULL, 0 },
-    { "IXL", 0, RC_GENERAL, dt_byte, NULL, 0 },
-    { "IX", 0, RC_GENERAL, dt_word, NULL, 0 },
-    { "IYH", 0, RC_GENERAL, dt_byte, NULL, 0 },
-    { "IYL", 0, RC_GENERAL, dt_byte, NULL, 0 },
-    { "IY", 0, RC_GENERAL, dt_word, NULL, 0 },
-    { "I", 0, RC_GENERAL, dt_byte, NULL, 0 },
-    { "R", 0, RC_GENERAL, dt_word, NULL, 0 },
+  { "IXH", 0, RC_GENERAL, dt_byte, NULL, 0 },
+  { "IXL", 0, RC_GENERAL, dt_byte, NULL, 0 },
+  { "IX", 0, RC_GENERAL, dt_word, NULL, 0 },
+  { "IYH", 0, RC_GENERAL, dt_byte, NULL, 0 },
+  { "IYL", 0, RC_GENERAL, dt_byte, NULL, 0 },
+  { "IY", 0, RC_GENERAL, dt_word, NULL, 0 },
+  { "I", 0, RC_GENERAL, dt_byte, NULL, 0 },
+  { "R", 0, RC_GENERAL, dt_word, NULL, 0 },
 
-    { "PC", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
+  { "PC", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
 
-    { "SP", REGISTER_ADDRESS | REGISTER_SP, RC_GENERAL, dt_word, NULL, 0 },
-    { "IP", REGISTER_ADDRESS | REGISTER_IP, RC_GENERAL, dt_word, NULL, 0 },
+  { "SP", REGISTER_ADDRESS | REGISTER_SP, RC_GENERAL, dt_word, NULL, 0 },
+  { "IP", REGISTER_ADDRESS | REGISTER_IP, RC_GENERAL, dt_word, NULL, 0 },
     
-    { "BANK", 0, RC_GENERAL, dt_dword, NULL, 0 },
+  { "BANK", 0, RC_GENERAL, dt_dword, NULL, 0 },
 #endif
 };
 
-static const char *register_classes[] =
-{
-    "General Registers",
+static const char *register_classes[] = {
+  "General Registers",
 #ifdef DEBUG_68K
-    "VDP Registers",
+  "VDP Registers",
 #endif
-    NULL
+  NULL
 };
 
 struct apply_codemap_req : public exec_request_t {
 private:
-  const std::map<int32_t, int32_t>& _changed;
+  const Map<google::protobuf::uint32, google::protobuf::uint32>& _changed;
 public:
-  apply_codemap_req(const std::map<int32_t, int32_t>& changed) : _changed(changed) {};
+  apply_codemap_req(const google::protobuf::Map<google::protobuf::uint32, google::protobuf::uint32>& changed) : _changed(changed) {};
 
   int idaapi execute(void) override {
     for (auto i = _changed.cbegin(); i != _changed.cend(); ++i) {
@@ -192,170 +208,516 @@ public:
   }
 };
 
-static void apply_codemap(const std::map<int32_t, int32_t>& changed)
-{
+static std::mutex apply_lock;
+static google::protobuf::Map<google::protobuf::uint32, google::protobuf::uint32> to_apply;
+
+static void call_apply() {
+  apply_codemap_req req(to_apply);
+  execute_sync(req, MFF_WRITE);
+}
+
+static void apply_codemap(const google::protobuf::Map<google::protobuf::uint32, google::protobuf::uint32>& changed) {
   if (changed.empty()) return;
 
-  apply_codemap_req req(changed);
-  execute_sync(req, MFF_FAST);
-}
+  apply_lock.lock();
+  to_apply = changed;
 
-static void pause_execution()
-{
-    try {
-      if (client) {
-        client->pause();
-      }
-    } catch (...) {
+  std::thread th1(call_apply);
+  th1.detach();
 
-    }
-}
-
-static void continue_execution()
-{
-    try {
-      if (client) {
-        client->resume();
-      }
-    }
-    catch (...) {
-
-    }
-}
-
-static void finish_execution()
-{
-    try {
-      if (client) {
-        client->exit_emulation();
-      }
-    }
-    catch (...) {
-      debug_event_t ev;
-      ev.pid = 1;
-      ev.handled = true;
-      ev.set_exit_code(PROCESS_EXITED, 0);
-
-      events.enqueue(ev, IN_BACK);
-    }
+  apply_lock.unlock();
 }
 
 void stop_server() {
-  try {
-    srv->stop();
-  }
-  catch (...) {
-    
-  }
+  server->Shutdown(); //std::chrono::system_clock::now() + std::chrono::milliseconds(100));
 }
 
-class DbgClientHandler : virtual public DbgClientIf {
-public:
-  DbgClientHandler() {
-    // Your initialization goes here
+class DbgClientHandler final : public DbgClient::Service {
+  Status pause_event(ServerContext* context, const PauseChanged* request, Empty* response) override {
+    apply_codemap(request->changed());
+
+    debug_event_t ev;
+    ev.pid = 1;
+    ev.tid = 1;
+    ev.ea = request->address();
+    ev.handled = true;
+    ev.set_eid(PROCESS_SUSPENDED);
+    events.enqueue(ev, IN_BACK);
+
+    return Status::OK;
   }
 
-  void start_event() {
+  Status start_event(ServerContext* context, const Empty* request, Empty* response) override {
     debug_event_t ev;
     ev.pid = 1;
     ev.tid = 1;
     ev.ea = BADADDR;
     ev.handled = true;
 
-    ev.set_modinfo(PROCESS_STARTED).name.sprnt("GPGX");
+    ev.set_modinfo(PROCESS_STARTED).name.sprnt("GENS");
     ev.set_modinfo(PROCESS_STARTED).base = 0;
     ev.set_modinfo(PROCESS_STARTED).size = 0;
     ev.set_modinfo(PROCESS_STARTED).rebase_to = BADADDR;
 
     events.enqueue(ev, IN_BACK);
+    return Status::OK;
   }
 
-  void pause_event(const int32_t address, const std::map<int32_t, int32_t>& changed) {
+  Status stop_event(ServerContext* context, const Changed* request, Empty* response) override {
+    apply_codemap(request->changed());
+
     debug_event_t ev;
     ev.pid = 1;
-    ev.tid = 1;
-    ev.ea = address;
     ev.handled = true;
-    ev.set_eid(PROCESS_SUSPENDED);
+    ev.set_exit_code(PROCESS_EXITED, 0);
     events.enqueue(ev, IN_BACK);
 
-    apply_codemap(changed);
+    return Status::OK;
+  }
+};
+
+static void IdaServerFunc() {
+  std::string server_address("0.0.0.0:9091");
+  DbgClientHandler service;
+
+  ServerBuilder builder;
+  builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
+  builder.RegisterService(&service);
+
+  server = builder.BuildAndStart();
+
+  server->Wait();
+}
+
+static void init_ida_server() {
+  std::thread t1(IdaServerFunc);
+  t1.detach();
+}
+
+class DbgServerClient {
+public:
+  DbgServerClient(std::shared_ptr<Channel> channel)
+    : stub_(DbgServer::NewStub(channel)) {}
+
+  bool get_gp_reg(GpRegsEnum index, uint32_t* _return) {
+    GpReg reg;
+    reg.set_reg(index);
+
+    AnyRegValue value;
+
+    ClientContext context;
+    Status status = stub_->get_gp_reg(&context, reg, &value);
+
+    *_return = 0;
+
+    if (!status.ok()) {
+      //warning("%s\n", status.error_message().c_str());
+      return false;
+    }
+
+    *_return = value.value();
+    return true;
   }
 
-  void stop_event(const std::map<int32_t, int32_t>& changed) {
+  bool get_gp_regs(GpRegs* regs) {
+    Empty req;
+
+    ClientContext context;
+    Status status = stub_->get_gp_regs(&context, req, regs);
+
+    if (!status.ok()) {
+      //warning("%s\n", status.error_message().c_str());
+      return false;
+    }
+
+    return true;
+  }
+
+  bool set_gp_reg(GpRegsEnum index, uint32_t value) {
+    GpRegValue regVal;
+    regVal.set_index(index);
+    regVal.set_value(value);
+
+    Empty resp;
+
+    ClientContext context;
+    Status status = stub_->set_gp_reg(&context, regVal, &resp);
+
+    if (!status.ok()) {
+      //warning("%s\n", status.error_message().c_str());
+      return false;
+    }
+
+    return true;
+  }
+
+  bool get_vdp_reg(VdpRegsEnum index, uint8_t* _return) {
+    VdpReg reg;
+    reg.set_reg(index);
+
+    AnyRegValue value;
+
+    ClientContext context;
+    Status status = stub_->get_vdp_reg(&context, reg, &value);
+
+    *_return = 0;
+
+    if (!status.ok()) {
+      //warning("%s\n", status.error_message().c_str());
+      return false;
+    }
+
+    *_return = value.value() & 0xFF;
+    return true;
+  }
+
+  bool get_vdp_regs(VdpRegs* regs) {
+    Empty req;
+
+    ClientContext context;
+    Status status = stub_->get_vdp_regs(&context, req, regs);
+
+    if (!status.ok()) {
+      //warning("%s\n", status.error_message().c_str());
+      return false;
+    }
+
+    return true;
+  }
+
+  bool set_vdp_reg(VdpRegsEnum index, uint8_t value) {
+    VdpRegValue regVal;
+    regVal.set_index(index);
+    regVal.set_value(value);
+
+    Empty resp;
+
+    ClientContext context;
+    Status status = stub_->set_vdp_reg(&context, regVal, &resp);
+
+    if (!status.ok()) {
+      //warning("%s\n", status.error_message().c_str());
+      return false;
+    }
+
+    return true;
+  }
+
+  bool get_dma_info(DmaInfo* info) {
+    Empty req;
+
+    ClientContext context;
+    Status status = stub_->get_dma_info(&context, req, info);
+
+    if (!status.ok()) {
+      //warning("%s\n", status.error_message().c_str());
+      return false;
+    }
+
+    return true;
+  }
+
+  bool read_memory(uint32_t address, uint32_t size, uint8_t* _result) {
+    MemoryAS req;
+    req.set_address(address);
+    req.set_size(size);
+
+    MemData data;
+
+    ClientContext context;
+    Status status = stub_->read_memory(&context, req, &data);
+
+    if (!status.ok()) {
+      //warning("%s\n", status.error_message().c_str());
+      return false;
+    }
+
+    data.data().copy((char*)_result, data.data().size());
+    return true;
+  }
+
+  bool write_memory(const uint8_t* data, uint32_t address, uint32_t size) {
+    MemoryAD req;
+    req.set_address(address);
+    req.set_data(data, size);
+
+    Empty resp;
+
+    ClientContext context;
+    Status status = stub_->write_memory(&context, req, &resp);
+
+    if (!status.ok()) {
+      //warning("%s\n", status.error_message().c_str());
+      return false;
+    }
+
+    return true;
+  }
+
+  bool get_breakpoints(std::vector<DbgBreakpoint> _return) {
+    Empty req;
+
+    DbgBreakpoints bpts;
+
+    ClientContext context;
+    Status status = stub_->get_breakpoints(&context, req, &bpts);
+
+    if (!status.ok()) {
+      //warning("%s\n", status.error_message().c_str());
+      return false;
+    }
+
+    _return.clear();
+
+    for (auto i = bpts.list().cbegin(); i != bpts.list().cend(); ++i) {
+      _return.push_back(*i);
+    }
+
+    return true;
+  }
+
+  bool add_breakpoint(const DbgBreakpoint& bpt) {
+    Empty resp;
+
+    ClientContext context;
+    Status status = stub_->add_breakpoint(&context, bpt, &resp);
+
+    if (!status.ok()) {
+      //warning("%s\n", status.error_message().c_str());
+      return false;
+    }
+
+    return true;
+  }
+
+  bool toggle_breakpoint(const DbgBreakpoint& bpt) {
+    Empty resp;
+
+    ClientContext context;
+    Status status = stub_->toggle_breakpoint(&context, bpt, &resp);
+
+    if (!status.ok()) {
+      //warning("%s\n", status.error_message().c_str());
+      return false;
+    }
+
+    return true;
+  }
+
+  bool update_breakpoint(const DbgBreakpoint& bpt) {
+    Empty resp;
+
+    ClientContext context;
+    Status status = stub_->update_breakpoint(&context, bpt, &resp);
+
+    if (!status.ok()) {
+      //warning("%s\n", status.error_message().c_str());
+      return false;
+    }
+
+    return true;
+  }
+
+  bool del_breakpoint(const DbgBreakpoint& bpt) {
+    Empty resp;
+
+    ClientContext context;
+    Status status = stub_->del_breakpoint(&context, bpt, &resp);
+
+    if (!status.ok()) {
+      //warning("%s\n", status.error_message().c_str());
+      return false;
+    }
+
+    return true;
+  }
+
+  bool clear_breakpoints() {
+    Empty req;
+    Empty resp;
+
+    ClientContext context;
+    Status status = stub_->clear_breakpoints(&context, req, &resp);
+
+    if (!status.ok()) {
+      //warning("%s\n", status.error_message().c_str());
+      return false;
+    }
+
+    return true;
+  }
+
+  bool pause() {
+    Empty req;
+    Empty resp;
+
+    ClientContext context;
+    Status status = stub_->pause(&context, req, &resp);
+
+    if (!status.ok()) {
+      //warning("%s\n", status.error_message().c_str());
+      return false;
+    }
+
+    return true;
+  }
+
+  bool resume() {
+    Empty req;
+    Empty resp;
+
+    ClientContext context;
+    Status status = stub_->resume(&context, req, &resp);
+
+    if (!status.ok()) {
+      //warning("%s\n", status.error_message().c_str());
+      return false;
+    }
+
+    return true;
+  }
+
+  bool start() {
+    Empty req;
+    Empty resp;
+
+    ClientContext context;
+    Status status = stub_->start_emulation(&context, req, &resp);
+
+    if (!status.ok()) {
+      //warning("%s\n", status.error_message().c_str());
+      return false;
+    }
+
+    return true;
+  }
+
+  bool exit() {
+    Empty req;
+    Empty resp;
+
+    ClientContext context;
+    Status status = stub_->exit_emulation(&context, req, &resp);
+
+    if (!status.ok()) {
+      //warning("%s\n", status.error_message().c_str());
+      return false;
+    }
+
+    return true;
+  }
+
+  bool step_into() {
+    Empty req;
+    Empty resp;
+
+    ClientContext context;
+    Status status = stub_->step_into(&context, req, &resp);
+
+    if (!status.ok()) {
+      //warning("%s\n", status.error_message().c_str());
+      return false;
+    }
+
+    return true;
+  }
+
+  bool step_over() {
+    Empty req;
+    Empty resp;
+
+    ClientContext context;
+    Status status = stub_->step_over(&context, req, &resp);
+
+    if (!status.ok()) {
+      //warning("%s\n", status.error_message().c_str());
+      return false;
+    }
+
+    return true;
+  }
+
+  bool get_callstack(std::vector<uint32_t>& _return) {
+    Empty req;
+    Callstack resp;
+
+    ClientContext context;
+    Status status = stub_->get_callstack(&context, req, &resp);
+
+    if (!status.ok()) {
+      //warning("%s\n", status.error_message().c_str());
+      return false;
+    }
+
+    _return.clear();
+
+    for (auto i = resp.callstack().cbegin(); i != resp.callstack().cend(); ++i) {
+      _return.push_back(*i);
+    }
+
+    return true;
+  }
+
+private:
+  std::unique_ptr<DbgServer::Stub> stub_;
+};
+
+static std::unique_ptr<DbgServerClient> client;
+
+static bool pause_execution() {
+  return client->pause();
+}
+
+static bool continue_execution() {
+  return client->resume();
+}
+
+static bool finish_execution() {
+  if (!client->exit()) {
     debug_event_t ev;
     ev.pid = 1;
     ev.handled = true;
     ev.set_exit_code(PROCESS_EXITED, 0);
 
-    apply_codemap(changed);
-
     events.enqueue(ev, IN_BACK);
+    return false;
   }
 
-};
-
-static void init_ida_server() {
-  try {
-    ::std::shared_ptr<DbgClientHandler> handler(new DbgClientHandler());
-    ::std::shared_ptr<TProcessor> processor(new DbgClientProcessor(handler));
-    ::std::shared_ptr<TNonblockingServerTransport> serverTransport(new TNonblockingServerSocket(9091));
-    ::std::shared_ptr<TFramedTransportFactory> transportFactory(new TFramedTransportFactory());
-    ::std::shared_ptr<TProtocolFactory> protocolFactory(new TBinaryProtocolFactory());
-
-    srv = ::std::shared_ptr<TNonblockingServer>(new TNonblockingServer(processor, protocolFactory, serverTransport));
-    ::std::shared_ptr<ThreadFactory> tf(new ThreadFactory());
-    ::std::shared_ptr<Thread> thread = tf->newThread(srv);
-    thread->start();
-  }
-  catch (...) {
-
-  }
+  return true;
 }
 
 static void init_emu_client() {
-  ::std::shared_ptr<TTransport> socket(new TSocket("127.0.0.1", 9090));
-  cli_transport = ::std::shared_ptr<TTransport>(new TFramedTransport(socket));
-  ::std::shared_ptr<TBinaryProtocol> protocol(new TBinaryProtocol(cli_transport));
-  client = ::std::shared_ptr<DbgServerClient>(new DbgServerClient(protocol));
+  auto channel = grpc::CreateChannel("localhost:9090", grpc::InsecureChannelCredentials());
 
   show_wait_box("Waiting for GENS emulation...");
 
-  while (true) {
+  while (channel->GetState(true) != GRPC_CHANNEL_READY) {
     if (user_cancelled()) {
       break;
-    }
-
-    try {
-      cli_transport->open();
-      break;
-    }
-    catch (...) {
-      
     }
   }
 
   hide_wait_box();
+
+  client = std::unique_ptr<DbgServerClient>(new DbgServerClient(channel));
 }
 
 // Initialize debugger
 // Returns true-success
 // This function is called from the main thread
-static drc_t idaapi init_debugger(const char* hostname, int portnum, const char* password, qstring *errbuf)
-{
+static drc_t idaapi init_debugger(const char* hostname, int portnum, const char* password, qstring *errbuf) {
 #ifdef DEBUG_68K
-    set_processor_type("68020", SETPROC_LOADER); // reset proc to "M68020"
+  set_processor_type("68020", SETPROC_LOADER); // reset proc to "M68020"
 #endif
-    return DRC_OK;
+  return DRC_OK;
 }
 
 // Terminate debugger
 // Returns true-success
 // This function is called from the main thread
-static drc_t idaapi term_debugger(void)
-{
-    finish_execution();
-    return DRC_OK;
+static drc_t idaapi term_debugger(void) {
+  finish_execution();
+  return DRC_OK;
 }
 
 // Return information about the n-th "compatible" running process.
@@ -364,7 +726,7 @@ static drc_t idaapi term_debugger(void)
 // This function is called from the main thread
 static drc_t s_get_processes(procinfo_vec_t* procs, qstring* errbuf) {
   process_info_t info;
-  info.name.sprnt("gpgx");
+  info.name.sprnt("GENS");
   info.pid = 1;
   procs->add(info);
 
@@ -382,30 +744,18 @@ static drc_t idaapi s_start_process(const char* path,
   uint32 dbg_proc_flags,
   const char* input_path,
   uint32 input_file_crc32,
-  qstring* errbuf = NULL)
-{
-    events.clear();
+  qstring* errbuf = NULL) {
+  events.clear();
 
-    init_ida_server();
-    init_emu_client();
+  init_ida_server();
+  init_emu_client();
 
-    try {
-      if (client) {
-        client->start_emulation();
-      }
-    }
-    catch (...) {
-      return DRC_FAILED;
-    }
-
-    return DRC_OK;
+  return client->start() ? DRC_OK : DRC_FAILED;
 }
 
 // rebase database if the debugged program has been rebased by the system
 // This function is called from the main thread
-static void idaapi rebase_if_required_to(ea_t new_base)
-{
-}
+static void idaapi rebase_if_required_to(ea_t new_base) { }
 
 // Prepare to pause the process
 // This function will prepare to pause the process
@@ -416,10 +766,9 @@ static void idaapi rebase_if_required_to(ea_t new_base)
 // If this function is absent, then it won't be possible to pause the program
 // 1-ok, 0-failed, -1-network error
 // This function is called from debthread
-static drc_t idaapi prepare_to_pause_process(qstring *errbuf)
-{
-    pause_execution();
-    return DRC_OK;
+static drc_t idaapi prepare_to_pause_process(qstring *errbuf) {
+  pause_execution();
+  return DRC_OK;
 }
 
 // Stop the process.
@@ -429,51 +778,48 @@ static drc_t idaapi prepare_to_pause_process(qstring *errbuf)
 // In this mode, all other events will be automatically handled and process will be resumed.
 // 1-ok, 0-failed, -1-network error
 // This function is called from debthread
-static drc_t idaapi emul_exit_process(qstring *errbuf)
-{
-    finish_execution();
-
-    return DRC_OK;
+static drc_t idaapi emul_exit_process(qstring *errbuf) {
+  finish_execution();
+  return DRC_OK;
 }
 
 // Get a pending debug event and suspend the process
 // This function will be called regularly by IDA.
 // This function is called from debthread
-static gdecode_t idaapi get_debug_event(debug_event_t *event, int timeout_ms)
-{
-    while (true)
-    {
-        // are there any pending events?
-        if (events.retrieve(event))
-        {
-            return events.empty() ? GDE_ONE_EVENT : GDE_MANY_EVENTS;
-        }
-        if (events.empty())
-            break;
+static gdecode_t idaapi get_debug_event(debug_event_t *event, int timeout_ms) {
+  while (true) {
+    // are there any pending events?
+    if (events.retrieve(event)) {
+      return events.empty() ? GDE_ONE_EVENT : GDE_MANY_EVENTS;
     }
-    return GDE_NO_EVENT;
+
+    if (events.empty()) {
+      break;
+    }
+  }
+  
+  return GDE_NO_EVENT;
 }
 
 // Continue after handling the event
 // 1-ok, 0-failed, -1-network error
 // This function is called from debthread
-static drc_t idaapi continue_after_event(const debug_event_t *event)
-{
-    dbg_notification_t req = get_running_notification();
-    switch (event->eid())
-    {
-    case STEP:
-    case PROCESS_SUSPENDED:
-        if (req == dbg_null || req == dbg_run_to) {
-          continue_execution();
-        }
-        break;
-    case PROCESS_EXITED:
-        stop_server();
-        break;
-    }
+static drc_t idaapi continue_after_event(const debug_event_t *event) {
+  dbg_notification_t req = get_running_notification();
 
-    return DRC_OK;
+  switch (event->eid()) {
+  case STEP:
+  case PROCESS_SUSPENDED:
+    if (req == dbg_null || req == dbg_run_to) {
+      continue_execution();
+    }
+    break;
+  case PROCESS_EXITED:
+    stop_server();
+    break;
+  }
+
+  return DRC_OK;
 }
 
 // The following function will be called by the kernel each time
@@ -489,43 +835,20 @@ static drc_t idaapi continue_after_event(const debug_event_t *event)
 // names to the database.
 // This function pointer may be absent, i.e. NULL.
 // This function is called from the main thread
-static void idaapi stopped_at_debug_event(bool dlls_added)
-{
-}
+static void idaapi stopped_at_debug_event(bool dlls_added) { }
 
 // The following functions manipulate threads.
 // 1-ok, 0-failed, -1-network error
 // These functions are called from debthread
-static drc_t idaapi s_set_resume_mode(thid_t tid, resume_mode_t resmod) // Run one instruction in the thread
-{
-    switch (resmod)
-    {
-    case RESMOD_INTO:    ///< step into call (the most typical single stepping)
-        try {
-          if (client) {
-            client->step_into();
-            return DRC_OK;
-          }
-        }
-        catch (...) {
-          return DRC_FAILED;
-        }
+static drc_t idaapi s_set_resume_mode(thid_t tid, resume_mode_t resmod) { // Run one instruction in the thread
+  switch (resmod) {
+  case RESMOD_INTO:    ///< step into call (the most typical single stepping)
+    return client->step_into() ? DRC_OK : DRC_FAILED;
+  case RESMOD_OVER:    ///< step over call
+    return client->step_over() ? DRC_OK : DRC_FAILED;
+  }
 
-        break;
-    case RESMOD_OVER:    ///< step over call
-        try {
-          if (client) {
-            client->step_over();
-            return DRC_OK;
-          }
-        }
-        catch (...) {
-          return DRC_FAILED;
-        }
-        break;
-    }
-
-    return DRC_FAILED;
+  return DRC_FAILED;
 }
 
 // Read thread registers
@@ -535,159 +858,114 @@ static drc_t idaapi s_set_resume_mode(thid_t tid, resume_mode_t resmod) // Run o
 //			 regval is assumed to have debugger_t::registers_size elements
 // 1-ok, 0-failed, -1-network error
 // This function is called from debthread
-static drc_t idaapi read_registers(thid_t tid, int clsmask, regval_t *values, qstring *errbuf)
-{
-    if (clsmask & RC_GENERAL)
-    {
-        GpRegisters regs;
+static drc_t idaapi read_registers(thid_t tid, int clsmask, regval_t *values, qstring *errbuf) {
+  if (clsmask & RC_GENERAL) {
+    GpRegs regs;
 
-        try {
-          if (client) {
-            client->get_gp_regs(regs);
+    if (!client->get_gp_regs(&regs)) {
+      return DRC_FAILED;
+    }
 
 #ifdef DEBUG_68K
-            values[R_D0].ival = regs.D0;
-            values[R_D1].ival = regs.D1;
-            values[R_D2].ival = regs.D2;
-            values[R_D3].ival = regs.D3;
-            values[R_D4].ival = regs.D4;
-            values[R_D5].ival = regs.D5;
-            values[R_D6].ival = regs.D6;
-            values[R_D7].ival = regs.D7;
+    values[R_D0].ival = regs.d0();
+    values[R_D1].ival = regs.d1();
+    values[R_D2].ival = regs.d2();
+    values[R_D3].ival = regs.d3();
+    values[R_D4].ival = regs.d4();
+    values[R_D5].ival = regs.d5();
+    values[R_D6].ival = regs.d6();
+    values[R_D7].ival = regs.d7();
 
-            values[R_A0].ival = regs.A0;
-            values[R_A1].ival = regs.A1;
-            values[R_A2].ival = regs.A2;
-            values[R_A3].ival = regs.A3;
-            values[R_A4].ival = regs.A4;
-            values[R_A5].ival = regs.A5;
-            values[R_A6].ival = regs.A6;
-            values[R_A7].ival = regs.A7;
+    values[R_A0].ival = regs.a0();
+    values[R_A1].ival = regs.a1();
+    values[R_A2].ival = regs.a2();
+    values[R_A3].ival = regs.a3();
+    values[R_A4].ival = regs.a4();
+    values[R_A5].ival = regs.a5();
+    values[R_A6].ival = regs.a6();
+    values[R_A7].ival = regs.a7();
 
-            values[R_PC].ival = regs.PC;
-            values[R_SP].ival = regs.SP;
-            values[R_SR].ival = regs.SR;
+    values[R_PC].ival = regs.pc();
+    values[R_SP].ival = regs.sp();
+    values[R_SR].ival = regs.sr();
 #else
-            /*
-            { "A", 0, RC_GENERAL, dt_byte, NULL, 0 },
-    { "AF", 0, RC_GENERAL, dt_word, SRReg, 0xFF },
-    { "AF'", 0, RC_GENERAL, dt_word, NULL, 0 },
-    { "B", 0, RC_GENERAL, dt_byte, NULL, 0 },
-    { "C", 0, RC_GENERAL, dt_byte, NULL, 0 },
-    { "BC", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
-    { "BC'", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
-    { "DE", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
-    { "DE'", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
-    { "HL", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
-    { "HL'", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
+    values[R_A].ival = (regs.af() >> 8) & 0xFF;
+    values[R_AF].ival = regs.af();
+    values[R_AF2].ival = regs.af2();
+    values[R_B].ival = (regs.bc() >> 8) & 0xFF;
+    values[R_C].ival = (regs.bc() >> 0) & 0xFF;
+    values[R_BC].ival = regs.bc();
+    values[R_BC2].ival = regs.bc2();
+    values[R_DE].ival = regs.de();
+    values[R_DE2].ival = regs.de2();
+    values[R_HL].ival = regs.hl();
+    values[R_HL2].ival = regs.hl2();
 
-    { "IXH", 0, RC_GENERAL, dt_byte, NULL, 0 },
-    { "IXL", 0, RC_GENERAL, dt_byte, NULL, 0 },
-    { "IX", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
-    { "IYH", 0, RC_GENERAL, dt_byte, NULL, 0 },
-    { "IYL", 0, RC_GENERAL, dt_byte, NULL, 0 },
-    { "IY", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
-    { "I", 0, RC_GENERAL, dt_byte, NULL, 0 },
-    { "R", 0, RC_GENERAL, dt_word, NULL, 0 },
+    values[R_IXH].ival = (regs.ix() >> 8) & 0xFF;
+    values[R_IXL].ival = (regs.ix() >> 0) & 0xFF;
+    values[R_IX].ival = regs.ix();
+    values[R_IYH].ival = (regs.iy() >> 8) & 0xFF;
+    values[R_IYL].ival = (regs.iy() >> 0) & 0xFF;
+    values[R_IY].ival = regs.iy();
+    values[R_I].ival = regs.i();
+    values[R_R].ival = regs.r();
+    values[R_PC].ival = regs.pc();
 
-    { "SP", REGISTER_ADDRESS | REGISTER_SP, RC_GENERAL, dt_word, NULL, 0 },
-    { "PC", REGISTER_ADDRESS | REGISTER_IP, RC_GENERAL, dt_word, NULL, 0 },
+    values[R_SP].ival = regs.sp();
+    values[R_IP].ival = regs.ip();
 
-    { "M68K_BANK", REGISTER_READONLY, RC_GENERAL, dt_dword, NULL, 0 },
-            */
-            values[R_A].ival = (regs.AF >> 8) & 0xFF;
-            values[R_AF].ival = regs.AF;
-            values[R_AF2].ival = regs.AF2;
-            values[R_B].ival = (regs.BC >> 8) & 0xFF;
-            values[R_C].ival = (regs.BC >> 0) & 0xFF;
-            values[R_BC].ival = regs.BC;
-            values[R_BC2].ival = regs.BC2;
-            values[R_DE].ival = regs.DE;
-            values[R_DE2].ival = regs.DE2;
-            values[R_HL].ival = regs.HL;
-            values[R_HL2].ival = regs.HL2;
-
-            values[R_IXH].ival = (regs.IX >> 8) & 0xFF;
-            values[R_IXL].ival = (regs.IX >> 0) & 0xFF;
-            values[R_IX].ival = regs.IX;
-            values[R_IYH].ival = (regs.IY >> 8) & 0xFF;
-            values[R_IYL].ival = (regs.IY >> 0) & 0xFF;
-            values[R_IY].ival = regs.IY;
-            values[R_I].ival = regs.I;
-            values[R_R].ival = regs.R;
-            values[R_PC].ival = regs.PC;
-
-            values[R_SP].ival = regs.SP;
-            values[R_IP].ival = regs.IP;
-
-            values[R_BANK].ival = regs.BANK;
+    values[R_BANK].ival = regs.bank();
 #endif
-          }
-        }
-        catch (...) {
-          return DRC_FAILED;
-        }
 
 #ifdef DEBUG_68K
-        DmaInfo dma;
+    DmaInfo dma;
 
-        try {
-          if (client) {
-            client->get_dma_info(dma);
-
-            values[R_VDP_DMA_LEN].ival = dma.Len;
-            values[R_VDP_DMA_SRC].ival = dma.Src;
-            values[R_VDP_WRITE_ADDR].ival = dma.Dst;
-          }
-        }
-        catch (...) {
-          return DRC_FAILED;
-        }
-#endif
+    if (!client->get_dma_info(&dma)) {
+      return DRC_FAILED;
     }
+
+    values[R_VDP_DMA_LEN].ival = dma.len();
+    values[R_VDP_DMA_SRC].ival = dma.src();
+    values[R_VDP_WRITE_ADDR].ival = dma.dst();
+#endif
+  }
 
 #ifdef DEBUG_68K
-    if (clsmask & RC_VDP)
-    {
-        VdpRegisters regs;
+  if (clsmask & RC_VDP) {
+    VdpRegs regs;
 
-        try {
-          if (client) {
-            client->get_vdp_regs(regs);
-
-            values[R_V00].ival = regs.V00;
-            values[R_V01].ival = regs.V01;
-            values[R_V02].ival = regs.V02;
-            values[R_V03].ival = regs.V03;
-            values[R_V04].ival = regs.V04;
-            values[R_V05].ival = regs.V05;
-            values[R_V06].ival = regs.V06;
-            values[R_V07].ival = regs.V07;
-            values[R_V08].ival = regs.V08;
-            values[R_V09].ival = regs.V09;
-            values[R_V10].ival = regs.V0A;
-            values[R_V11].ival = regs.V0B;
-            values[R_V12].ival = regs.V0C;
-            values[R_V13].ival = regs.V0D;
-            values[R_V14].ival = regs.V0E;
-            values[R_V15].ival = regs.V0F;
-            values[R_V16].ival = regs.V10;
-            values[R_V17].ival = regs.V11;
-            values[R_V18].ival = regs.V12;
-            values[R_V19].ival = regs.V13;
-            values[R_V20].ival = regs.V14;
-            values[R_V21].ival = regs.V15;
-            values[R_V22].ival = regs.V16;
-            values[R_V23].ival = regs.V17;
-          }
-        }
-        catch (...) {
-          return DRC_FAILED;
-        }
+    if (!client->get_vdp_regs(&regs)) {
+      return DRC_FAILED;
     }
+
+    values[R_V00].ival = regs.v00();
+    values[R_V01].ival = regs.v01();
+    values[R_V02].ival = regs.v02();
+    values[R_V03].ival = regs.v03();
+    values[R_V04].ival = regs.v04();
+    values[R_V05].ival = regs.v05();
+    values[R_V06].ival = regs.v06();
+    values[R_V07].ival = regs.v07();
+    values[R_V08].ival = regs.v08();
+    values[R_V09].ival = regs.v09();
+    values[R_V10].ival = regs.v0a();
+    values[R_V11].ival = regs.v0b();
+    values[R_V12].ival = regs.v0c();
+    values[R_V13].ival = regs.v0d();
+    values[R_V14].ival = regs.v0e();
+    values[R_V15].ival = regs.v0f();
+    values[R_V16].ival = regs.v10();
+    values[R_V17].ival = regs.v11();
+    values[R_V18].ival = regs.v12();
+    values[R_V19].ival = regs.v13();
+    values[R_V20].ival = regs.v14();
+    values[R_V21].ival = regs.v15();
+    values[R_V22].ival = regs.v16();
+    values[R_V23].ival = regs.v17();
+  }
 #endif
 
-    return DRC_OK;
+  return DRC_OK;
 }
 
 // Write one thread register
@@ -696,42 +974,23 @@ static drc_t idaapi read_registers(thid_t tid, int clsmask, regval_t *values, qs
 //	regval - new value of the register
 // 1-ok, 0-failed, -1-network error
 // This function is called from debthread
-static drc_t idaapi write_register(thid_t tid, int regidx, const regval_t *value, qstring *errbuf)
-{
+static drc_t idaapi write_register(thid_t tid, int regidx, const regval_t *value, qstring *errbuf) {
 #ifdef DEBUG_68K
-    if (regidx >= R_D0 && regidx <= R_SR) {
+  if (regidx >= R_D0 && regidx <= R_SR) {
 #endif
-      GpRegister reg;
-      reg.index = (GpRegsEnum::type)regidx;
-      reg.value = value->ival & 0xFFFFFFFF;
-
-      try {
-        if (client) {
-          client->set_gp_reg(reg);
-        }
-      }
-      catch (...) {
-        return DRC_FAILED;
-      }
+    if (!client->set_gp_reg((GpRegsEnum)regidx, value->ival & 0xFFFFFFFF)) {
+      return DRC_FAILED;
+    }
 #ifdef DEBUG_68K
+  }
+  else if (regidx >= R_V00 && regidx <= R_V23) {
+    if (!client->set_vdp_reg((VdpRegsEnum)(regidx - R_V00), value->ival & 0xFF)) {
+      return DRC_FAILED;
     }
-    else if (regidx >= R_V00 && regidx <= R_V23) {
-      VdpRegister reg;
-      reg.index = (VdpRegsEnum::type)(regidx - R_V00);
-      reg.value = value->ival & 0xFF;
-
-      try {
-        if (client) {
-          client->set_vdp_reg(reg);
-        }
-      }
-      catch (...) {
-        return DRC_FAILED;
-      }
-    }
+  }
 #endif
 
-    return DRC_OK;
+  return DRC_OK;
 }
 
 //
@@ -746,55 +1005,53 @@ static drc_t idaapi write_register(thid_t tid, int regidx, const regval_t *value
 //	0: failed
 //	1: new memory layout is returned
 // This function is called from debthread
-static drc_t idaapi get_memory_info(meminfo_vec_t &areas, qstring *errbuf)
-{
-    areas.clear();
+static drc_t idaapi get_memory_info(meminfo_vec_t &areas, qstring *errbuf) {
+  areas.clear();
 
-    memory_info_t info;
+  memory_info_t info;
 
-    // Don't remove this loop
-    for (int i = 0; i < get_segm_qty(); ++i)
-    {
-      segment_t* segm = getnseg(i);
+  // Don't remove this loop
+  for (int i = 0; i < get_segm_qty(); ++i) {
+    segment_t* segm = getnseg(i);
 
-      info.start_ea = segm->start_ea;
-      info.end_ea = segm->end_ea;
+    info.start_ea = segm->start_ea;
+    info.end_ea = segm->end_ea;
 
-      qstring buf;
-      get_segm_name(&buf, segm);
-      info.name = buf;
+    qstring buf;
+    get_segm_name(&buf, segm);
+    info.name = buf;
 
-      get_segm_class(&buf, segm);
-      info.sclass = buf;
+    get_segm_class(&buf, segm);
+    info.sclass = buf;
 
-      info.sbase = 0;
-      info.perm = SEGPERM_READ | SEGPERM_WRITE;
-      info.bitness = 1;
-      areas.push_back(info);
-    }
-    // Don't remove this loop
+    info.sbase = 0;
+    info.perm = SEGPERM_READ | SEGPERM_WRITE;
+    info.bitness = 1;
+    areas.push_back(info);
+  }
+  // Don't remove this loop
 
 #ifdef DEBUG_68K
-    info.name = "DBG_VDP_VRAM";
-    info.start_ea = BREAKPOINTS_BASE;
-    info.end_ea = info.start_ea + 0x10000;
-    info.bitness = 1;
-    areas.push_back(info);
+  info.name = "DBG_VDP_VRAM";
+  info.start_ea = BREAKPOINTS_BASE;
+  info.end_ea = info.start_ea + 0x10000;
+  info.bitness = 1;
+  areas.push_back(info);
 
-    info.name = "DBG_VDP_CRAM";
-    info.start_ea = info.end_ea;
-    info.end_ea = info.start_ea + 0x10000;
-    info.bitness = 1;
-    areas.push_back(info);
+  info.name = "DBG_VDP_CRAM";
+  info.start_ea = info.end_ea;
+  info.end_ea = info.start_ea + 0x10000;
+  info.bitness = 1;
+  areas.push_back(info);
 
-    info.name = "DBG_VDP_VSRAM";
-    info.start_ea = info.end_ea;
-    info.end_ea = info.start_ea + 0x10000;
-    info.bitness = 1;
-    areas.push_back(info);
+  info.name = "DBG_VDP_VSRAM";
+  info.start_ea = info.end_ea;
+  info.end_ea = info.start_ea + 0x10000;
+  info.bitness = 1;
+  areas.push_back(info);
 #endif
 
-    return DRC_OK;
+  return DRC_OK;
 }
 
 // Read process memory
@@ -802,41 +1059,15 @@ static drc_t idaapi get_memory_info(meminfo_vec_t &areas, qstring *errbuf)
 // 0 means read error
 // -1 means that the process does not exist anymore
 // This function is called from debthread
-static ssize_t idaapi read_memory(ea_t ea, void *buffer, size_t size, qstring *errbuf)
-{
-    std::string mem;
-
-    try {
-      if (client) {
-        client->read_memory(mem, (int32_t)ea, (int32_t)size);
-
-        memcpy(&((unsigned char*)buffer)[0], mem.c_str(), size);
-      }
-    }
-    catch (...) {
-      return 0;
-    }
-
-    return size;
+static ssize_t idaapi read_memory(ea_t ea, void *buffer, size_t size, qstring *errbuf) {
+  return client->read_memory(ea, size, (uint8_t*)buffer) ? size : 0;
 }
 
 // Write process memory
 // Returns number of written bytes, -1-fatal error
 // This function is called from debthread
-static ssize_t idaapi write_memory(ea_t ea, const void *buffer, size_t size, qstring *errbuf)
-{
-    std::string mem((const char*)buffer);
-
-    try {
-      if (client) {
-        client->write_memory((int32_t)ea, mem);
-      }
-    }
-    catch (...) {
-      return 0;
-    }
-
-    return size;
+static ssize_t idaapi write_memory(ea_t ea, const void *buffer, size_t size, qstring *errbuf) {
+  return client->write_memory((const uint8_t*)buffer, ea, size) ? size : 0;
 }
 
 // Is it possible to set breakpoint?
@@ -844,256 +1075,209 @@ static ssize_t idaapi write_memory(ea_t ea, const void *buffer, size_t size, qst
 // This function is called from debthread or from the main thread if debthread
 // is not running yet.
 // It is called to verify hardware breakpoints.
-static int idaapi is_ok_bpt(bpttype_t type, ea_t ea, int len)
-{
-    switch (type)
-    {
-        //case BPT_SOFT:
-    case BPT_EXEC:
-    case BPT_READ: // there is no such constant in sdk61
-    case BPT_WRITE:
-    case BPT_RDWR:
-        return BPT_OK;
-    }
+static int idaapi is_ok_bpt(bpttype_t type, ea_t ea, int len) {
+  switch (type) {
+  case BPT_EXEC:
+  case BPT_READ: // there is no such constant in sdk61
+  case BPT_WRITE:
+  case BPT_RDWR:
+    return BPT_OK;
+  }
 
-    return BPT_BAD_TYPE;
+  return BPT_BAD_TYPE;
 }
 
 // Add/del breakpoints.
 // bpts array contains nadd bpts to add, followed by ndel bpts to del.
 // returns number of successfully modified bpts, -1-network error
 // This function is called from debthread
-static drc_t idaapi update_bpts(int* nbpts, update_bpt_info_t *bpts, int nadd, int ndel, qstring *errbuf)
-{
-    for (int i = 0; i < nadd; ++i)
-    {
-        ea_t start = bpts[i].ea;
-        ea_t end = bpts[i].ea + bpts[i].size - 1;
+static drc_t idaapi update_bpts(int* nbpts, update_bpt_info_t *bpts, int nadd, int ndel, qstring *errbuf) {
+  for (int i = 0; i < nadd; ++i) {
+    ea_t start = bpts[i].ea;
+    ea_t end = bpts[i].ea + bpts[i].size - 1;
 
-        BpType::type type1;
-        int type2 = 0;
+    BpType type1;
+    int type2 = 0;
 #ifdef DEBUG_68K
-        bool is_vdp = false;
+    bool is_vdp = false;
 #endif
 
-        switch (bpts[i].type)
-        {
-        case BPT_EXEC:
-            type1 = BpType::BP_PC;
-            break;
-        case BPT_READ:
-            type1 = BpType::BP_READ;
-            break;
-        case BPT_WRITE:
-            type1 = BpType::BP_WRITE;
-            break;
-        case BPT_RDWR:
-            type1 = BpType::BP_READ;
-            type2 = (int)BpType::BP_WRITE;
-            break;
-        }
-
-#ifdef DEBUG_68K
-        if (start >= BREAKPOINTS_BASE && end < BREAKPOINTS_BASE + 0x30000)
-        {
-            start -= BREAKPOINTS_BASE;
-            end -= BREAKPOINTS_BASE;
-            is_vdp = true;
-        }
-#endif
-
-        DbgBreakpoint bp;
-        bp.bstart = start & 0xFFFFFF;
-        bp.bend = end & 0xFFFFFF;
-        bp.type = type1;
-
-        bp.enabled = true;
-#ifdef DEBUG_68K
-        bp.is_vdp = is_vdp;
-#endif
-        bp.is_forbid = false;
-
-        try {
-          if (client) {
-            client->add_breakpoint(bp);
-          }
-        }
-        catch (...) {
-          return DRC_FAILED;
-        }
-
-        if (type2 != 0)
-        {
-            bp.type = (BpType::type)type2;
-
-            try {
-              if (client) {
-                client->add_breakpoint(bp);
-              }
-            }
-            catch (...) {
-              return DRC_FAILED;
-            }
-        }
-
-        bpts[i].code = BPT_OK;
+    switch (bpts[i].type) {
+    case BPT_EXEC:
+      type1 = BpType::BP_PC;
+      break;
+    case BPT_READ:
+      type1 = BpType::BP_READ;
+      break;
+    case BPT_WRITE:
+      type1 = BpType::BP_WRITE;
+      break;
+    case BPT_RDWR:
+      type1 = BpType::BP_READ;
+      type2 = (int)BpType::BP_WRITE;
+      break;
     }
 
-    for (int i = 0; i < ndel; ++i)
-    {
-        ea_t start = bpts[nadd + i].ea;
-        ea_t end = bpts[nadd + i].ea + bpts[nadd + i].size - 1;
-        BpType::type type1;
-        int type2 = 0;
 #ifdef DEBUG_68K
-        bool is_vdp = false;
+    if (start >= BREAKPOINTS_BASE && end < BREAKPOINTS_BASE + 0x30000) {
+      start -= BREAKPOINTS_BASE;
+      end -= BREAKPOINTS_BASE;
+      is_vdp = true;
+    }
 #endif
 
-        switch (bpts[nadd + i].type)
-        {
-        case BPT_EXEC:
-            type1 = BpType::BP_PC;
-            break;
-        case BPT_READ:
-            type1 = BpType::BP_READ;
-            break;
-        case BPT_WRITE:
-            type1 = BpType::BP_WRITE;
-            break;
-        case BPT_RDWR:
-            type1 = BpType::BP_READ;
-            type2 = (int)BpType::BP_WRITE;
-            break;
-        }
+    DbgBreakpoint bp;
+    bp.set_bstart(start & 0xFFFFFF);
+    bp.set_bend(end & 0xFFFFFF);
+    bp.set_type(type1);
 
+    bp.set_enabled(true);
 #ifdef DEBUG_68K
-        if (start >= BREAKPOINTS_BASE && end < BREAKPOINTS_BASE + 0x30000)
-        {
-            start -= BREAKPOINTS_BASE;
-            end -= BREAKPOINTS_BASE;
-            is_vdp = true;
-        }
+    bp.set_is_vdp(is_vdp);
 #endif
+    bp.set_is_forbid(false);
 
-        DbgBreakpoint bp;
-        bp.bstart = start & 0xFFFFFF;
-        bp.bend = end & 0xFFFFFF;
-        bp.type = type1;
-
-        bp.enabled = true;
-#ifdef DEBUG_68K
-        bp.is_vdp = is_vdp;
-#endif
-        bp.is_forbid = false;
-
-        try {
-          if (client) {
-            client->del_breakpoint(bp);
-          }
-        }
-        catch (...) {
-          return DRC_FAILED;
-        }
-
-        if (type2 != 0)
-        {
-            bp.type = (BpType::type)type2;
-
-            try {
-              if (client) {
-                client->del_breakpoint(bp);
-              }
-            }
-            catch (...) {
-              return DRC_FAILED;
-            }
-        }
-
-        bpts[nadd + i].code = BPT_OK;
+    if (!client->add_breakpoint(bp)) {
+      return DRC_FAILED;
     }
 
-    *nbpts = (ndel + nadd);
-    return DRC_OK;
+    if (type2 != 0) {
+      bp.set_type((BpType)type2);
+
+      if (!client->add_breakpoint(bp)) {
+        return DRC_FAILED;
+      }
+    }
+
+    bpts[i].code = BPT_OK;
+  }
+
+  for (int i = 0; i < ndel; ++i) {
+    ea_t start = bpts[nadd + i].ea;
+    ea_t end = bpts[nadd + i].ea + bpts[nadd + i].size - 1;
+    BpType type1;
+    int type2 = 0;
+#ifdef DEBUG_68K
+    bool is_vdp = false;
+#endif
+
+    switch (bpts[nadd + i].type) {
+    case BPT_EXEC:
+      type1 = BpType::BP_PC;
+      break;
+    case BPT_READ:
+      type1 = BpType::BP_READ;
+      break;
+    case BPT_WRITE:
+      type1 = BpType::BP_WRITE;
+      break;
+    case BPT_RDWR:
+      type1 = BpType::BP_READ;
+      type2 = (int)BpType::BP_WRITE;
+      break;
+    }
+
+#ifdef DEBUG_68K
+    if (start >= BREAKPOINTS_BASE && end < BREAKPOINTS_BASE + 0x30000) {
+      start -= BREAKPOINTS_BASE;
+      end -= BREAKPOINTS_BASE;
+      is_vdp = true;
+    }
+#endif
+
+    DbgBreakpoint bp;
+    bp.set_bstart(start & 0xFFFFFF);
+    bp.set_bend(end & 0xFFFFFF);
+    bp.set_type(type1);
+
+    bp.set_enabled(true);
+#ifdef DEBUG_68K
+    bp.set_is_vdp(is_vdp);
+#endif
+    bp.set_is_forbid(false);
+
+    if (!client->del_breakpoint(bp)) {
+      return DRC_FAILED;
+    }
+
+    if (type2 != 0) {
+      bp.set_type((BpType)type2);
+
+      if (!client->del_breakpoint(bp)) {
+        return DRC_FAILED;
+      }
+    }
+
+    bpts[nadd + i].code = BPT_OK;
+  }
+
+  *nbpts = (ndel + nadd);
+  return DRC_OK;
 }
 
 // Update low-level (server side) breakpoint conditions
 // Returns nlowcnds. -1-network error
 // This function is called from debthread
-static drc_t idaapi update_lowcnds(int* nupdated, const lowcnd_t *lowcnds, int nlowcnds, qstring* errbuf)
-{
-    for (int i = 0; i < nlowcnds; ++i)
-    {
-        ea_t start = lowcnds[i].ea;
-        ea_t end = lowcnds[i].ea + lowcnds[i].size - 1;
-        BpType::type type1;
-        int type2 = 0;
+static drc_t idaapi update_lowcnds(int* nupdated, const lowcnd_t *lowcnds, int nlowcnds, qstring* errbuf) {
+  for (int i = 0; i < nlowcnds; ++i) {
+    ea_t start = lowcnds[i].ea;
+    ea_t end = lowcnds[i].ea + lowcnds[i].size - 1;
+    BpType type1;
+    int type2 = 0;
 #ifdef DEBUG_68K
-        bool is_vdp = false;
+    bool is_vdp = false;
 #endif
 
-        switch (lowcnds[i].type)
-        {
-        case BPT_EXEC:
-            type1 = BpType::BP_PC;
-            break;
-        case BPT_READ:
-            type1 = BpType::BP_READ;
-            break;
-        case BPT_WRITE:
-            type1 = BpType::BP_WRITE;
-            break;
-        case BPT_RDWR:
-            type1 = BpType::BP_READ;
-            type2 = (int)BpType::BP_WRITE;
-            break;
-        }
-
-#ifdef DEBUG_68K
-        if (start >= BREAKPOINTS_BASE && end < BREAKPOINTS_BASE + 0x30000)
-        {
-            start -= BREAKPOINTS_BASE;
-            end -= BREAKPOINTS_BASE;
-            is_vdp = true;
-        }
-#endif
-
-        DbgBreakpoint bp;
-        bp.bstart = start & 0xFFFFFF;
-        bp.bend = end & 0xFFFFFF;
-        bp.type = type1;
-
-        bp.enabled = true;
-#ifdef DEBUG_68K
-        bp.is_vdp = is_vdp;
-#endif
-        bp.is_forbid = (lowcnds[i].cndbody.empty() ? false : ((lowcnds[i].cndbody[0] == '1') ? true : false));
-
-        try {
-          if (client) {
-            client->update_breakpoint(bp);
-          }
-        }
-        catch (...) {
-          return DRC_FAILED;
-        }
-
-        if (type2 != 0)
-        {
-            bp.type = (BpType::type)type2;
-
-            try {
-              if (client) {
-                client->update_breakpoint(bp);
-              }
-            }
-            catch (...) {
-              return DRC_FAILED;
-            }
-        }
+    switch (lowcnds[i].type) {
+    case BPT_EXEC:
+      type1 = BpType::BP_PC;
+      break;
+    case BPT_READ:
+      type1 = BpType::BP_READ;
+      break;
+    case BPT_WRITE:
+      type1 = BpType::BP_WRITE;
+      break;
+    case BPT_RDWR:
+      type1 = BpType::BP_READ;
+      type2 = (int)BpType::BP_WRITE;
+      break;
     }
 
-    *nupdated = nlowcnds;
-    return DRC_OK;
+#ifdef DEBUG_68K
+    if (start >= BREAKPOINTS_BASE && end < BREAKPOINTS_BASE + 0x30000) {
+      start -= BREAKPOINTS_BASE;
+      end -= BREAKPOINTS_BASE;
+      is_vdp = true;
+    }
+#endif
+
+    DbgBreakpoint bp;
+    bp.set_bstart(start & 0xFFFFFF);
+    bp.set_bend(end & 0xFFFFFF);
+    bp.set_type(type1);
+
+    bp.set_enabled(true);
+#ifdef DEBUG_68K
+    bp.set_is_vdp(is_vdp);
+#endif
+    bp.set_is_forbid(lowcnds[i].cndbody.empty() ? false : ((lowcnds[i].cndbody[0] == '1') ? true : false));
+
+    if (!client->update_breakpoint(bp)) {
+      return DRC_FAILED;
+    }
+
+    if (type2 != 0) {
+      bp.set_type((BpType)type2);
+
+      if (!client->update_breakpoint(bp)) {
+        return DRC_FAILED;
+      }
+    }
+  }
+
+  *nupdated = nlowcnds;
+  return DRC_OK;
 }
 
 // Calculate the call stack trace
@@ -1103,41 +1287,32 @@ static drc_t idaapi update_lowcnds(int* nupdated, const lowcnd_t *lowcnds, int n
 // If this function is missing or returns false, IDA will use the standard
 // mechanism (based on the frame pointer chain) to calculate the stack trace
 // This function is called from the main thread
-static bool idaapi update_call_stack(thid_t tid, call_stack_t *trace)
-{
-    std::vector<int32_t> cs;
+static bool idaapi update_call_stack(thid_t tid, call_stack_t *trace) {
+  std::vector<uint32_t> cs;
 
-    try {
-      if (client) {
-        client->get_callstack(cs);
-      }
-    }
-    catch (...) {
-      return false;
-    }
+  if (!client->get_callstack(cs)) {
+    return false;
+  }
 
-    trace->resize(cs.size());
+  trace->resize(cs.size());
 
-    for (size_t i = 0; i < cs.size(); i++)
-    {
-        call_stack_info_t &ci = (*trace)[i];
-        ci.callea = cs[i];
-        ci.funcea = BADADDR;
-        ci.fp = BADADDR;
-        ci.funcok = true;
-    }
+  for (size_t i = 0; i < cs.size(); i++) {
+    call_stack_info_t& ci = (*trace)[i];
+    ci.callea = cs[i];
+    ci.funcea = BADADDR;
+    ci.fp = BADADDR;
+    ci.funcok = true;
+  }
 
-    return true;
+  return true;
 }
 
 static ssize_t idaapi idd_notify(void*, int msgid, va_list va) {
   drc_t retcode = DRC_NONE;
   qstring* errbuf;
 
-  switch (msgid)
-  {
-  case debugger_t::ev_init_debugger:
-  {
+  switch (msgid) {
+  case debugger_t::ev_init_debugger: {
     const char* hostname = va_arg(va, const char*);
 
     int portnum = va_arg(va, int);
@@ -1152,16 +1327,14 @@ static ssize_t idaapi idd_notify(void*, int msgid, va_list va) {
     retcode = term_debugger();
     break;
 
-  case debugger_t::ev_get_processes:
-  {
+  case debugger_t::ev_get_processes: {
     procinfo_vec_t* procs = va_arg(va, procinfo_vec_t*);
     errbuf = va_arg(va, qstring*);
     retcode = s_get_processes(procs, errbuf);
   }
   break;
 
-  case debugger_t::ev_start_process:
-  {
+  case debugger_t::ev_start_process: {
     const char* path = va_arg(va, const char*);
     const char* args = va_arg(va, const char*);
     const char* startdir = va_arg(va, const char*);
@@ -1179,22 +1352,20 @@ static ssize_t idaapi idd_notify(void*, int msgid, va_list va) {
   }
   break;
 
-  //case debugger_t::ev_attach_process:
-  //{
-  //    pid_t pid = va_argi(va, pid_t);
-  //    int event_id = va_arg(va, int);
-  //    uint32 dbg_proc_flags = va_arg(va, uint32);
-  //    errbuf = va_arg(va, qstring*);
-  //    retcode = s_attach_process(pid, event_id, dbg_proc_flags, errbuf);
+  //case debugger_t::ev_attach_process: {
+  //  pid_t pid = va_argi(va, pid_t);
+  //  int event_id = va_arg(va, int);
+  //  uint32 dbg_proc_flags = va_arg(va, uint32);
+  //  errbuf = va_arg(va, qstring*);
+  //  retcode = s_attach_process(pid, event_id, dbg_proc_flags, errbuf);
   //}
   //break;
 
   //case debugger_t::ev_detach_process:
-  //    retcode = g_dbgmod.dbg_detach_process();
-  //    break;
+  //  retcode = g_dbgmod.dbg_detach_process();
+  //  break;
 
-  case debugger_t::ev_get_debapp_attrs:
-  {
+  case debugger_t::ev_get_debapp_attrs: {
     debapp_attrs_t* out_pattrs = va_arg(va, debapp_attrs_t*);
 #ifdef DEBUG_68K
     out_pattrs->addrsize = 4;
@@ -1209,10 +1380,9 @@ static ssize_t idaapi idd_notify(void*, int msgid, va_list va) {
   }
   break;
 
-  //case debugger_t::ev_rebase_if_required_to:
-  //{
-  //    ea_t new_base = va_arg(va, ea_t);
-  //    retcode = DRC_OK;
+  //case debugger_t::ev_rebase_if_required_to: {
+  //  ea_t new_base = va_arg(va, ea_t);
+  //  retcode = DRC_OK;
   //}
   //break;
 
@@ -1226,8 +1396,7 @@ static ssize_t idaapi idd_notify(void*, int msgid, va_list va) {
     retcode = emul_exit_process(errbuf);
     break;
 
-  case debugger_t::ev_get_debug_event:
-  {
+  case debugger_t::ev_get_debug_event: {
     gdecode_t* code = va_arg(va, gdecode_t*);
     debug_event_t* event = va_arg(va, debug_event_t*);
     int timeout_ms = va_arg(va, int);
@@ -1236,56 +1405,49 @@ static ssize_t idaapi idd_notify(void*, int msgid, va_list va) {
   }
   break;
 
-  case debugger_t::ev_resume:
-  {
+  case debugger_t::ev_resume: {
     debug_event_t* event = va_arg(va, debug_event_t*);
     retcode = continue_after_event(event);
   }
   break;
 
-  //case debugger_t::ev_set_exception_info:
-  //{
-  //    exception_info_t* info = va_arg(va, exception_info_t*);
-  //    int qty = va_arg(va, int);
-  //    g_dbgmod.dbg_set_exception_info(info, qty);
-  //    retcode = DRC_OK;
+  //case debugger_t::ev_set_exception_info: {
+  //  exception_info_t* info = va_arg(va, exception_info_t*);
+  //  int qty = va_arg(va, int);
+  //  g_dbgmod.dbg_set_exception_info(info, qty);
+  //  retcode = DRC_OK;
   //}
   //break;
 
-  //case debugger_t::ev_suspended:
-  //{
-  //    bool dlls_added = va_argi(va, bool);
-  //    thread_name_vec_t* thr_names = va_arg(va, thread_name_vec_t*);
-  //    retcode = DRC_OK;
+  //case debugger_t::ev_suspended: {
+  //  bool dlls_added = va_argi(va, bool);
+  //  thread_name_vec_t* thr_names = va_arg(va, thread_name_vec_t*);
+  //  retcode = DRC_OK;
   //}
   //break;
 
-  case debugger_t::ev_thread_suspend:
-  {
+  case debugger_t::ev_thread_suspend: {
     thid_t tid = va_argi(va, thid_t);
     pause_execution();
     retcode = DRC_OK;
   }
   break;
 
-  case debugger_t::ev_thread_continue:
-  {
+  case debugger_t::ev_thread_continue: {
     thid_t tid = va_argi(va, thid_t);
     continue_execution();
     retcode = DRC_OK;
   }
   break;
 
-  case debugger_t::ev_set_resume_mode:
-  {
+  case debugger_t::ev_set_resume_mode: {
     thid_t tid = va_argi(va, thid_t);
     resume_mode_t resmod = va_argi(va, resume_mode_t);
     retcode = s_set_resume_mode(tid, resmod);
   }
   break;
 
-  case debugger_t::ev_read_registers:
-  {
+  case debugger_t::ev_read_registers: {
     thid_t tid = va_argi(va, thid_t);
     int clsmask = va_arg(va, int);
     regval_t* values = va_arg(va, regval_t*);
@@ -1294,8 +1456,7 @@ static ssize_t idaapi idd_notify(void*, int msgid, va_list va) {
   }
   break;
 
-  case debugger_t::ev_write_register:
-  {
+  case debugger_t::ev_write_register: {
     thid_t tid = va_argi(va, thid_t);
     int regidx = va_arg(va, int);
     const regval_t* value = va_arg(va, const regval_t*);
@@ -1304,16 +1465,14 @@ static ssize_t idaapi idd_notify(void*, int msgid, va_list va) {
   }
   break;
 
-  case debugger_t::ev_get_memory_info:
-  {
+  case debugger_t::ev_get_memory_info: {
     meminfo_vec_t* ranges = va_arg(va, meminfo_vec_t*);
     errbuf = va_arg(va, qstring*);
     retcode = get_memory_info(*ranges, errbuf);
   }
   break;
 
-  case debugger_t::ev_read_memory:
-  {
+  case debugger_t::ev_read_memory: {
     size_t* nbytes = va_arg(va, size_t*);
     ea_t ea = va_arg(va, ea_t);
     void* buffer = va_arg(va, void*);
@@ -1325,8 +1484,7 @@ static ssize_t idaapi idd_notify(void*, int msgid, va_list va) {
   }
   break;
 
-  case debugger_t::ev_write_memory:
-  {
+  case debugger_t::ev_write_memory: {
     size_t* nbytes = va_arg(va, size_t*);
     ea_t ea = va_arg(va, ea_t);
     const void* buffer = va_arg(va, void*);
@@ -1338,8 +1496,7 @@ static ssize_t idaapi idd_notify(void*, int msgid, va_list va) {
   }
   break;
 
-  case debugger_t::ev_check_bpt:
-  {
+  case debugger_t::ev_check_bpt: {
     int* bptvc = va_arg(va, int*);
     bpttype_t type = va_argi(va, bpttype_t);
     ea_t ea = va_arg(va, ea_t);
@@ -1349,8 +1506,7 @@ static ssize_t idaapi idd_notify(void*, int msgid, va_list va) {
   }
   break;
 
-  case debugger_t::ev_update_bpts:
-  {
+  case debugger_t::ev_update_bpts: {
     int* nbpts = va_arg(va, int*);
     update_bpt_info_t* bpts = va_arg(va, update_bpt_info_t*);
     int nadd = va_arg(va, int);
@@ -1360,8 +1516,7 @@ static ssize_t idaapi idd_notify(void*, int msgid, va_list va) {
   }
   break;
 
-  case debugger_t::ev_update_lowcnds:
-  {
+  case debugger_t::ev_update_lowcnds: {
       int* nupdated = va_arg(va, int*);
       const lowcnd_t* lowcnds = va_arg(va, const lowcnd_t*);
       int nlowcnds = va_arg(va, int);
@@ -1371,8 +1526,7 @@ static ssize_t idaapi idd_notify(void*, int msgid, va_list va) {
   break;
 
 #ifdef HAVE_UPDATE_CALL_STACK
-  case debugger_t::ev_update_call_stack:
-  {
+  case debugger_t::ev_update_call_stack: {
     thid_t tid = va_argi(va, thid_t);
     call_stack_t* trace = va_arg(va, call_stack_t*);
     retcode = g_dbgmod.dbg_update_call_stack(tid, trace);
@@ -1380,25 +1534,24 @@ static ssize_t idaapi idd_notify(void*, int msgid, va_list va) {
   break;
 #endif
 
-  //case debugger_t::ev_eval_lowcnd:
-  //{
-  //    thid_t tid = va_argi(va, thid_t);
-  //    ea_t ea = va_arg(va, ea_t);
-  //    errbuf = va_arg(va, qstring*);
-  //    retcode = g_dbgmod.dbg_eval_lowcnd(tid, ea, errbuf);
+  //case debugger_t::ev_eval_lowcnd: {
+  //  thid_t tid = va_argi(va, thid_t);
+  //  ea_t ea = va_arg(va, ea_t);
+  //  errbuf = va_arg(va, qstring*);
+  //  retcode = g_dbgmod.dbg_eval_lowcnd(tid, ea, errbuf);
   //}
   //break;
 
-  //case debugger_t::ev_bin_search:
-  //{
-  //    ea_t* ea = va_arg(va, ea_t*);
-  //    ea_t start_ea = va_arg(va, ea_t);
-  //    ea_t end_ea = va_arg(va, ea_t);
-  //    const compiled_binpat_vec_t* ptns = va_arg(va, const compiled_binpat_vec_t*);
-  //    int srch_flags = va_arg(va, int);
-  //    errbuf = va_arg(va, qstring*);
-  //    if (ptns != NULL)
-  //        retcode = g_dbgmod.dbg_bin_search(ea, start_ea, end_ea, *ptns, srch_flags, errbuf);
+  //case debugger_t::ev_bin_search: {
+  //  ea_t* ea = va_arg(va, ea_t*);
+  //  ea_t start_ea = va_arg(va, ea_t);
+  //  ea_t end_ea = va_arg(va, ea_t);
+  //  const compiled_binpat_vec_t* ptns = va_arg(va, const compiled_binpat_vec_t*);
+  //  int srch_flags = va_arg(va, int);
+  //  errbuf = va_arg(va, qstring*);
+  //  if (ptns != NULL) {
+  //    retcode = g_dbgmod.dbg_bin_search(ea, start_ea, end_ea, *ptns, srch_flags, errbuf);
+  //  }
   //}
   //break;
   default:
@@ -1414,33 +1567,32 @@ static ssize_t idaapi idd_notify(void*, int msgid, va_list va) {
 //
 //--------------------------------------------------------------------------
 
-debugger_t debugger =
-{
-    IDD_INTERFACE_VERSION,
-    NAME,
+debugger_t debugger = {
+  IDD_INTERFACE_VERSION,
+  NAME,
 #ifdef DEBUG_68K
-    0x8000 + 1,
-    "m68k",
+  0x8000 + 1,
+  "m68k",
 #else
-    0x8000 + 2,
-    "z80",
+  0x8000 + 2,
+  "z80",
 #endif
-    DBG_FLAG_NOHOST | DBG_FLAG_CAN_CONT_BPT | DBG_FLAG_FAKE_ATTACH | DBG_FLAG_SAFE | DBG_FLAG_NOPASSWORD | DBG_FLAG_NOSTARTDIR | DBG_FLAG_NOPARAMETERS | DBG_FLAG_ANYSIZE_HWBPT | DBG_FLAG_DEBTHREAD | DBG_FLAG_PREFER_SWBPTS,
-    DBG_HAS_GET_PROCESSES | DBG_HAS_REQUEST_PAUSE | DBG_HAS_SET_RESUME_MODE | DBG_HAS_CHECK_BPT | DBG_HAS_THREAD_SUSPEND | DBG_HAS_THREAD_CONTINUE | DBG_FLAG_LOWCNDS | DBG_FLAG_CONNSTRING,
+  DBG_FLAG_NOHOST | DBG_FLAG_CAN_CONT_BPT | DBG_FLAG_FAKE_ATTACH | DBG_FLAG_SAFE | DBG_FLAG_NOPASSWORD | DBG_FLAG_NOSTARTDIR | DBG_FLAG_NOPARAMETERS | DBG_FLAG_ANYSIZE_HWBPT | DBG_FLAG_DEBTHREAD | DBG_FLAG_PREFER_SWBPTS,
+  DBG_HAS_GET_PROCESSES | DBG_HAS_REQUEST_PAUSE | DBG_HAS_SET_RESUME_MODE | DBG_HAS_CHECK_BPT | DBG_HAS_THREAD_SUSPEND | DBG_HAS_THREAD_CONTINUE | DBG_FLAG_LOWCNDS | DBG_FLAG_CONNSTRING,
 
-    register_classes,
-    RC_GENERAL,
-    registers,
-    qnumber(registers),
+  register_classes,
+  RC_GENERAL,
+  registers,
+  qnumber(registers),
 
-    0x1000,
+  0x1000,
 
-    NULL,
-    0,
-    0,
+  NULL,
+  0,
+  0,
 
-    DBG_RESMOD_STEP_INTO | DBG_RESMOD_STEP_OVER,
+  DBG_RESMOD_STEP_INTO | DBG_RESMOD_STEP_OVER,
 
-    NULL, // set_dbg_options
-    idd_notify
+  NULL, // set_dbg_options
+  idd_notify
 };

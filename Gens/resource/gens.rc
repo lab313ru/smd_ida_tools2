@@ -283,30 +283,14 @@ BEGIN
     CONTROL         "Double Sized",IDC_X2_FPS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,127,70,90,8
     CONTROL         "Transparency",IDC_TRANS_FPS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,84,90,8
     CONTROL         "Slider2",IDC_COLOR_FPS,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,122,81,116,16
-    CONTROL         IDB_RECT_BLANC,IDC_STATIC,"Static",SS_BITMAP,124,98,14,10
-    CONTROL         IDB_RECT_ROUGE,IDC_STATIC,"Static",SS_BITMAP,223,98,14,10
-    CONTROL         IDB_RECT_BLEU,IDC_STATIC,"Static",SS_BITMAP,156,98,14,10
-    CONTROL         IDB_RECT_VERT,IDC_STATIC,"Static",SS_BITMAP,189,98,14,10
     CONTROL         "Enable",IDC_ENABLE_MESSAGE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,128,90,8
     GROUPBOX        "Message",IDC_OPTION_MESSAGE,7,116,242,60
     CONTROL         "Double Sized",IDC_X2_MESSAGE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,127,130,90,8
     CONTROL         "Transparency",IDC_TRANS_MESSAGE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,144,90,8
     CONTROL         "Slider2",IDC_COLOR_MESSAGE,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,121,142,116,16
-    CONTROL         IDB_RECT_BLANC,IDC_STATIC,"Static",SS_BITMAP,123,158,14,10
-    CONTROL         IDB_RECT_ROUGE,IDC_STATIC,"Static",SS_BITMAP,223,158,14,10
-    CONTROL         IDB_RECT_BLEU,IDC_STATIC,"Static",SS_BITMAP,155,158,14,10
-    CONTROL         IDB_RECT_VERT,IDC_STATIC,"Static",SS_BITMAP,189,158,14,10
     GROUPBOX        "Misc",IDC_OPTION_MISC,7,177,242,51
     CTEXT           "Intro effect color",IDC_EFFECT_COLOR,13,186,79,11
     CONTROL         "Slider1",IDC_COLOR_EFFECT,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,98,184,144,18
-    CONTROL         IDB_RECT_NOIR,IDC_STATIC,"Static",SS_BITMAP,100,202,14,10
-    CONTROL         IDB_RECT_BLEU,IDC_STATIC,"Static",SS_BITMAP,118,202,14,10
-    CONTROL         IDB_RECT_VERT,IDC_STATIC,"Static",SS_BITMAP,136,202,14,10
-    CONTROL         IDB_RECT_ROUGE,IDC_STATIC,"Static",SS_BITMAP,173,202,14,10
-    CONTROL         IDB_RECT_CYAN,IDC_STATIC,"Static",SS_BITMAP,155,202,14,10
-    CONTROL         IDB_RECT_VIOLET,IDC_STATIC,"Static",SS_BITMAP,192,202,14,10
-    CONTROL         IDB_RECT_JAUNE,IDC_STATIC,"Static",SS_BITMAP,210,202,14,10
-    CONTROL         IDB_RECT_BLANC,IDC_STATIC,"Static",SS_BITMAP,227,202,14,10
     PUSHBUTTON      "&Cancel",IDC_OPTION_CANCEL,150,334,50,14
     PUSHBUTTON      "&OK",IDC_OPTION_OK,204,334,50,14
     CONTROL         "Fast Blur",IDC_FASTBLUR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,36,109,8
@@ -440,7 +424,6 @@ BEGIN
     LTEXT           "UNKNOWN",IDC_STATIC_CON1_CURSET,181,185,40,8
     LTEXT           "UNKNOWN",IDC_STATIC_CON2_CURSET,181,196,40,10
     LTEXT           "Note : Read Only must be unchecked to resume recording",IDC_STATIC,194,97,104,19
-    CONTROL         IDB_WARNING,IDC_STATIC_WARNING_BITMAP,"Static",SS_BITMAP | NOT WS_VISIBLE,320,185,16,15
     LTEXT           "",IDC_STATIC_SAVESTATEREQ,193,119,111,9
     LTEXT           "Frame per second:",IDC_STATIC,235,37,62,8
     LTEXT           "",IDC_STATIC_VFRESH,302,38,27,12
@@ -1028,27 +1011,9 @@ IDI_LUA                 ICON                    "..\\resource\\lua.ico"
 // Bitmap
 //
 
-IDB_RECT_BLANC          BITMAP                  "..\\resource\\bitmap1.bmp"
-
-IDB_RECT_BLEU           BITMAP                  "..\\resource\\bmp00000.bmp"
-
-IDB_RECT_ROUGE          BITMAP                  "..\\resource\\bmp00002.bmp"
-
-IDB_RECT_VERT           BITMAP                  "..\\resource\\bmp00001.bmp"
-
-IDB_RECT_NOIR           BITMAP                  "..\\resource\\bmp00003.bmp"
-
-IDB_RECT_CYAN           BITMAP                  "..\\resource\\bmp00004.bmp"
-
-IDB_RECT_VIOLET         BITMAP                  "..\\resource\\bmp00005.bmp"
-
-IDB_RECT_JAUNE          BITMAP                  "..\\resource\\bmp00006.bmp"
-
 IDB_LOGO_SM             BITMAP                  "..\\resource\\gens_small.bmp"
 
 IDB_LOGO_BIG            BITMAP                  "..\\resource\\gens_big.bmp"
-
-IDB_WARNING             BITMAP                  "..\\resource\\bmp00007.bmp"
 
 
 #ifdef APSTUDIO_INVOKED

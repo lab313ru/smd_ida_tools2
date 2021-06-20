@@ -1,17 +1,6 @@
-#include "gen-cpp/DbgClient.h"
-#include <thrift/protocol/TBinaryProtocol.h>
-#include <thrift/transport/TSocket.h>
-#include <thrift/transport/TBufferTransports.h>
-
-using namespace ::apache::thrift;
-using namespace ::apache::thrift::protocol;
-using namespace ::apache::thrift::transport;
-
 #include "z80_debugwindow.h"
 #include "mem_z80.h"
 #include "resource.h"
-
-extern ::std::shared_ptr<DbgClientClient> client;
 
 extern bool handled_ida_event;
 
@@ -69,15 +58,8 @@ void Z80DebugWindow::TracePC(int pc)
   {
     br = true;
 
-    try {
-      if (client) {
-        client->pause_event(pc, changed);
-        changed.clear();
-      }
-    }
-    catch (...) {
-
-    }
+    send_pause_event(pc, changed);
+    changed.clear();
 
     handled_ida_event = true;
   }

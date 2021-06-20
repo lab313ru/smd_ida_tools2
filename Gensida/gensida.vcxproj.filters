@@ -4,8 +4,8 @@
     <Filter Include="ida">
       <UniqueIdentifier>{d2e72e27-9dac-4ead-a237-f40edbfdc6c6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="thrift">
-      <UniqueIdentifier>{8423a3c4-6c10-4453-9934-259ee24654e3}</UniqueIdentifier>
+    <Filter Include="proto">
+      <UniqueIdentifier>{a7a8f7f9-e64e-42c5-aa74-d6aede27961f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -15,17 +15,11 @@
     <ClCompile Include="ida\ida_plugin.cpp">
       <Filter>ida</Filter>
     </ClCompile>
-    <ClCompile Include="..\gen-cpp\DbgClient.cpp">
-      <Filter>thrift</Filter>
+    <ClCompile Include="..\proto\debug_proto_68k.grpc.pb.cc">
+      <Filter>proto</Filter>
     </ClCompile>
-    <ClCompile Include="..\gen-cpp\DbgServer.cpp">
-      <Filter>thrift</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gen-cpp\debug_proto_68k_types.cpp">
-      <Filter>thrift</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gen-cpp\debug_proto_z80_types.cpp">
-      <Filter>thrift</Filter>
+    <ClCompile Include="..\proto\debug_proto_68k.pb.cc">
+      <Filter>proto</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -41,17 +35,11 @@
     <ClInclude Include="ida\ida_registers.h">
       <Filter>ida</Filter>
     </ClInclude>
-    <ClInclude Include="..\gen-cpp\DbgClient.h">
-      <Filter>thrift</Filter>
+    <ClInclude Include="..\proto\debug_proto_68k.grpc.pb.h">
+      <Filter>proto</Filter>
     </ClInclude>
-    <ClInclude Include="..\gen-cpp\DbgServer.h">
-      <Filter>thrift</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gen-cpp\debug_proto_68k_types.h">
-      <Filter>thrift</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gen-cpp\debug_proto_z80_types.h">
-      <Filter>thrift</Filter>
+    <ClInclude Include="..\proto\debug_proto_68k.pb.h">
+      <Filter>proto</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

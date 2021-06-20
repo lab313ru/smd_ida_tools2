@@ -89,6 +89,18 @@
     <TargetName>$(ProjectName)_z80</TargetName>
     <IntDir>$(Configuration)_gens_z80\</IntDir>
   </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug7_68k|Win32'">
+    <VcpkgUseStatic>true</VcpkgUseStatic>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug7_z80|Win32'">
+    <VcpkgUseStatic>true</VcpkgUseStatic>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Release7_68k|Win32'">
+    <VcpkgUseStatic>true</VcpkgUseStatic>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Release7_z80|Win32'">
+    <VcpkgUseStatic>true</VcpkgUseStatic>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug7_68k|Win32'">
     <ClCompile>
       <PrecompiledHeader>
@@ -96,21 +108,17 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CRT_SECURE_NO_WARNINGS;DEBUG_68K;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)\;$(ProjectDir)\include\;$(SolutionDir)\;$(SolutionDir)\thrift\;$(SolutionDir)\libevent\include\;C:\local\boost_1_75_0\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\;$(ProjectDir)\include\;$(SolutionDir)\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
-      <ExceptionHandling>Async</ExceptionHandling>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>winmm.lib;comctl32.lib;libs\lua51.lib;libs\dx7\ddraw.lib;libs\dx7\dinput.lib;libs\dx7\dsound.lib;libs\dx7\dxguid.lib;thriftd_32.lib;thriftnbd_32.lib;event_32.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)\thrift\;$(SolutionDir)\libevent\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>winmm.lib;comctl32.lib;ws2_32.lib;Crypt32.lib;libs\lua51.lib;libs\dx7\ddraw.lib;libs\dx7\dinput.lib;libs\dx7\dsound.lib;libs\dx7\dxguid.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PreBuildEvent>
-      <Command>"$(SolutionDir)thrift.exe" --gen cpp -o "$(SolutionDir.TrimEnd('\'))" "$(SolutionDir)thrift\debug_proto_68k.thrift"</Command>
-    </PreBuildEvent>
+    <PreBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug7_z80|Win32'">
     <ClCompile>
@@ -119,21 +127,17 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CRT_SECURE_NO_WARNINGS;DEBUG_Z80;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)\;$(ProjectDir)\include\;$(SolutionDir)\;$(SolutionDir)\thrift\;$(SolutionDir)\libevent\include\;C:\local\boost_1_75_0\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\;$(ProjectDir)\include\;$(SolutionDir)\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
-      <ExceptionHandling>Async</ExceptionHandling>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>winmm.lib;comctl32.lib;libs\lua51.lib;libs\dx7\ddraw.lib;libs\dx7\dinput.lib;libs\dx7\dsound.lib;libs\dx7\dxguid.lib;thriftd_32.lib;thriftnbd_32.lib;event_32.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)\thrift\;$(SolutionDir)\libevent\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>winmm.lib;comctl32.lib;ws2_32.lib;Crypt32.lib;libs\lua51.lib;libs\dx7\ddraw.lib;libs\dx7\dinput.lib;libs\dx7\dsound.lib;libs\dx7\dxguid.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PreBuildEvent>
-      <Command>"$(SolutionDir)thrift.exe" --gen cpp -o "$(SolutionDir.TrimEnd('\'))" "$(SolutionDir)thrift\debug_proto_z80.thrift"</Command>
-    </PreBuildEvent>
+    <PreBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release7_68k|Win32'">
     <ClCompile>
@@ -144,22 +148,18 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_CRT_SECURE_NO_WARNINGS;DEBUG_68K;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)\;$(ProjectDir)\include\;$(SolutionDir)\;$(SolutionDir)\thrift\;$(SolutionDir)\libevent\include\;C:\local\boost_1_75_0\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\;$(ProjectDir)\include\;$(SolutionDir)\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <ExceptionHandling>Async</ExceptionHandling>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>winmm.lib;comctl32.lib;libs\lua51.lib;libs\dx7\ddraw.lib;libs\dx7\dinput.lib;libs\dx7\dsound.lib;libs\dx7\dxguid.lib;thrift_32.lib;thriftnb_32.lib;event_32.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)\thrift\;$(SolutionDir)\libevent\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>winmm.lib;comctl32.lib;ws2_32.lib;Crypt32.lib;libs\lua51.lib;libs\dx7\ddraw.lib;libs\dx7\dinput.lib;libs\dx7\dsound.lib;libs\dx7\dxguid.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PreBuildEvent>
-      <Command>"$(SolutionDir)thrift.exe" --gen cpp -o "$(SolutionDir.TrimEnd('\'))" "$(SolutionDir)thrift\debug_proto_68k.thrift"</Command>
-    </PreBuildEvent>
+    <PreBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release7_z80|Win32'">
     <ClCompile>
@@ -170,22 +170,18 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_CRT_SECURE_NO_WARNINGS;DEBUG_Z80;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)\;$(ProjectDir)\include\;$(SolutionDir)\;$(SolutionDir)\thrift\;$(SolutionDir)\libevent\include\;C:\local\boost_1_75_0\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\;$(ProjectDir)\include\;$(SolutionDir)\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <ExceptionHandling>Async</ExceptionHandling>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>winmm.lib;comctl32.lib;libs\lua51.lib;libs\dx7\ddraw.lib;libs\dx7\dinput.lib;libs\dx7\dsound.lib;libs\dx7\dxguid.lib;thrift_32.lib;thriftnb_32.lib;event_32.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)\thrift\;$(SolutionDir)\libevent\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>winmm.lib;comctl32.lib;ws2_32.lib;Crypt32.lib;libs\lua51.lib;libs\dx7\ddraw.lib;libs\dx7\dinput.lib;libs\dx7\dsound.lib;libs\dx7\dxguid.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PreBuildEvent>
-      <Command>"$(SolutionDir)thrift.exe" --gen cpp -o "$(SolutionDir.TrimEnd('\'))" "$(SolutionDir)thrift\debug_proto_z80.thrift"</Command>
-    </PreBuildEvent>
+    <PreBuildEvent />
   </ItemDefinitionGroup>
   <ItemGroup>
     <CustomBuild Include="asm\blit.asm">
@@ -310,16 +306,8 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\gen-cpp\DbgClient.cpp" />
-    <ClCompile Include="..\gen-cpp\DbgServer.cpp" />
-    <ClCompile Include="..\gen-cpp\debug_proto_68k_types.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug7_z80|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release7_z80|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\gen-cpp\debug_proto_z80_types.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug7_68k|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release7_68k|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="..\proto\debug_proto_68k.grpc.pb.cc" />
+    <ClCompile Include="..\proto\debug_proto_68k.pb.cc" />
     <ClCompile Include="lua\src\lapi.c" />
     <ClCompile Include="lua\src\lauxlib.c" />
     <ClCompile Include="lua\src\lbaselib.c" />
@@ -403,16 +391,8 @@
     <ClCompile Include="zlib\zutil.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\gen-cpp\DbgClient.h" />
-    <ClInclude Include="..\gen-cpp\DbgServer.h" />
-    <ClInclude Include="..\gen-cpp\debug_proto_68k_types.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug7_z80|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release7_z80|Win32'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="..\gen-cpp\debug_proto_z80_types.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug7_68k|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release7_68k|Win32'">true</ExcludedFromBuild>
-    </ClInclude>
+    <ClInclude Include="..\proto\debug_proto_68k.grpc.pb.h" />
+    <ClInclude Include="..\proto\debug_proto_68k.pb.h" />
     <ClInclude Include="include\blit.h" />
     <ClInclude Include="include\corehooks.h" />
     <ClInclude Include="include\cpu_68k.h" />
@@ -488,7 +468,6 @@
     <ClInclude Include="lua\src\lundump.h" />
     <ClInclude Include="lua\src\lvm.h" />
     <ClInclude Include="lua\src\lzio.h" />
-    <ClInclude Include="resource\resource.h" />
     <ClInclude Include="ym2612_debug.h" />
     <ClInclude Include="zlib\crc32.h" />
     <ClInclude Include="zlib\deflate.h" />
@@ -528,15 +507,6 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="resource\bitmap1.bmp" />
-    <Image Include="resource\bmp00000.bmp" />
-    <Image Include="resource\bmp00001.bmp" />
-    <Image Include="resource\bmp00002.bmp" />
-    <Image Include="resource\bmp00003.bmp" />
-    <Image Include="resource\bmp00004.bmp" />
-    <Image Include="resource\bmp00005.bmp" />
-    <Image Include="resource\bmp00006.bmp" />
-    <Image Include="resource\bmp00007.bmp" />
     <Image Include="resource\gens2.ico" />
     <Image Include="resource\gens_big.bmp" />
     <Image Include="resource\gens_small.bmp" />

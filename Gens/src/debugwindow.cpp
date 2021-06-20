@@ -1,12 +1,3 @@
-#include "gen-cpp/DbgClient.h"
-#include <thrift/protocol/TBinaryProtocol.h>
-#include <thrift/transport/TSocket.h>
-#include <thrift/transport/TBufferTransports.h>
-
-using namespace ::apache::thrift;
-using namespace ::apache::thrift::protocol;
-using namespace ::apache::thrift::transport;
-
 #include "resource.h"
 #include "gens.h"
 #include "save.h"
@@ -18,8 +9,6 @@ using namespace ::apache::thrift::transport;
 #include "vdp_io.h"
 #include <vector>
 #include <iostream>
-
-extern ::std::shared_ptr<DbgClientClient> client;
 
 bool handled_ida_event;
 
@@ -49,15 +38,8 @@ void DebugWindow::Breakpoint(int pc)
 {
     if (!handled_ida_event)
     {
-        try {
-          if (client) {
-            client->pause_event(pc, changed);
-            changed.clear();
-          }
-        }
-        catch (...) {
-
-        }
+      send_pause_event(pc, changed);
+      changed.clear();
     }
 
     Show_Genesis_Screen(HWnd);

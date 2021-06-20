@@ -19,7 +19,7 @@
     <Filter Include="zlib">
       <UniqueIdentifier>{a4aee00d-8ab6-4022-a7ba-ad30d43f5f2f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="debug">
+    <Filter Include="proto">
       <UniqueIdentifier>{095b89a5-5d2c-410f-873f-19d2dbdb42fb}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -281,23 +281,17 @@
     <ClCompile Include="zlib\zutil.c">
       <Filter>zlib</Filter>
     </ClCompile>
-    <ClCompile Include="..\gen-cpp\DbgClient.cpp">
-      <Filter>debug</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gen-cpp\DbgServer.cpp">
-      <Filter>debug</Filter>
-    </ClCompile>
     <ClCompile Include="src\z80_debugwindow.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\gen-cpp\debug_proto_z80_types.cpp">
-      <Filter>debug</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gen-cpp\debug_proto_68k_types.cpp">
-      <Filter>debug</Filter>
-    </ClCompile>
     <ClCompile Include="src\ym2612_debug.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\proto\debug_proto_68k.grpc.pb.cc">
+      <Filter>proto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\proto\debug_proto_68k.pb.cc">
+      <Filter>proto</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -547,24 +541,17 @@
     <ClInclude Include="zlib\zutil.h">
       <Filter>zlib</Filter>
     </ClInclude>
-    <ClInclude Include="..\gen-cpp\DbgClient.h">
-      <Filter>debug</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gen-cpp\DbgServer.h">
-      <Filter>debug</Filter>
-    </ClInclude>
     <ClInclude Include="include\z80_debugwindow.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\gen-cpp\debug_proto_z80_types.h">
-      <Filter>debug</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gen-cpp\debug_proto_68k_types.h">
-      <Filter>debug</Filter>
-    </ClInclude>
-    <ClInclude Include="resource\resource.h" />
     <ClInclude Include="ym2612_debug.h">
       <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\proto\debug_proto_68k.grpc.pb.h">
+      <Filter>proto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\proto\debug_proto_68k.pb.h">
+      <Filter>proto</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -573,19 +560,20 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="resource\gens2.ico" />
-    <Image Include="resource\sonic.ico" />
-    <Image Include="resource\lua.ico" />
-    <Image Include="resource\bitmap1.bmp" />
-    <Image Include="resource\bmp00000.bmp" />
-    <Image Include="resource\bmp00002.bmp" />
-    <Image Include="resource\bmp00001.bmp" />
-    <Image Include="resource\bmp00003.bmp" />
-    <Image Include="resource\bmp00004.bmp" />
-    <Image Include="resource\bmp00005.bmp" />
-    <Image Include="resource\bmp00006.bmp" />
-    <Image Include="resource\gens_small.bmp" />
-    <Image Include="resource\gens_big.bmp" />
-    <Image Include="resource\bmp00007.bmp" />
+    <Image Include="resource\gens_big.bmp">
+      <Filter>resource</Filter>
+    </Image>
+    <Image Include="resource\gens_small.bmp">
+      <Filter>resource</Filter>
+    </Image>
+    <Image Include="resource\gens2.ico">
+      <Filter>resource</Filter>
+    </Image>
+    <Image Include="resource\lua.ico">
+      <Filter>resource</Filter>
+    </Image>
+    <Image Include="resource\sonic.ico">
+      <Filter>resource</Filter>
+    </Image>
   </ItemGroup>
 </Project>
