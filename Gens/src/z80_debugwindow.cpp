@@ -115,16 +115,30 @@ void Z80DebugWindow::TraceWrite(uint32 start, uint32 stop)
 void Z80DebugWindow::DoStepOver()
 {
   unsigned char opc = Z80_ReadB_Ram(last_pc);
-  if ((opc & 0xC6) == 0xC4) // CALL
-  {
+
+  switch (opc) {
+  case 0xCD:
+  case 0xDC:
+  case 0xFC:
+  case 0xD4:
+  case 0xC4:
+  case 0xF4:
+  case 0xEC:
+  case 0xE4:
+  case 0xCC: // CALL
     StepOver = last_pc + 3;
-  }
-  else if ((opc & 0xC7) == 0xC0) // RST
-  {
+    break;
+  case 0xC7:
+  case 0xCF:
+  case 0xD7:
+  case 0xDF:
+  case 0xE7:
+  case 0xEF:
+  case 0xF7:
+  case 0xFF: // RST
     StepOver = last_pc + 1;
-  }
-  else
-  {
+    break;
+  default:
     StepInto = true;
     StepOver = -1;
   }
