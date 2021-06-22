@@ -685,15 +685,15 @@ private:
 static std::unique_ptr<DbgServerClient> client;
 
 static bool pause_execution() {
-  return client->pause();
+  return client && client->pause();
 }
 
 static bool continue_execution() {
-  return client->resume();
+  return client && client->resume();
 }
 
 static bool finish_execution() {
-  if (!client->exit()) {
+  if (client && !client->exit()) {
     debug_event_t ev;
     ev.pid = 1;
     ev.handled = true;
@@ -706,20 +706,23 @@ static bool finish_execution() {
   return true;
 }
 
-static void init_emu_client() {
+static bool init_emu_client() {
   auto channel = grpc::CreateChannel("localhost:9090", grpc::InsecureChannelCredentials());
 
   show_wait_box("Waiting for GENS emulation...");
 
   while (channel->GetState(true) != GRPC_CHANNEL_READY) {
     if (user_cancelled()) {
-      break;
+      hide_wait_box();
+      server->Shutdown();
+      return false;
     }
   }
 
   hide_wait_box();
 
   client = std::unique_ptr<DbgServerClient>(new DbgServerClient(channel));
+  return true;
 }
 
 // Initialize debugger
@@ -737,6 +740,7 @@ static drc_t idaapi init_debugger(const char* hostname, int portnum, const char*
 // This function is called from the main thread
 static drc_t idaapi term_debugger(void) {
   finish_execution();
+  client = nullptr;
   return DRC_OK;
 }
 
@@ -768,9 +772,11 @@ static drc_t idaapi s_start_process(const char* path,
   events.clear();
 
   init_ida_server();
-  init_emu_client();
+  if (!init_emu_client() || (client && !client->start())) {
+    return DRC_NETERR;
+  }
 
-  return client->start() ? DRC_OK : DRC_FAILED;
+  return DRC_OK;
 }
 
 // rebase database if the debugged program has been rebased by the system
@@ -787,8 +793,7 @@ static void idaapi rebase_if_required_to(ea_t new_base) { }
 // 1-ok, 0-failed, -1-network error
 // This function is called from debthread
 static drc_t idaapi prepare_to_pause_process(qstring *errbuf) {
-  pause_execution();
-  return DRC_OK;
+  return pause_execution() ? DRC_OK : DRC_FAILED;
 }
 
 // Stop the process.
@@ -799,8 +804,7 @@ static drc_t idaapi prepare_to_pause_process(qstring *errbuf) {
 // 1-ok, 0-failed, -1-network error
 // This function is called from debthread
 static drc_t idaapi emul_exit_process(qstring *errbuf) {
-  finish_execution();
-  return DRC_OK;
+  return finish_execution() ? DRC_OK : DRC_FAILED;
 }
 
 // Get a pending debug event and suspend the process
@@ -831,7 +835,7 @@ static drc_t idaapi continue_after_event(const debug_event_t *event) {
   case STEP:
   case PROCESS_SUSPENDED:
     if (req == dbg_null || req == dbg_run_to) {
-      continue_execution();
+      return continue_execution() ? DRC_OK : DRC_FAILED;
     }
     break;
   case PROCESS_EXITED:
@@ -863,9 +867,9 @@ static void idaapi stopped_at_debug_event(bool dlls_added) { }
 static drc_t idaapi s_set_resume_mode(thid_t tid, resume_mode_t resmod) { // Run one instruction in the thread
   switch (resmod) {
   case RESMOD_INTO:    ///< step into call (the most typical single stepping)
-    return client->step_into() ? DRC_OK : DRC_FAILED;
+    return client && client->step_into() ? DRC_OK : DRC_FAILED;
   case RESMOD_OVER:    ///< step over call
-    return client->step_over() ? DRC_OK : DRC_FAILED;
+    return client && client->step_over() ? DRC_OK : DRC_FAILED;
   }
 
   return DRC_FAILED;
@@ -882,7 +886,7 @@ static drc_t idaapi read_registers(thid_t tid, int clsmask, regval_t *values, qs
   if (clsmask & RC_GENERAL) {
     GpRegs regs;
 
-    if (!client->get_gp_regs(&regs)) {
+    if (client && !client->get_gp_regs(&regs)) {
       return DRC_FAILED;
     }
 
@@ -948,7 +952,7 @@ static drc_t idaapi read_registers(thid_t tid, int clsmask, regval_t *values, qs
 #ifdef DEBUG_68K
     DmaInfo dma;
 
-    if (!client->get_dma_info(&dma)) {
+    if (client && !client->get_dma_info(&dma)) {
       return DRC_FAILED;
     }
 
@@ -962,7 +966,7 @@ static drc_t idaapi read_registers(thid_t tid, int clsmask, regval_t *values, qs
   if (clsmask & RC_VDP) {
     VdpRegs regs;
 
-    if (!client->get_vdp_regs(&regs)) {
+    if (client && !client->get_vdp_regs(&regs)) {
       return DRC_FAILED;
     }
 
@@ -1006,13 +1010,13 @@ static drc_t idaapi write_register(thid_t tid, int regidx, const regval_t *value
 #ifdef DEBUG_68K
   if (regidx >= R_D0 && regidx <= R_SR) {
 #endif
-    if (!client->set_gp_reg((GpRegsEnum)regidx, value->ival & 0xFFFFFFFF)) {
+    if (client && !client->set_gp_reg((GpRegsEnum)regidx, value->ival & 0xFFFFFFFF)) {
       return DRC_FAILED;
     }
 #ifdef DEBUG_68K
   }
   else if (regidx >= R_V00 && regidx <= R_V23) {
-    if (!client->set_vdp_reg((VdpRegsEnum)(regidx - R_V00), value->ival & 0xFF)) {
+    if (client && !client->set_vdp_reg((VdpRegsEnum)(regidx - R_V00), value->ival & 0xFF)) {
       return DRC_FAILED;
     }
   }
@@ -1088,14 +1092,14 @@ static drc_t idaapi get_memory_info(meminfo_vec_t &areas, qstring *errbuf) {
 // -1 means that the process does not exist anymore
 // This function is called from debthread
 static ssize_t idaapi read_memory(ea_t ea, void *buffer, size_t size, qstring *errbuf) {
-  return client->read_memory(ea, size, (uint8_t*)buffer) ? size : 0;
+  return client && client->read_memory(ea, size, (uint8_t*)buffer) ? size : 0;
 }
 
 // Write process memory
 // Returns number of written bytes, -1-fatal error
 // This function is called from debthread
 static ssize_t idaapi write_memory(ea_t ea, const void *buffer, size_t size, qstring *errbuf) {
-  return client->write_memory((const uint8_t*)buffer, ea, size) ? size : 0;
+  return client && client->write_memory((const uint8_t*)buffer, ea, size) ? size : 0;
 }
 
 // Is it possible to set breakpoint?
@@ -1165,14 +1169,14 @@ static drc_t idaapi update_bpts(int* nbpts, update_bpt_info_t *bpts, int nadd, i
 #endif
     bp.set_is_forbid(false);
 
-    if (!client->add_breakpoint(bp)) {
+    if (client && !client->add_breakpoint(bp)) {
       return DRC_FAILED;
     }
 
     if (type2 != 0) {
       bp.set_type((BpType)type2);
 
-      if (!client->add_breakpoint(bp)) {
+      if (client && !client->add_breakpoint(bp)) {
         return DRC_FAILED;
       }
     }
@@ -1224,14 +1228,14 @@ static drc_t idaapi update_bpts(int* nbpts, update_bpt_info_t *bpts, int nadd, i
 #endif
     bp.set_is_forbid(false);
 
-    if (!client->del_breakpoint(bp)) {
+    if (client && !client->del_breakpoint(bp)) {
       return DRC_FAILED;
     }
 
     if (type2 != 0) {
       bp.set_type((BpType)type2);
 
-      if (!client->del_breakpoint(bp)) {
+      if (client && !client->del_breakpoint(bp)) {
         return DRC_FAILED;
       }
     }
@@ -1291,14 +1295,14 @@ static drc_t idaapi update_lowcnds(int* nupdated, const lowcnd_t *lowcnds, int n
 #endif
     bp.set_is_forbid(lowcnds[i].cndbody.empty() ? false : ((lowcnds[i].cndbody[0] == '1') ? true : false));
 
-    if (!client->update_breakpoint(bp)) {
+    if (client && !client->update_breakpoint(bp)) {
       return DRC_FAILED;
     }
 
     if (type2 != 0) {
       bp.set_type((BpType)type2);
 
-      if (!client->update_breakpoint(bp)) {
+      if (client && !client->update_breakpoint(bp)) {
         return DRC_FAILED;
       }
     }
@@ -1318,7 +1322,7 @@ static drc_t idaapi update_lowcnds(int* nupdated, const lowcnd_t *lowcnds, int n
 static bool idaapi update_call_stack(thid_t tid, call_stack_t *trace) {
   std::vector<uint32_t> cs;
 
-  if (!client->get_callstack(cs)) {
+  if (client && !client->get_callstack(cs)) {
     return false;
   }
 

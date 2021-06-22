@@ -1666,7 +1666,34 @@ void Update_YM2612_View()
   if (!YM2612DbgHWnd) return;
 
   YM2612_Debugger_Update(YM2612DbgHWnd);
+  RedrawWindow(GetDlgItem(YM2612DbgHWnd, IDC_ADSR_DRAW1), NULL, NULL, RDW_INVALIDATE);
+  RedrawWindow(GetDlgItem(YM2612DbgHWnd, IDC_ADSR_DRAW2), NULL, NULL, RDW_INVALIDATE);
+  RedrawWindow(GetDlgItem(YM2612DbgHWnd, IDC_ADSR_DRAW3), NULL, NULL, RDW_INVALIDATE);
+  RedrawWindow(GetDlgItem(YM2612DbgHWnd, IDC_ADSR_DRAW4), NULL, NULL, RDW_INVALIDATE);
 }
+
+const int ADSR_H = 140;
+const int ADSR_W = ADSR_H * 2;
+const int ADSR_MAX_H = 128;
+const int SUSTAIN_X = 31;
+
+static void move_to_point(HDC hdc, int x, int y) {
+  MoveToEx(hdc, x, ADSR_H - (1 + y), NULL);
+}
+
+static void line_to_point(HDC hdc, int x, int y) {
+  LineTo(hdc, x, ADSR_H - (1 + y));
+}
+
+static int map_val_y(double val, double max_val) {
+  return max_val ? ((val / max_val) * ADSR_H) : 0;
+}
+
+static int map_val(double val, double max_val, double out_max) {
+  return out_max ? (val * out_max / max_val) : 0;
+}
+
+static HPEN t1Pen, t2Pen, rPen, bPen, oPen, gPen, pPen;
 
 LRESULT CALLBACK YM2612WndProcDialog(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
@@ -1703,11 +1730,135 @@ LRESULT CALLBACK YM2612WndProcDialog(HWND hwnd, UINT msg, WPARAM wparam, LPARAM 
 
     SetWindowPos(hwnd, NULL, r.left, r.top, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER | SWP_SHOWWINDOW);
 
+    HWND hOpRegs = GetDlgItem(hwnd, IDC_YM2612_DEBUGGER_OP_REGS_GB);
+    GetWindowRect(hOpRegs, &r);
+    MapWindowPoints(HWND_DESKTOP, hwnd, (LPPOINT)&r, 2);
+
+    // ADSR views
+    for (auto i = 0; i <= (IDC_ADSR_DRAW4 - IDC_ADSR_DRAW1); ++i) {
+      HWND adsrDraw = GetDlgItem(hwnd, IDC_ADSR_DRAW1 + i);
+      SetWindowPos(adsrDraw, NULL,
+        r.right + 5,
+        r.top + 5 + (ADSR_H + 5) * i,
+        ADSR_W,
+        ADSR_H,
+        SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+    // ADSR views
+
+    t1Pen = CreatePen(PS_DOT, 1, RGB(47, 79, 79));
+    t2Pen = CreatePen(PS_DOT, 1, RGB(220, 220, 220));
+    rPen = CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
+    bPen = CreatePen(PS_SOLID, 1, RGB(0, 0, 255));
+    oPen = CreatePen(PS_SOLID, 1, RGB(255, 165, 0));
+    gPen = CreatePen(PS_SOLID, 1, RGB(0, 255, 0));
+    pPen = CreatePen(PS_SOLID, 1, RGB(255, 0, 255));
+
     return YM2612_msgWM_INITDIALOG(hwnd, wparam, lparam);
   }
   case WM_COMMAND:
     return YM2612_msgWM_COMMAND(hwnd, wparam, lparam);
+  case WM_DRAWITEM:
+  {
+    LPDRAWITEMSTRUCT di = (LPDRAWITEMSTRUCT)lparam;
+
+    switch ((UINT)wparam) {
+    case IDC_ADSR_DRAW1:
+    case IDC_ADSR_DRAW2:
+    case IDC_ADSR_DRAW3:
+    case IDC_ADSR_DRAW4:
+    {
+      FillRect(di->hDC, &di->rcItem, (HBRUSH)(COLOR_WINDOW + 1));
+
+      YM2612Operators op = (YM2612Operators)((UINT)wparam - IDC_ADSR_DRAW1);
+
+      int total = 0x7F - GetTotalLevelData(selectedChannel, op);
+      total = map_val(total, 0x7F, ADSR_H);
+
+      // draw Total Level
+      HPEN hOldPen = (HPEN)SelectObject(di->hDC, t1Pen);
+      move_to_point(di->hDC, 0, total);
+      line_to_point(di->hDC, ADSR_W, total);
+      SelectObject(di->hDC, hOldPen);
+      // end draw Total Level
+
+      // draw X/Y
+      move_to_point(di->hDC, 0, 0);
+      line_to_point(di->hDC, 0, ADSR_H);
+
+      move_to_point(di->hDC, 0, 0);
+      line_to_point(di->hDC, ADSR_W, 0);
+      // end draw X/Y
+
+      move_to_point(di->hDC, 0, 0);
+
+      int attack = GetAttackRateData(selectedChannel, op);
+      int decay = GetDecayRateData(selectedChannel, op);
+      int sustain_level = 0x0F - GetSustainLevelData(selectedChannel, op);
+      int sustain_rate = GetSustainRateData(selectedChannel, op);
+      int release = GetReleaseRateData(selectedChannel, op);
+      int max_w = attack + decay + SUSTAIN_X + release;
+
+      attack = map_val(attack, max_w, ADSR_W);
+      decay = map_val(decay, max_w, ADSR_W);
+      int sustain_x = map_val(SUSTAIN_X, max_w, ADSR_W);
+      release = map_val(release, max_w, ADSR_W);
+
+      sustain_level = map_val(sustain_level, 0x0F, total);
+      sustain_rate = map_val(sustain_rate, 0x1F, sustain_level);
+
+      // draw Attack
+      hOldPen = (HPEN)SelectObject(di->hDC, rPen);
+      line_to_point(di->hDC, attack, total);
+
+      SelectObject(di->hDC, t2Pen);
+      line_to_point(di->hDC, attack, 0);
+
+      move_to_point(di->hDC, attack, total);
+      SelectObject(di->hDC, hOldPen);
+      // end draw Attack
+
+      // draw Decay
+      hOldPen = (HPEN)SelectObject(di->hDC, bPen);
+      line_to_point(di->hDC, attack + decay, sustain_level);
+
+      SelectObject(di->hDC, t2Pen);
+      line_to_point(di->hDC, attack + decay, 0);
+
+      move_to_point(di->hDC, attack + decay, sustain_level);
+      SelectObject(di->hDC, hOldPen);
+      // end draw Decay
+
+      // draw Sustain
+      hOldPen = (HPEN)SelectObject(di->hDC, gPen);
+      line_to_point(di->hDC, attack + decay + sustain_x, sustain_level - sustain_rate);
+
+      SelectObject(di->hDC, t2Pen);
+      line_to_point(di->hDC, attack + decay + sustain_x, 0);
+
+      move_to_point(di->hDC, attack + decay + sustain_x, sustain_level - sustain_rate);
+      SelectObject(di->hDC, hOldPen);
+      // end draw Sustain
+
+      // draw Release
+      hOldPen = (HPEN)SelectObject(di->hDC, pPen);
+      line_to_point(di->hDC, attack + decay + sustain_x + release, 0);
+      SelectObject(di->hDC, hOldPen);
+      // end draw Releae
+
+      return TRUE;
+    }
+    }
+  }
   case WM_CLOSE:
+    DeleteObject(t1Pen);
+    DeleteObject(t2Pen);
+    DeleteObject(rPen);
+    DeleteObject(bPen);
+    DeleteObject(oPen);
+    DeleteObject(gPen);
+    DeleteObject(pPen);
+
     DialogsOpen--;
     YM2612DbgHWnd = NULL;
     EndDialog(hwnd, true);

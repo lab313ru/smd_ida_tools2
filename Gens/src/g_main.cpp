@@ -1446,9 +1446,11 @@ private:
 static std::unique_ptr<DbgClientClient> client;
 
 void send_pause_event(int pc, std::map<uint32_t, uint32_t> changed) {
-  if (client) {
-    client->pause_event(pc, changed);
+  if (!client) {
+    return;
   }
+  
+  client->pause_event(pc, changed);
 }
 
 void stop_client() {
@@ -1992,6 +1994,10 @@ class DbgServerHandler final : public DbgServer::Service {
 
   Status start_emulation(ServerContext* context, const Empty* request, Empty* response) override {
     init_ida_client();
+
+    if (!client) {
+      return Status::CANCELLED;
+    }
 
     client->start_event();
 #ifdef DEBUG_68K
@@ -3939,6 +3945,10 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 Pause_Screen();
                 Clear_Sound_Buffer();
                 Flip(HWnd);
+
+                if (!client) {
+                  return 0;
+                }
 
 #ifdef DEBUG_68K
                 client->pause_event(M68kDW.last_pc, M68kDW.changed);

@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="asm">
-      <UniqueIdentifier>{2098e8b2-5155-40a1-9b9d-c3f69e0ff8ec}</UniqueIdentifier>
-    </Filter>
     <Filter Include="lua">
       <UniqueIdentifier>{faad4208-2ba6-4a76-9472-a20920c5aebe}</UniqueIdentifier>
     </Filter>
@@ -21,6 +18,9 @@
     </Filter>
     <Filter Include="proto">
       <UniqueIdentifier>{095b89a5-5d2c-410f-873f-19d2dbdb42fb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="asm">
+      <UniqueIdentifier>{2098e8b2-5155-40a1-9b9d-c3f69e0ff8ec}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -565,6 +565,7 @@
     <ClInclude Include="..\proto\debug_proto_z80.pb.h">
       <Filter>proto</Filter>
     </ClInclude>
+    <ClInclude Include="resource\resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource\gens.rc">
