@@ -1678,11 +1678,11 @@ const int ADSR_MAX_H = 128;
 const int SUSTAIN_X = 31;
 
 static void move_to_point(HDC hdc, int x, int y) {
-  MoveToEx(hdc, x, ADSR_H - (1 + y), NULL);
+  MoveToEx(hdc, x, ADSR_H - 1 - y, NULL);
 }
 
 static void line_to_point(HDC hdc, int x, int y) {
-  LineTo(hdc, x, ADSR_H - (1 + y));
+  LineTo(hdc, x, ADSR_H - 1 - y);
 }
 
 static int map_val_y(double val, double max_val) {
@@ -1773,36 +1773,29 @@ LRESULT CALLBACK YM2612WndProcDialog(HWND hwnd, UINT msg, WPARAM wparam, LPARAM 
       YM2612Operators op = (YM2612Operators)((UINT)wparam - IDC_ADSR_DRAW1);
 
       int total = 0x7F - GetTotalLevelData(selectedChannel, op);
-      total = map_val(total, 0x7F, ADSR_H);
+      total = map_val(total, 0x7F, ADSR_H-1);
 
       // draw Total Level
       HPEN hOldPen = (HPEN)SelectObject(di->hDC, t1Pen);
       move_to_point(di->hDC, 0, total);
-      line_to_point(di->hDC, ADSR_W, total);
+      line_to_point(di->hDC, ADSR_W-1, total);
       SelectObject(di->hDC, hOldPen);
       // end draw Total Level
 
-      // draw X/Y
-      move_to_point(di->hDC, 0, 0);
-      line_to_point(di->hDC, 0, ADSR_H);
-
-      move_to_point(di->hDC, 0, 0);
-      line_to_point(di->hDC, ADSR_W, 0);
-      // end draw X/Y
-
       move_to_point(di->hDC, 0, 0);
 
-      int attack = GetAttackRateData(selectedChannel, op);
+      int attack_inv = GetAttackRateData(selectedChannel, op);
+      int attack = 0x1F - attack_inv;
       int decay = GetDecayRateData(selectedChannel, op);
       int sustain_level = 0x0F - GetSustainLevelData(selectedChannel, op);
       int sustain_rate = GetSustainRateData(selectedChannel, op);
       int release = GetReleaseRateData(selectedChannel, op);
       int max_w = attack + decay + SUSTAIN_X + release;
 
-      attack = map_val(attack, max_w, ADSR_W);
-      decay = map_val(decay, max_w, ADSR_W);
-      int sustain_x = map_val(SUSTAIN_X, max_w, ADSR_W);
-      release = map_val(release, max_w, ADSR_W);
+      attack = map_val(attack, max_w, ADSR_W-1);
+      decay = map_val(decay, max_w, ADSR_W-1);
+      int sustain_x = map_val(SUSTAIN_X, max_w, ADSR_W-1);
+      release = map_val(release, max_w, ADSR_W-1);
 
       sustain_level = map_val(sustain_level, 0x0F, total);
       sustain_rate = map_val(sustain_rate, 0x1F, sustain_level);
@@ -1811,8 +1804,10 @@ LRESULT CALLBACK YM2612WndProcDialog(HWND hwnd, UINT msg, WPARAM wparam, LPARAM 
       hOldPen = (HPEN)SelectObject(di->hDC, rPen);
       line_to_point(di->hDC, attack, total);
 
-      SelectObject(di->hDC, t2Pen);
-      line_to_point(di->hDC, attack, 0);
+      if (attack_inv < 0x1F) {
+        SelectObject(di->hDC, t2Pen);
+        line_to_point(di->hDC, attack, 0);
+      }
 
       move_to_point(di->hDC, attack, total);
       SelectObject(di->hDC, hOldPen);
