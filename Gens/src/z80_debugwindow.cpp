@@ -78,15 +78,48 @@ void Z80DebugWindow::TracePC(int pc)
 
   unsigned char opc = Z80_ReadB_Ram(last_pc);
 
-  if (((opc & 0xC6) == 0xC4) || ((opc & 0xC7) == 0xC0)) // CALL, RST
-  {
+  switch (opc) {
+  case 0xCD:
+  case 0xDC:
+  case 0xFC:
+  case 0xD4:
+  case 0xC4:
+  case 0xF4:
+  case 0xEC:
+  case 0xE4:
+  case 0xCC:
+  case 0xC7:
+  case 0xCF:
+  case 0xD7:
+  case 0xDF:
+  case 0xE7:
+  case 0xEF:
+  case 0xF7:
+  case 0xFF: // CALL, RST
     callstack.push_back(last_pc);
-  }
-
-  if ((opc & 0xC6) == 0xC0) // ret
-  {
-    if (!callstack.empty())
+    break;
+  case 0xC9:
+  case 0xD8:
+  case 0xF8:
+  case 0xD0:
+  case 0xC0:
+  case 0xF0:
+  case 0xE8:
+  case 0xE0:
+  case 0xC8:
+    if (!callstack.empty()) {
       callstack.pop_back();
+    }
+    break;
+  case 0xED:
+    opc = Z80_ReadB_Ram(last_pc+1);
+
+    if (opc == 0x4D || opc == 0x45) {
+      if (!callstack.empty()) {
+        callstack.pop_back();
+      }
+    }
+    break;
   }
 }
 
@@ -138,6 +171,13 @@ void Z80DebugWindow::DoStepOver()
   case 0xFF: // RST
     StepOver = last_pc + 1;
     break;
+  case 0xED:
+    opc = Z80_ReadB_Ram(last_pc+1);
+
+    if (opc == 0xB0) { // ldir
+      StepOver = last_pc + 2;
+      break;
+    }
   default:
     StepInto = true;
     StepOver = -1;
