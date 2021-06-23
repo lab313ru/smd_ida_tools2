@@ -138,9 +138,7 @@ HWND RamSearchHWnd = NULL; // modeless dialog
 HWND RamWatchHWnd = NULL; // modeless dialog
 HWND PlaneExplorerHWnd = NULL; // modeless dialog
 HWND VDPRamHWnd = NULL; // modeless dialog
-#ifdef DEBUG_Z80
 HWND YM2612DbgHWnd = NULL; // modeless dialog
-#endif
 HWND VDPSpritesHWnd = NULL; // modeless dialog
 HWND RamCheatHWnd = NULL; // modeless dialog
 std::vector<HWND> LuaScriptHWnds; // modeless dialogs

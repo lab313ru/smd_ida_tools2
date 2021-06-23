@@ -15,7 +15,9 @@
 #include <memory.h>
 
 #include "psg.h"
+#ifdef DEBUG_Z80
 #include "ym2612_psg_debug.h"
+#endif
 
 /* Defines */
 
@@ -102,7 +104,11 @@ void PSG_Write(int data)
 
             PSG_Special_Update();
 
+#ifdef DEBUG_Z80
             PSG.Volume[PSG.Current_Channel] = PSG_Volume_Table[enabled_channels_psg[PSG.Current_Channel] ? data : 0x0F];
+#else
+            PSG.Volume[PSG.Current_Channel] = PSG_Volume_Table[data];
+#endif
 
             PSG_DEBUG_2("channel %d    volume = %.8X\n", PSG.Current_Channel, PSG.Volume[PSG.Current_Channel]);
         }
