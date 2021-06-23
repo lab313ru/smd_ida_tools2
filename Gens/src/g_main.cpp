@@ -1250,6 +1250,18 @@ void Handle_Gens_Messages()
                 SendMessage(RamWatchHWnd, msg.message, msg.wParam, msg.lParam);
             continue;
         }
+        if (YM2612DbgHWnd && IsDialogMessage(YM2612DbgHWnd, &msg))
+        {
+          if (msg.message == WM_KEYDOWN) // send keydown messages to the dialog (for accelerators, and also needed for the Alt key to work)
+            SendMessage(YM2612DbgHWnd, msg.message, msg.wParam, msg.lParam);
+          continue;
+        }
+        if (VDPRamHWnd && IsDialogMessage(VDPRamHWnd, &msg))
+        {
+          if (msg.message == WM_KEYDOWN) // send keydown messages to the dialog (for accelerators, and also needed for the Alt key to work)
+            SendMessage(VDPRamHWnd, msg.message, msg.wParam, msg.lParam);
+          continue;
+        }
         if (VolControlHWnd && IsDialogMessage(VolControlHWnd, &msg))
             continue;
         bool docontinue = false;
