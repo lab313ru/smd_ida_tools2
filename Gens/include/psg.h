@@ -25,6 +25,7 @@ extern "C" {
 
     extern int *PSG_Buf[2];
     extern int PSG_Len;
+    extern int PSG_MaxVolume;
     /* end */
 
     void PSG_Write(int data);

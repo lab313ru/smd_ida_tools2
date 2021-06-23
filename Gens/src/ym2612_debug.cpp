@@ -1,5 +1,6 @@
 #include "resource.h"
 #include <Windows.h>
+#include <CommCtrl.h>
 #include <map>
 #include <sstream>
 #include <iomanip>
@@ -7,6 +8,7 @@
 #include "g_main.h"
 #include "ym2612.h"
 #include "ym2612_debug.h"
+#include "psg.h"
 
 enum class YM2612Channels :unsigned int
 {
@@ -817,6 +819,16 @@ static INT_PTR YM2612_msgWM_INITDIALOG(HWND hwnd, WPARAM wparam, LPARAM lparam)
   for (auto i = 0; i < channelCount; ++i) {
     enabled_channels[i] = 1;
   }
+
+  HWND hVol1_PSG = GetDlgItem(hwnd, IDC_PSG_SLIDER_1);
+  HWND hVol2_PSG = GetDlgItem(hwnd, IDC_PSG_SLIDER_2);
+  HWND hVol3_PSG = GetDlgItem(hwnd, IDC_PSG_SLIDER_3);
+  HWND hVol4_PSG = GetDlgItem(hwnd, IDC_PSG_SLIDER_4);
+
+  SendMessage(hVol1_PSG, PBM_SETPOS, (WPARAM)0, (LPARAM)0);
+  SendMessage(hVol2_PSG, PBM_SETPOS, (WPARAM)0, (LPARAM)0);
+  SendMessage(hVol3_PSG, PBM_SETPOS, (WPARAM)0, (LPARAM)0);
+  SendMessage(hVol4_PSG, PBM_SETPOS, (WPARAM)0, (LPARAM)0);
 
   return TRUE;
 }
@@ -1657,6 +1669,62 @@ static INT_PTR YM2612_Debugger_Update(HWND hwnd)
   CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_KEY_4, (GetKeyState(YM2612Channels::CHANNEL4, YM2612Operators::OPERATOR1) && GetKeyState(YM2612Channels::CHANNEL4, YM2612Operators::OPERATOR2) && GetKeyState(YM2612Channels::CHANNEL4, YM2612Operators::OPERATOR3) && GetKeyState(YM2612Channels::CHANNEL4, YM2612Operators::OPERATOR4)) ? BST_CHECKED : BST_UNCHECKED);
   CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_KEY_5, (GetKeyState(YM2612Channels::CHANNEL5, YM2612Operators::OPERATOR1) && GetKeyState(YM2612Channels::CHANNEL5, YM2612Operators::OPERATOR2) && GetKeyState(YM2612Channels::CHANNEL5, YM2612Operators::OPERATOR3) && GetKeyState(YM2612Channels::CHANNEL5, YM2612Operators::OPERATOR4)) ? BST_CHECKED : BST_UNCHECKED);
   CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_KEY_6, (GetKeyState(YM2612Channels::CHANNEL6, YM2612Operators::OPERATOR1) && GetKeyState(YM2612Channels::CHANNEL6, YM2612Operators::OPERATOR2) && GetKeyState(YM2612Channels::CHANNEL6, YM2612Operators::OPERATOR3) && GetKeyState(YM2612Channels::CHANNEL6, YM2612Operators::OPERATOR4)) ? BST_CHECKED : BST_UNCHECKED);
+
+  char tmp[10];
+
+  int val = PSG.Register[0]==0 ? 0 : (int)(3579545/(PSG.Register[0]*32));
+  itoa(val, tmp, 10);
+  SetDlgItemText(hwnd, IDC_PSG_FREQ_1, tmp);
+
+  val = PSG.Register[0];
+  itoa(val, tmp, 10);
+  SetDlgItemText(hwnd, IDC_PSG_DATA_1, tmp);
+
+  val = PSG.Register[2] == 0 ? 0 : (int)(3579545 / (PSG.Register[2] * 32));
+  itoa(val, tmp, 10);
+  SetDlgItemText(hwnd, IDC_PSG_FREQ_2, tmp);
+
+  val = PSG.Register[2];
+  itoa(val, tmp, 10);
+  SetDlgItemText(hwnd, IDC_PSG_DATA_2, tmp);
+
+  val = PSG.Register[4] == 0 ? 0 : (int)(3579545 / (PSG.Register[4] * 32));
+  itoa(val, tmp, 10);
+  SetDlgItemText(hwnd, IDC_PSG_FREQ_3, tmp);
+
+  val = PSG.Register[4];
+  itoa(val, tmp, 10);
+  SetDlgItemText(hwnd, IDC_PSG_DATA_3, tmp);
+
+  UpdateDlgItemString(hwnd, IDC_PSG_FEEDBACK, (PSG.Register[6]>>2)==1 ? "White": "Periodic");
+
+  if ((PSG.Register[6] & 0x03) == 0){
+    UpdateDlgItemString(hwnd, IDC_PSG_CLOCK, "Clock/2");
+  }
+  else if ((PSG.Register[6] & 0x03) == 0) {
+    UpdateDlgItemString(hwnd, IDC_PSG_CLOCK, "Clock/2");
+  }
+  else if ((PSG.Register[6] & 0x03) == 1) {
+    UpdateDlgItemString(hwnd, IDC_PSG_CLOCK, "Clock/4");
+  }
+  else if ((PSG.Register[6] & 0x03) == 2) {
+    UpdateDlgItemString(hwnd, IDC_PSG_CLOCK, "Clock/8");
+  }
+  else if ((PSG.Register[6] & 0x03) == 3) {
+    UpdateDlgItemString(hwnd, IDC_PSG_CLOCK, "Tone 3");
+  }
+
+  int pval = (100 * PSG.Volume[0]) / PSG_MaxVolume;
+  SendMessage(GetDlgItem(hwnd, IDC_PSG_SLIDER_1), PBM_SETPOS, (WPARAM)pval, (LPARAM)0);
+
+  pval = (100 * PSG.Volume[1]) / PSG_MaxVolume;
+  SendMessage(GetDlgItem(hwnd, IDC_PSG_SLIDER_2), PBM_SETPOS, (WPARAM)pval, (LPARAM)0);
+
+  pval = (100 * PSG.Volume[2]) / PSG_MaxVolume;
+  SendMessage(GetDlgItem(hwnd, IDC_PSG_SLIDER_3), PBM_SETPOS, (WPARAM)pval, (LPARAM)0);
+
+  pval = (100 * PSG.Volume[3]) / PSG_MaxVolume;
+  SendMessage(GetDlgItem(hwnd, IDC_PSG_SLIDER_4), PBM_SETPOS, (WPARAM)pval, (LPARAM)0);
 
   return TRUE;
 }

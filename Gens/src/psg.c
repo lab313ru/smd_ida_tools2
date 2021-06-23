@@ -79,6 +79,7 @@ extern int VDP_Current_Line;
 
 int *PSG_Buf[2];
 int PSG_Len = 0;
+int PSG_MaxVolume;
 
 /* Functions */
 
@@ -342,7 +343,7 @@ void PSG_Init(int clock, int rate)
     }
 
     PSG_Volume_Table[15] = 0;
-
+	PSG_MaxVolume = PSG_Volume_Table[0];
     /*
         for(i = 0; i < 256; i++)
         {

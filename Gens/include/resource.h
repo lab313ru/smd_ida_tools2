@@ -837,6 +837,18 @@
 #define IDC_ADSR_DRAW3 0xB00A
 #define IDC_ADSR_DRAW4 0xB00B
 #define IDC_YM2612_DEBUGGER_OP_REGS_GB 0xB00C
+#define IDC_PSG_SLIDER_1                50039
+#define IDC_PSG_SLIDER_2                50040
+#define IDC_PSG_SLIDER_3                50041
+#define IDC_PSG_SLIDER_4                50042
+#define IDC_PSG_DATA_1                  50043
+#define IDC_PSG_FREQ_1                  50044
+#define IDC_PSG_DATA_2                  50045
+#define IDC_PSG_FREQ_2                  50046
+#define IDC_PSG_DATA_3                  50047
+#define IDC_PSG_FREQ_3                  50048
+#define IDC_PSG_FEEDBACK                50049
+#define IDC_PSG_CLOCK                   50050
 
 // Next default values for new objects
 //

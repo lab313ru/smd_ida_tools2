@@ -4529,7 +4529,7 @@ HMENU Build_Main_Menu(void)
     MENU_L(TAS_Tools, i++, Flags, ID_VDP_SPRITES, "VDP Sprites");
     MENU_L(TAS_Tools, i++, Flags, ID_PLANE_EXPLORER, "Plane Explorer");
 #ifdef DEBUG_Z80
-    MENU_L(TAS_Tools, i++, Flags, ID_YM2612_DEBUGGER, "YM2612 Debugger");
+    MENU_L(TAS_Tools, i++, Flags, ID_YM2612_DEBUGGER, "&YM2612 && PSG View");
 #endif
 
     // MOVIES //
