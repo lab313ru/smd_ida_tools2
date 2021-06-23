@@ -1673,27 +1673,27 @@ static INT_PTR YM2612_Debugger_Update(HWND hwnd)
   char tmp[10];
 
   int val = PSG.Register[0]==0 ? 0 : (int)(3579545/(PSG.Register[0]*32));
-  itoa(val, tmp, 10);
+  _itoa(val, tmp, 10);
   SetDlgItemText(hwnd, IDC_PSG_FREQ_1, tmp);
 
   val = PSG.Register[0];
-  itoa(val, tmp, 10);
+  _itoa(val, tmp, 10);
   SetDlgItemText(hwnd, IDC_PSG_DATA_1, tmp);
 
   val = PSG.Register[2] == 0 ? 0 : (int)(3579545 / (PSG.Register[2] * 32));
-  itoa(val, tmp, 10);
+  _itoa(val, tmp, 10);
   SetDlgItemText(hwnd, IDC_PSG_FREQ_2, tmp);
 
   val = PSG.Register[2];
-  itoa(val, tmp, 10);
+  _itoa(val, tmp, 10);
   SetDlgItemText(hwnd, IDC_PSG_DATA_2, tmp);
 
   val = PSG.Register[4] == 0 ? 0 : (int)(3579545 / (PSG.Register[4] * 32));
-  itoa(val, tmp, 10);
+  _itoa(val, tmp, 10);
   SetDlgItemText(hwnd, IDC_PSG_FREQ_3, tmp);
 
   val = PSG.Register[4];
-  itoa(val, tmp, 10);
+  _itoa(val, tmp, 10);
   SetDlgItemText(hwnd, IDC_PSG_DATA_3, tmp);
 
   UpdateDlgItemString(hwnd, IDC_PSG_FEEDBACK, (PSG.Register[6]>>2)==1 ? "White": "Periodic");
@@ -1762,6 +1762,7 @@ static int map_val(double val, double max_val, double out_max) {
 }
 
 static HPEN t1Pen, t2Pen, rPen, bPen, oPen, gPen, pPen;
+static HBRUSH adsrBrush;
 
 LRESULT CALLBACK YM2612WndProcDialog(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
@@ -1822,6 +1823,8 @@ LRESULT CALLBACK YM2612WndProcDialog(HWND hwnd, UINT msg, WPARAM wparam, LPARAM 
     gPen = CreatePen(PS_SOLID, 1, RGB(0, 255, 0));
     pPen = CreatePen(PS_SOLID, 1, RGB(255, 0, 255));
 
+    adsrBrush = CreateSolidBrush(RGB(105, 105, 105));
+
     return YM2612_msgWM_INITDIALOG(hwnd, wparam, lparam);
   }
   case WM_COMMAND:
@@ -1836,7 +1839,7 @@ LRESULT CALLBACK YM2612WndProcDialog(HWND hwnd, UINT msg, WPARAM wparam, LPARAM 
     case IDC_ADSR_DRAW3:
     case IDC_ADSR_DRAW4:
     {
-      FillRect(di->hDC, &di->rcItem, (HBRUSH)(COLOR_WINDOW + 1));
+      FillRect(di->hDC, &di->rcItem, adsrBrush);
 
       YM2612Operators op = (YM2612Operators)((UINT)wparam - IDC_ADSR_DRAW1);
 
@@ -1854,7 +1857,8 @@ LRESULT CALLBACK YM2612WndProcDialog(HWND hwnd, UINT msg, WPARAM wparam, LPARAM 
 
       int attack_inv = GetAttackRateData(selectedChannel, op);
       int attack = 0x1F - attack_inv;
-      int decay = GetDecayRateData(selectedChannel, op);
+      int decay_orig = GetDecayRateData(selectedChannel, op);
+      int decay = decay_orig;
       int sustain_level = 0x0F - GetSustainLevelData(selectedChannel, op);
       int sustain_rate = GetSustainRateData(selectedChannel, op);
       int release = GetReleaseRateData(selectedChannel, op);
@@ -1885,21 +1889,27 @@ LRESULT CALLBACK YM2612WndProcDialog(HWND hwnd, UINT msg, WPARAM wparam, LPARAM 
       hOldPen = (HPEN)SelectObject(di->hDC, bPen);
       line_to_point(di->hDC, attack + decay, sustain_level);
 
-      SelectObject(di->hDC, t2Pen);
-      line_to_point(di->hDC, attack + decay, 0);
+      if (decay_orig > 0) {
+        SelectObject(di->hDC, t2Pen);
+        line_to_point(di->hDC, attack + decay, 0);
+      }
 
       move_to_point(di->hDC, attack + decay, sustain_level);
       SelectObject(di->hDC, hOldPen);
       // end draw Decay
 
+      sustain_rate = sustain_level - sustain_rate;
+
       // draw Sustain
       hOldPen = (HPEN)SelectObject(di->hDC, gPen);
-      line_to_point(di->hDC, attack + decay + sustain_x, sustain_level - sustain_rate);
+      line_to_point(di->hDC, attack + decay + sustain_x, sustain_rate);
 
-      SelectObject(di->hDC, t2Pen);
-      line_to_point(di->hDC, attack + decay + sustain_x, 0);
+      if (sustain_rate > 0) {
+        SelectObject(di->hDC, t2Pen);
+        line_to_point(di->hDC, attack + decay + sustain_x, 0);
+      }
 
-      move_to_point(di->hDC, attack + decay + sustain_x, sustain_level - sustain_rate);
+      move_to_point(di->hDC, attack + decay + sustain_x, sustain_rate);
       SelectObject(di->hDC, hOldPen);
       // end draw Sustain
 
