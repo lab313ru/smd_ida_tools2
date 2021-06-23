@@ -804,7 +804,8 @@ static drc_t idaapi prepare_to_pause_process(qstring *errbuf) {
 // 1-ok, 0-failed, -1-network error
 // This function is called from debthread
 static drc_t idaapi emul_exit_process(qstring *errbuf) {
-  return finish_execution() ? DRC_OK : DRC_FAILED;
+  finish_execution();
+  return DRC_OK;
 }
 
 // Get a pending debug event and suspend the process
