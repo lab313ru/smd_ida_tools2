@@ -7,7 +7,7 @@
 
 #include "g_main.h"
 #include "ym2612.h"
-#include "ym2612_debug.h"
+#include "ym2612_psg_debug.h"
 #include "psg.h"
 
 enum class YM2612Channels :unsigned int
@@ -33,16 +33,18 @@ static YM2612Channels selectedChannel;
 static std::string previousText;
 static unsigned int currentControlFocus;
 
-static const unsigned int channelCount = 6;
+static const unsigned int channelCount_psg = 4;
+static const unsigned int channelCount_ym = 6;
 static const unsigned int operatorCount = 4;
 static const unsigned int partCount = 2;
 static const unsigned int registerCountPerPart = 0x100;
 static const unsigned int registerCountTotal = registerCountPerPart * partCount;
 
-int enabled_channels[channelCount] = { 1, 1, 1, 1, 1, 1 };
+int enabled_channels_ym[channelCount_ym] = { 1, 1, 1, 1, 1, 1 };
+int enabled_channels_psg[channelCount_psg] = { 1, 1, 1, 1 };
 
 //----------------------------------------------------------------------------------------
-const unsigned int channelAddressOffsets[channelCount] = {
+const unsigned int channelAddressOffsets[channelCount_ym] = {
   0,                         //Channel 1
   1,                         //Channel 2
   2,                         //Channel 3
@@ -51,7 +53,7 @@ const unsigned int channelAddressOffsets[channelCount] = {
   registerCountPerPart + 2 }; //Channel 6
 
 //----------------------------------------------------------------------------------------
-const unsigned int operatorAddressOffsets[channelCount][operatorCount] = {
+const unsigned int operatorAddressOffsets[channelCount_ym][operatorCount] = {
   {channelAddressOffsets[0] + 0x0, channelAddressOffsets[0] + 0x8, channelAddressOffsets[0] + 0x4, channelAddressOffsets[0] + 0xC},  //Channel 1
   {channelAddressOffsets[1] + 0x0, channelAddressOffsets[1] + 0x8, channelAddressOffsets[1] + 0x4, channelAddressOffsets[1] + 0xC},  //Channel 2
   {channelAddressOffsets[2] + 0x0, channelAddressOffsets[2] + 0x8, channelAddressOffsets[2] + 0x4, channelAddressOffsets[2] + 0xC},  //Channel 3
@@ -816,9 +818,14 @@ static INT_PTR YM2612_msgWM_INITDIALOG(HWND hwnd, WPARAM wparam, LPARAM lparam)
   CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_CS5_CHK, (selectedChannel == YM2612Channels::CHANNEL5) ? BST_CHECKED : BST_UNCHECKED);
   CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_CS6_CHK, (selectedChannel == YM2612Channels::CHANNEL6) ? BST_CHECKED : BST_UNCHECKED);
 
-  for (auto i = 0; i < channelCount; ++i) {
-    enabled_channels[i] = 1;
+  for (auto i = 0; i < channelCount_ym; ++i) {
+    enabled_channels_ym[i] = 1;
   }
+
+  CheckDlgButton(hwnd, IDC_PSG_ENABLE_1, BST_CHECKED);
+  CheckDlgButton(hwnd, IDC_PSG_ENABLE_2, BST_CHECKED);
+  CheckDlgButton(hwnd, IDC_PSG_ENABLE_3, BST_CHECKED);
+  CheckDlgButton(hwnd, IDC_PSG_ENABLE_4, BST_CHECKED);
 
   HWND hVol1_PSG = GetDlgItem(hwnd, IDC_PSG_SLIDER_1);
   HWND hVol2_PSG = GetDlgItem(hwnd, IDC_PSG_SLIDER_2);
@@ -834,8 +841,8 @@ static INT_PTR YM2612_msgWM_INITDIALOG(HWND hwnd, WPARAM wparam, LPARAM lparam)
 }
 
 static void update_channels() {
-  for (auto chn = 0; chn < channelCount; ++chn) {
-    if (!enabled_channels[chn]) {
+  for (auto chn = 0; chn < channelCount_ym; ++chn) {
+    if (!enabled_channels_ym[chn]) {
       continue;
     }
 
@@ -851,482 +858,6 @@ static void update_channels() {
       SetTotalLevelData(ch, op, 127);
     }
   }
-}
-
-static INT_PTR YM2612_msgWM_COMMAND(HWND hwnd, WPARAM wparam, LPARAM lparam)
-{
-  YM2612Channels channelNo = selectedChannel;
-
-  if (HIWORD(wparam) == BN_CLICKED)
-  {
-    unsigned int controlID = LOWORD(wparam);
-    switch (controlID)
-    {
-    //Channel Select
-    case IDC_YM2612_DEBUGGER_CS1_CHK: {
-      selectedChannel = YM2612Channels::CHANNEL1;
-      InvalidateRect(hwnd, NULL, FALSE);
-      break; }
-    case IDC_YM2612_DEBUGGER_CS2_CHK: {
-      selectedChannel = YM2612Channels::CHANNEL2;
-      InvalidateRect(hwnd, NULL, FALSE);
-      break; }
-    case IDC_YM2612_DEBUGGER_CS3_CHK: {
-      selectedChannel = YM2612Channels::CHANNEL3;
-      InvalidateRect(hwnd, NULL, FALSE);
-      break; }
-    case IDC_YM2612_DEBUGGER_CS4_CHK: {
-      selectedChannel = YM2612Channels::CHANNEL4;
-      InvalidateRect(hwnd, NULL, FALSE);
-      break; }
-    case IDC_YM2612_DEBUGGER_CS5_CHK: {
-      selectedChannel = YM2612Channels::CHANNEL5;
-      InvalidateRect(hwnd, NULL, FALSE);
-      break; }
-    case IDC_YM2612_DEBUGGER_CS6_CHK: {
-      selectedChannel = YM2612Channels::CHANNEL6;
-      InvalidateRect(hwnd, NULL, FALSE);
-      break; }
-
-    //Disable/enable channels
-    case IDC_YM2612_DEBUGGER_CS1: {
-      selectedChannel = YM2612Channels::CHANNEL1;
-      enabled_channels[0] = IsDlgButtonChecked(hwnd, controlID) == BST_CHECKED;
-
-      update_channels();
-      
-      InvalidateRect(hwnd, NULL, FALSE);
-      break; }
-    case IDC_YM2612_DEBUGGER_CS2: {
-      selectedChannel = YM2612Channels::CHANNEL2;
-      enabled_channels[1] = IsDlgButtonChecked(hwnd, controlID) == BST_CHECKED;
-
-      update_channels();
-
-      InvalidateRect(hwnd, NULL, FALSE);
-      break; }
-    case IDC_YM2612_DEBUGGER_CS3: {
-      selectedChannel = YM2612Channels::CHANNEL3;
-      enabled_channels[2] = IsDlgButtonChecked(hwnd, controlID) == BST_CHECKED;
-
-      update_channels();
-
-      InvalidateRect(hwnd, NULL, FALSE);
-      break; }
-    case IDC_YM2612_DEBUGGER_CS4: {
-      selectedChannel = YM2612Channels::CHANNEL4;
-      enabled_channels[3] = IsDlgButtonChecked(hwnd, controlID) == BST_CHECKED;
-
-      update_channels();
-
-      InvalidateRect(hwnd, NULL, FALSE);
-      break; }
-    case IDC_YM2612_DEBUGGER_CS5: {
-      selectedChannel = YM2612Channels::CHANNEL5;
-      enabled_channels[4] = IsDlgButtonChecked(hwnd, controlID) == BST_CHECKED;
-
-      update_channels();
-
-      InvalidateRect(hwnd, NULL, FALSE);
-      break; }
-    case IDC_YM2612_DEBUGGER_CS6: {
-      selectedChannel = YM2612Channels::CHANNEL6;
-      enabled_channels[5] = IsDlgButtonChecked(hwnd, controlID) == BST_CHECKED;
-
-      update_channels();
-
-      InvalidateRect(hwnd, NULL, FALSE);
-      break; }
-
-                                //AM Enable
-    case IDC_YM2612_DEBUGGER_AM_OP1: {
-      SetAmplitudeModulationEnabled(channelNo, YM2612Operators::OPERATOR1, IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED);
-      break; }
-    case IDC_YM2612_DEBUGGER_AM_OP2: {
-      SetAmplitudeModulationEnabled(channelNo, YM2612Operators::OPERATOR2, IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED);
-      break; }
-    case IDC_YM2612_DEBUGGER_AM_OP3: {
-      SetAmplitudeModulationEnabled(channelNo, YM2612Operators::OPERATOR3, IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED);
-      break; }
-    case IDC_YM2612_DEBUGGER_AM_OP4: {
-      SetAmplitudeModulationEnabled(channelNo, YM2612Operators::OPERATOR4, IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED);
-      break; }
-
-                                   //Left/Right
-    case IDC_YM2612_DEBUGGER_LEFT: {
-      SetOutputLeft(channelNo, IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED);
-      break; }
-    case IDC_YM2612_DEBUGGER_RIGHT: {
-      SetOutputRight(channelNo, IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED);
-      break; }
-
-                                  //Timers
-    case IDC_YM2612_DEBUGGER_TIMERA_ENABLED: {
-      SetTimerAEnable(IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED);
-      break; }
-    case IDC_YM2612_DEBUGGER_TIMERB_ENABLED: {
-      SetTimerBEnable(IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED);
-      break; }
-    case IDC_YM2612_DEBUGGER_TIMERA_LOADED: {
-      SetTimerALoad(IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED);
-      break; }
-    case IDC_YM2612_DEBUGGER_TIMERB_LOADED: {
-      SetTimerBLoad(IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED);
-      break; }
-    case IDC_YM2612_DEBUGGER_TIMERA_OVERFLOW: {
-      SetTimerAOverflow(IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED);
-      break; }
-    case IDC_YM2612_DEBUGGER_TIMERB_OVERFLOW: {
-      SetTimerBOverflow(IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED);
-      break; }
-
-                                            //LFO
-    case IDC_YM2612_DEBUGGER_LFOENABLED: {
-      SetLFOEnabled(IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED);
-      break; }
-
-                                       //DAC
-    case IDC_YM2612_DEBUGGER_DACENABLED: {
-      SetDACEnabled(IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED);
-      break; }
-
-                                       //Key On/Off
-    case IDC_YM2612_DEBUGGER_KEY_11: {
-      SetKeyState(YM2612Channels::CHANNEL1, YM2612Operators::OPERATOR1, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      break; }
-    case IDC_YM2612_DEBUGGER_KEY_12: {
-      SetKeyState(YM2612Channels::CHANNEL1, YM2612Operators::OPERATOR2, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      break; }
-    case IDC_YM2612_DEBUGGER_KEY_13: {
-      SetKeyState(YM2612Channels::CHANNEL1, YM2612Operators::OPERATOR3, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      break; }
-    case IDC_YM2612_DEBUGGER_KEY_14: {
-      SetKeyState(YM2612Channels::CHANNEL1, YM2612Operators::OPERATOR4, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      break; }
-    case IDC_YM2612_DEBUGGER_KEY_21: {
-      SetKeyState(YM2612Channels::CHANNEL2, YM2612Operators::OPERATOR1, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      break; }
-    case IDC_YM2612_DEBUGGER_KEY_22: {
-      SetKeyState(YM2612Channels::CHANNEL2, YM2612Operators::OPERATOR2, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      break; }
-    case IDC_YM2612_DEBUGGER_KEY_23: {
-      SetKeyState(YM2612Channels::CHANNEL2, YM2612Operators::OPERATOR3, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      break; }
-    case IDC_YM2612_DEBUGGER_KEY_24: {
-      SetKeyState(YM2612Channels::CHANNEL2, YM2612Operators::OPERATOR4, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      break; }
-    case IDC_YM2612_DEBUGGER_KEY_31: {
-      SetKeyState(YM2612Channels::CHANNEL3, YM2612Operators::OPERATOR1, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      break; }
-    case IDC_YM2612_DEBUGGER_KEY_32: {
-      SetKeyState(YM2612Channels::CHANNEL3, YM2612Operators::OPERATOR2, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      break; }
-    case IDC_YM2612_DEBUGGER_KEY_33: {
-      SetKeyState(YM2612Channels::CHANNEL3, YM2612Operators::OPERATOR3, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      break; }
-    case IDC_YM2612_DEBUGGER_KEY_34: {
-      SetKeyState(YM2612Channels::CHANNEL3, YM2612Operators::OPERATOR4, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      break; }
-    case IDC_YM2612_DEBUGGER_KEY_41: {
-      SetKeyState(YM2612Channels::CHANNEL4, YM2612Operators::OPERATOR1, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      break; }
-    case IDC_YM2612_DEBUGGER_KEY_42: {
-      SetKeyState(YM2612Channels::CHANNEL4, YM2612Operators::OPERATOR2, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      break; }
-    case IDC_YM2612_DEBUGGER_KEY_43: {
-      SetKeyState(YM2612Channels::CHANNEL4, YM2612Operators::OPERATOR3, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      break; }
-    case IDC_YM2612_DEBUGGER_KEY_44: {
-      SetKeyState(YM2612Channels::CHANNEL4, YM2612Operators::OPERATOR4, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      break; }
-    case IDC_YM2612_DEBUGGER_KEY_51: {
-      SetKeyState(YM2612Channels::CHANNEL5, YM2612Operators::OPERATOR1, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      break; }
-    case IDC_YM2612_DEBUGGER_KEY_52: {
-      SetKeyState(YM2612Channels::CHANNEL5, YM2612Operators::OPERATOR2, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      break; }
-    case IDC_YM2612_DEBUGGER_KEY_53: {
-      SetKeyState(YM2612Channels::CHANNEL5, YM2612Operators::OPERATOR3, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      break; }
-    case IDC_YM2612_DEBUGGER_KEY_54: {
-      SetKeyState(YM2612Channels::CHANNEL5, YM2612Operators::OPERATOR4, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      break; }
-    case IDC_YM2612_DEBUGGER_KEY_61: {
-      SetKeyState(YM2612Channels::CHANNEL6, YM2612Operators::OPERATOR1, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      break; }
-    case IDC_YM2612_DEBUGGER_KEY_62: {
-      SetKeyState(YM2612Channels::CHANNEL6, YM2612Operators::OPERATOR2, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      break; }
-    case IDC_YM2612_DEBUGGER_KEY_63: {
-      SetKeyState(YM2612Channels::CHANNEL6, YM2612Operators::OPERATOR3, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      break; }
-    case IDC_YM2612_DEBUGGER_KEY_64: {
-      SetKeyState(YM2612Channels::CHANNEL6, YM2612Operators::OPERATOR4, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      break; }
-
-    case IDC_YM2612_DEBUGGER_KEY_1: {
-      SetKeyState(YM2612Channels::CHANNEL1, YM2612Operators::OPERATOR1, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      SetKeyState(YM2612Channels::CHANNEL1, YM2612Operators::OPERATOR2, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      SetKeyState(YM2612Channels::CHANNEL1, YM2612Operators::OPERATOR3, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      SetKeyState(YM2612Channels::CHANNEL1, YM2612Operators::OPERATOR4, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      break; }
-    case IDC_YM2612_DEBUGGER_KEY_2: {
-      SetKeyState(YM2612Channels::CHANNEL2, YM2612Operators::OPERATOR1, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      SetKeyState(YM2612Channels::CHANNEL2, YM2612Operators::OPERATOR2, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      SetKeyState(YM2612Channels::CHANNEL2, YM2612Operators::OPERATOR3, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      SetKeyState(YM2612Channels::CHANNEL2, YM2612Operators::OPERATOR4, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      break; }
-    case IDC_YM2612_DEBUGGER_KEY_3: {
-      SetKeyState(YM2612Channels::CHANNEL3, YM2612Operators::OPERATOR1, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      SetKeyState(YM2612Channels::CHANNEL3, YM2612Operators::OPERATOR2, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      SetKeyState(YM2612Channels::CHANNEL3, YM2612Operators::OPERATOR3, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      SetKeyState(YM2612Channels::CHANNEL3, YM2612Operators::OPERATOR4, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      break; }
-    case IDC_YM2612_DEBUGGER_KEY_4: {
-      SetKeyState(YM2612Channels::CHANNEL4, YM2612Operators::OPERATOR1, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      SetKeyState(YM2612Channels::CHANNEL4, YM2612Operators::OPERATOR2, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      SetKeyState(YM2612Channels::CHANNEL4, YM2612Operators::OPERATOR3, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      SetKeyState(YM2612Channels::CHANNEL4, YM2612Operators::OPERATOR4, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      break; }
-    case IDC_YM2612_DEBUGGER_KEY_5: {
-      SetKeyState(YM2612Channels::CHANNEL5, YM2612Operators::OPERATOR1, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      SetKeyState(YM2612Channels::CHANNEL5, YM2612Operators::OPERATOR2, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      SetKeyState(YM2612Channels::CHANNEL5, YM2612Operators::OPERATOR3, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      SetKeyState(YM2612Channels::CHANNEL5, YM2612Operators::OPERATOR4, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      break; }
-    case IDC_YM2612_DEBUGGER_KEY_6: {
-      SetKeyState(YM2612Channels::CHANNEL6, YM2612Operators::OPERATOR1, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      SetKeyState(YM2612Channels::CHANNEL6, YM2612Operators::OPERATOR2, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      SetKeyState(YM2612Channels::CHANNEL6, YM2612Operators::OPERATOR3, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      SetKeyState(YM2612Channels::CHANNEL6, YM2612Operators::OPERATOR4, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
-      break; }
-    }
-  }
-  else if (HIWORD(wparam) == EN_SETFOCUS)
-  {
-    previousText = GetDlgItemString(hwnd, LOWORD(wparam));
-    currentControlFocus = LOWORD(wparam);
-    return FALSE;
-  }
-  else if (HIWORD(wparam) == EN_KILLFOCUS)
-  {
-    std::string newText = GetDlgItemString(hwnd, LOWORD(wparam));
-    if (currentControlFocus == LOWORD(wparam))
-    {
-      currentControlFocus = 0;
-    }
-    if (newText == previousText)
-    {
-      return FALSE;
-    }
-
-    unsigned int controlID = LOWORD(wparam);
-    switch (controlID)
-    {
-      //Total Level
-    case IDC_YM2612_DEBUGGER_TL_OP1: {
-      SetTotalLevelData(channelNo, YM2612Operators::OPERATOR1, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_TL_OP2: {
-      SetTotalLevelData(channelNo, YM2612Operators::OPERATOR2, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_TL_OP3: {
-      SetTotalLevelData(channelNo, YM2612Operators::OPERATOR3, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_TL_OP4: {
-      SetTotalLevelData(channelNo, YM2612Operators::OPERATOR4, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-
-                                   //Sustain Level
-    case IDC_YM2612_DEBUGGER_SL_OP1: {
-      SetSustainLevelData(channelNo, YM2612Operators::OPERATOR1, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_SL_OP2: {
-      SetSustainLevelData(channelNo, YM2612Operators::OPERATOR2, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_SL_OP3: {
-      SetSustainLevelData(channelNo, YM2612Operators::OPERATOR3, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_SL_OP4: {
-      SetSustainLevelData(channelNo, YM2612Operators::OPERATOR4, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-
-                                   //Attack Rate
-    case IDC_YM2612_DEBUGGER_AR_OP1: {
-      SetAttackRateData(channelNo, YM2612Operators::OPERATOR1, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_AR_OP2: {
-      SetAttackRateData(channelNo, YM2612Operators::OPERATOR2, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_AR_OP3: {
-      SetAttackRateData(channelNo, YM2612Operators::OPERATOR3, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_AR_OP4: {
-      SetAttackRateData(channelNo, YM2612Operators::OPERATOR4, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-
-                                   //Decay Rate
-    case IDC_YM2612_DEBUGGER_DR_OP1: {
-      SetDecayRateData(channelNo, YM2612Operators::OPERATOR1, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_DR_OP2: {
-      SetDecayRateData(channelNo, YM2612Operators::OPERATOR2, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_DR_OP3: {
-      SetDecayRateData(channelNo, YM2612Operators::OPERATOR3, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_DR_OP4: {
-      SetDecayRateData(channelNo, YM2612Operators::OPERATOR4, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-
-                                   //Sustain Rate
-    case IDC_YM2612_DEBUGGER_SR_OP1: {
-      SetSustainRateData(channelNo, YM2612Operators::OPERATOR1, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_SR_OP2: {
-      SetSustainRateData(channelNo, YM2612Operators::OPERATOR2, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_SR_OP3: {
-      SetSustainRateData(channelNo, YM2612Operators::OPERATOR3, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_SR_OP4: {
-      SetSustainRateData(channelNo, YM2612Operators::OPERATOR4, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-
-                                   //Release Rate
-    case IDC_YM2612_DEBUGGER_RR_OP1: {
-      SetReleaseRateData(channelNo, YM2612Operators::OPERATOR1, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_RR_OP2: {
-      SetReleaseRateData(channelNo, YM2612Operators::OPERATOR2, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_RR_OP3: {
-      SetReleaseRateData(channelNo, YM2612Operators::OPERATOR3, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_RR_OP4: {
-      SetReleaseRateData(channelNo, YM2612Operators::OPERATOR4, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-
-                                   //SSG-EG Mode
-    case IDC_YM2612_DEBUGGER_SSGEG_OP1: {
-      SetSSGData(channelNo, YM2612Operators::OPERATOR1, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_SSGEG_OP2: {
-      SetSSGData(channelNo, YM2612Operators::OPERATOR2, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_SSGEG_OP3: {
-      SetSSGData(channelNo, YM2612Operators::OPERATOR3, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_SSGEG_OP4: {
-      SetSSGData(channelNo, YM2612Operators::OPERATOR4, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-
-                                      //Detune
-    case IDC_YM2612_DEBUGGER_DT_OP1: {
-      SetDetuneData(channelNo, YM2612Operators::OPERATOR1, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_DT_OP2: {
-      SetDetuneData(channelNo, YM2612Operators::OPERATOR2, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_DT_OP3: {
-      SetDetuneData(channelNo, YM2612Operators::OPERATOR3, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_DT_OP4: {
-      SetDetuneData(channelNo, YM2612Operators::OPERATOR4, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-
-                                   //Multiple
-    case IDC_YM2612_DEBUGGER_MUL_OP1: {
-      SetMultipleData(channelNo, YM2612Operators::OPERATOR1, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_MUL_OP2: {
-      SetMultipleData(channelNo, YM2612Operators::OPERATOR2, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_MUL_OP3: {
-      SetMultipleData(channelNo, YM2612Operators::OPERATOR3, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_MUL_OP4: {
-      SetMultipleData(channelNo, YM2612Operators::OPERATOR4, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-
-                                    //Key Scale
-    case IDC_YM2612_DEBUGGER_KS_OP1: {
-      SetKeyScaleData(channelNo, YM2612Operators::OPERATOR1, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_KS_OP2: {
-      SetKeyScaleData(channelNo, YM2612Operators::OPERATOR2, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_KS_OP3: {
-      SetKeyScaleData(channelNo, YM2612Operators::OPERATOR3, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_KS_OP4: {
-      SetKeyScaleData(channelNo, YM2612Operators::OPERATOR4, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-
-                                   //Channel Registers
-    case IDC_YM2612_DEBUGGER_ALGORITHM: {
-      SetAlgorithmData(channelNo, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_FEEDBACK: {
-      SetFeedbackData(channelNo, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_FNUM: {
-      SetFrequencyData(channelNo, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_BLOCK: {
-      SetBlockData(channelNo, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_AMS: {
-      SetAMSData(channelNo, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_PMS: {
-      SetPMSData(channelNo, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-
-                                //Channel 3 Frequency
-    case IDC_YM2612_DEBUGGER_CH3MODE: {
-      SetCH3Mode(GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_CH3FNUM_OP1: {
-      SetFrequencyDataChannel3(YM2612Operators::OPERATOR1, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_CH3FNUM_OP2: {
-      SetFrequencyDataChannel3(YM2612Operators::OPERATOR2, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_CH3FNUM_OP3: {
-      SetFrequencyDataChannel3(YM2612Operators::OPERATOR3, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_CH3FNUM_OP4: {
-      SetFrequencyDataChannel3(YM2612Operators::OPERATOR4, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_CH3BLOCK_OP1: {
-      SetBlockDataChannel3(YM2612Operators::OPERATOR1, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_CH3BLOCK_OP2: {
-      SetBlockDataChannel3(YM2612Operators::OPERATOR2, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_CH3BLOCK_OP3: {
-      SetBlockDataChannel3(YM2612Operators::OPERATOR3, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    case IDC_YM2612_DEBUGGER_CH3BLOCK_OP4: {
-      SetBlockDataChannel3(YM2612Operators::OPERATOR4, GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-
-                                        //LFO
-    case IDC_YM2612_DEBUGGER_LFOFREQ: {
-      SetLFOData(GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-
-                                    //DAC
-    case IDC_YM2612_DEBUGGER_DACDATA: {
-      SetDACData(GetDlgItemHex(hwnd, LOWORD(wparam)));
-      break; }
-    }
-
-    return FALSE;
-  }
-
-  return TRUE;
 }
 
 static INT_PTR YM2612_Debugger_Update(HWND hwnd)
@@ -1672,7 +1203,7 @@ static INT_PTR YM2612_Debugger_Update(HWND hwnd)
 
   char tmp[10];
 
-  int val = PSG.Register[0]==0 ? 0 : (int)(3579545/(PSG.Register[0]*32));
+  int val = PSG.Register[0] == 0 ? 0 : (int)(3579545 / (PSG.Register[0] * 32));
   _itoa(val, tmp, 10);
   SetDlgItemText(hwnd, IDC_PSG_FREQ_1, tmp);
 
@@ -1696,9 +1227,9 @@ static INT_PTR YM2612_Debugger_Update(HWND hwnd)
   _itoa(val, tmp, 10);
   SetDlgItemText(hwnd, IDC_PSG_DATA_3, tmp);
 
-  UpdateDlgItemString(hwnd, IDC_PSG_FEEDBACK, (PSG.Register[6]>>2)==1 ? "White": "Periodic");
+  UpdateDlgItemString(hwnd, IDC_PSG_FEEDBACK, (PSG.Register[6] >> 2) == 1 ? "White" : "Periodic");
 
-  if ((PSG.Register[6] & 0x03) == 0){
+  if ((PSG.Register[6] & 0x03) == 0) {
     UpdateDlgItemString(hwnd, IDC_PSG_CLOCK, "Clock/2");
   }
   else if ((PSG.Register[6] & 0x03) == 0) {
@@ -1725,6 +1256,438 @@ static INT_PTR YM2612_Debugger_Update(HWND hwnd)
 
   pval = (100 * PSG.Volume[3]) / PSG_MaxVolume;
   SendMessage(GetDlgItem(hwnd, IDC_PSG_SLIDER_4), PBM_SETPOS, (WPARAM)pval, (LPARAM)0);
+
+  return TRUE;
+}
+
+static INT_PTR YM2612_msgWM_COMMAND(HWND hwnd, WPARAM wparam, LPARAM lparam)
+{
+  YM2612Channels channelNo = selectedChannel;
+
+  if (HIWORD(wparam) == BN_CLICKED)
+  {
+    unsigned int controlID = LOWORD(wparam);
+    switch (controlID)
+    {
+    //Channel Select
+    case IDC_YM2612_DEBUGGER_CS1_CHK:
+    case IDC_YM2612_DEBUGGER_CS2_CHK:
+    case IDC_YM2612_DEBUGGER_CS3_CHK:
+    case IDC_YM2612_DEBUGGER_CS4_CHK:
+    case IDC_YM2612_DEBUGGER_CS5_CHK:
+    case IDC_YM2612_DEBUGGER_CS6_CHK: {
+      selectedChannel = (YM2612Channels)((int)YM2612Channels::CHANNEL1 + (controlID - IDC_YM2612_DEBUGGER_CS1_CHK));
+      YM2612_Debugger_Update(YM2612DbgHWnd);
+      break; }
+
+    //Disable/enable channels YM2612
+    case IDC_YM2612_DEBUGGER_CS1:
+    case IDC_YM2612_DEBUGGER_CS2:
+    case IDC_YM2612_DEBUGGER_CS3:
+    case IDC_YM2612_DEBUGGER_CS4:
+    case IDC_YM2612_DEBUGGER_CS5:
+    case IDC_YM2612_DEBUGGER_CS6: {
+      enabled_channels_ym[controlID - IDC_YM2612_DEBUGGER_CS1] = IsDlgButtonChecked(hwnd, controlID) == BST_CHECKED;
+
+      update_channels();
+      YM2612_Debugger_Update(YM2612DbgHWnd);
+      break; }
+
+    //Disable/enable channels PSG
+    case IDC_PSG_ENABLE_1:
+    case IDC_PSG_ENABLE_2:
+    case IDC_PSG_ENABLE_3:
+    case IDC_PSG_ENABLE_4: {
+      enabled_channels_psg[controlID - IDC_PSG_ENABLE_1] = IsDlgButtonChecked(hwnd, controlID) == BST_CHECKED;
+      break; }
+
+    //AM Enable
+    case IDC_YM2612_DEBUGGER_AM_OP1: {
+      SetAmplitudeModulationEnabled(channelNo, YM2612Operators::OPERATOR1, IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED);
+      break; }
+    case IDC_YM2612_DEBUGGER_AM_OP2: {
+      SetAmplitudeModulationEnabled(channelNo, YM2612Operators::OPERATOR2, IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED);
+      break; }
+    case IDC_YM2612_DEBUGGER_AM_OP3: {
+      SetAmplitudeModulationEnabled(channelNo, YM2612Operators::OPERATOR3, IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED);
+      break; }
+    case IDC_YM2612_DEBUGGER_AM_OP4: {
+      SetAmplitudeModulationEnabled(channelNo, YM2612Operators::OPERATOR4, IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED);
+      break; }
+
+    //Left/Right
+    case IDC_YM2612_DEBUGGER_LEFT: {
+      SetOutputLeft(channelNo, IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED);
+      break; }
+    case IDC_YM2612_DEBUGGER_RIGHT: {
+      SetOutputRight(channelNo, IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED);
+      break; }
+
+    //Timers
+    case IDC_YM2612_DEBUGGER_TIMERA_ENABLED: {
+      SetTimerAEnable(IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED);
+      break; }
+    case IDC_YM2612_DEBUGGER_TIMERB_ENABLED: {
+      SetTimerBEnable(IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED);
+      break; }
+    case IDC_YM2612_DEBUGGER_TIMERA_LOADED: {
+      SetTimerALoad(IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED);
+      break; }
+    case IDC_YM2612_DEBUGGER_TIMERB_LOADED: {
+      SetTimerBLoad(IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED);
+      break; }
+    case IDC_YM2612_DEBUGGER_TIMERA_OVERFLOW: {
+      SetTimerAOverflow(IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED);
+      break; }
+    case IDC_YM2612_DEBUGGER_TIMERB_OVERFLOW: {
+      SetTimerBOverflow(IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED);
+      break; }
+
+    //LFO
+    case IDC_YM2612_DEBUGGER_LFOENABLED: {
+      SetLFOEnabled(IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED);
+      break; }
+
+    //DAC
+    case IDC_YM2612_DEBUGGER_DACENABLED: {
+      SetDACEnabled(IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED);
+      break; }
+
+    //Key On/Off
+    case IDC_YM2612_DEBUGGER_KEY_11: {
+      SetKeyState(YM2612Channels::CHANNEL1, YM2612Operators::OPERATOR1, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      break; }
+    case IDC_YM2612_DEBUGGER_KEY_12: {
+      SetKeyState(YM2612Channels::CHANNEL1, YM2612Operators::OPERATOR2, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      break; }
+    case IDC_YM2612_DEBUGGER_KEY_13: {
+      SetKeyState(YM2612Channels::CHANNEL1, YM2612Operators::OPERATOR3, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      break; }
+    case IDC_YM2612_DEBUGGER_KEY_14: {
+      SetKeyState(YM2612Channels::CHANNEL1, YM2612Operators::OPERATOR4, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      break; }
+    case IDC_YM2612_DEBUGGER_KEY_21: {
+      SetKeyState(YM2612Channels::CHANNEL2, YM2612Operators::OPERATOR1, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      break; }
+    case IDC_YM2612_DEBUGGER_KEY_22: {
+      SetKeyState(YM2612Channels::CHANNEL2, YM2612Operators::OPERATOR2, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      break; }
+    case IDC_YM2612_DEBUGGER_KEY_23: {
+      SetKeyState(YM2612Channels::CHANNEL2, YM2612Operators::OPERATOR3, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      break; }
+    case IDC_YM2612_DEBUGGER_KEY_24: {
+      SetKeyState(YM2612Channels::CHANNEL2, YM2612Operators::OPERATOR4, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      break; }
+    case IDC_YM2612_DEBUGGER_KEY_31: {
+      SetKeyState(YM2612Channels::CHANNEL3, YM2612Operators::OPERATOR1, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      break; }
+    case IDC_YM2612_DEBUGGER_KEY_32: {
+      SetKeyState(YM2612Channels::CHANNEL3, YM2612Operators::OPERATOR2, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      break; }
+    case IDC_YM2612_DEBUGGER_KEY_33: {
+      SetKeyState(YM2612Channels::CHANNEL3, YM2612Operators::OPERATOR3, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      break; }
+    case IDC_YM2612_DEBUGGER_KEY_34: {
+      SetKeyState(YM2612Channels::CHANNEL3, YM2612Operators::OPERATOR4, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      break; }
+    case IDC_YM2612_DEBUGGER_KEY_41: {
+      SetKeyState(YM2612Channels::CHANNEL4, YM2612Operators::OPERATOR1, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      break; }
+    case IDC_YM2612_DEBUGGER_KEY_42: {
+      SetKeyState(YM2612Channels::CHANNEL4, YM2612Operators::OPERATOR2, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      break; }
+    case IDC_YM2612_DEBUGGER_KEY_43: {
+      SetKeyState(YM2612Channels::CHANNEL4, YM2612Operators::OPERATOR3, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      break; }
+    case IDC_YM2612_DEBUGGER_KEY_44: {
+      SetKeyState(YM2612Channels::CHANNEL4, YM2612Operators::OPERATOR4, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      break; }
+    case IDC_YM2612_DEBUGGER_KEY_51: {
+      SetKeyState(YM2612Channels::CHANNEL5, YM2612Operators::OPERATOR1, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      break; }
+    case IDC_YM2612_DEBUGGER_KEY_52: {
+      SetKeyState(YM2612Channels::CHANNEL5, YM2612Operators::OPERATOR2, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      break; }
+    case IDC_YM2612_DEBUGGER_KEY_53: {
+      SetKeyState(YM2612Channels::CHANNEL5, YM2612Operators::OPERATOR3, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      break; }
+    case IDC_YM2612_DEBUGGER_KEY_54: {
+      SetKeyState(YM2612Channels::CHANNEL5, YM2612Operators::OPERATOR4, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      break; }
+    case IDC_YM2612_DEBUGGER_KEY_61: {
+      SetKeyState(YM2612Channels::CHANNEL6, YM2612Operators::OPERATOR1, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      break; }
+    case IDC_YM2612_DEBUGGER_KEY_62: {
+      SetKeyState(YM2612Channels::CHANNEL6, YM2612Operators::OPERATOR2, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      break; }
+    case IDC_YM2612_DEBUGGER_KEY_63: {
+      SetKeyState(YM2612Channels::CHANNEL6, YM2612Operators::OPERATOR3, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      break; }
+    case IDC_YM2612_DEBUGGER_KEY_64: {
+      SetKeyState(YM2612Channels::CHANNEL6, YM2612Operators::OPERATOR4, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      break; }
+
+    case IDC_YM2612_DEBUGGER_KEY_1: {
+      SetKeyState(YM2612Channels::CHANNEL1, YM2612Operators::OPERATOR1, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      SetKeyState(YM2612Channels::CHANNEL1, YM2612Operators::OPERATOR2, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      SetKeyState(YM2612Channels::CHANNEL1, YM2612Operators::OPERATOR3, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      SetKeyState(YM2612Channels::CHANNEL1, YM2612Operators::OPERATOR4, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      break; }
+    case IDC_YM2612_DEBUGGER_KEY_2: {
+      SetKeyState(YM2612Channels::CHANNEL2, YM2612Operators::OPERATOR1, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      SetKeyState(YM2612Channels::CHANNEL2, YM2612Operators::OPERATOR2, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      SetKeyState(YM2612Channels::CHANNEL2, YM2612Operators::OPERATOR3, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      SetKeyState(YM2612Channels::CHANNEL2, YM2612Operators::OPERATOR4, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      break; }
+    case IDC_YM2612_DEBUGGER_KEY_3: {
+      SetKeyState(YM2612Channels::CHANNEL3, YM2612Operators::OPERATOR1, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      SetKeyState(YM2612Channels::CHANNEL3, YM2612Operators::OPERATOR2, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      SetKeyState(YM2612Channels::CHANNEL3, YM2612Operators::OPERATOR3, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      SetKeyState(YM2612Channels::CHANNEL3, YM2612Operators::OPERATOR4, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      break; }
+    case IDC_YM2612_DEBUGGER_KEY_4: {
+      SetKeyState(YM2612Channels::CHANNEL4, YM2612Operators::OPERATOR1, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      SetKeyState(YM2612Channels::CHANNEL4, YM2612Operators::OPERATOR2, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      SetKeyState(YM2612Channels::CHANNEL4, YM2612Operators::OPERATOR3, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      SetKeyState(YM2612Channels::CHANNEL4, YM2612Operators::OPERATOR4, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      break; }
+    case IDC_YM2612_DEBUGGER_KEY_5: {
+      SetKeyState(YM2612Channels::CHANNEL5, YM2612Operators::OPERATOR1, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      SetKeyState(YM2612Channels::CHANNEL5, YM2612Operators::OPERATOR2, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      SetKeyState(YM2612Channels::CHANNEL5, YM2612Operators::OPERATOR3, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      SetKeyState(YM2612Channels::CHANNEL5, YM2612Operators::OPERATOR4, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      break; }
+    case IDC_YM2612_DEBUGGER_KEY_6: {
+      SetKeyState(YM2612Channels::CHANNEL6, YM2612Operators::OPERATOR1, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      SetKeyState(YM2612Channels::CHANNEL6, YM2612Operators::OPERATOR2, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      SetKeyState(YM2612Channels::CHANNEL6, YM2612Operators::OPERATOR3, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      SetKeyState(YM2612Channels::CHANNEL6, YM2612Operators::OPERATOR4, (IsDlgButtonChecked(hwnd, LOWORD(wparam)) == BST_CHECKED));
+      break; }
+    }
+  }
+  else if (HIWORD(wparam) == EN_SETFOCUS)
+  {
+    previousText = GetDlgItemString(hwnd, LOWORD(wparam));
+    currentControlFocus = LOWORD(wparam);
+    return FALSE;
+  }
+  else if (HIWORD(wparam) == EN_KILLFOCUS)
+  {
+    std::string newText = GetDlgItemString(hwnd, LOWORD(wparam));
+    if (currentControlFocus == LOWORD(wparam))
+    {
+      currentControlFocus = 0;
+    }
+    if (newText == previousText)
+    {
+      return FALSE;
+    }
+
+    unsigned int controlID = LOWORD(wparam);
+    switch (controlID)
+    {
+     //Total Level
+    case IDC_YM2612_DEBUGGER_TL_OP1: {
+      SetTotalLevelData(channelNo, YM2612Operators::OPERATOR1, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_TL_OP2: {
+      SetTotalLevelData(channelNo, YM2612Operators::OPERATOR2, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_TL_OP3: {
+      SetTotalLevelData(channelNo, YM2612Operators::OPERATOR3, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_TL_OP4: {
+      SetTotalLevelData(channelNo, YM2612Operators::OPERATOR4, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+
+    //Sustain Level
+    case IDC_YM2612_DEBUGGER_SL_OP1: {
+      SetSustainLevelData(channelNo, YM2612Operators::OPERATOR1, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_SL_OP2: {
+      SetSustainLevelData(channelNo, YM2612Operators::OPERATOR2, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_SL_OP3: {
+      SetSustainLevelData(channelNo, YM2612Operators::OPERATOR3, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_SL_OP4: {
+      SetSustainLevelData(channelNo, YM2612Operators::OPERATOR4, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+
+    //Attack Rate
+    case IDC_YM2612_DEBUGGER_AR_OP1: {
+      SetAttackRateData(channelNo, YM2612Operators::OPERATOR1, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_AR_OP2: {
+      SetAttackRateData(channelNo, YM2612Operators::OPERATOR2, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_AR_OP3: {
+      SetAttackRateData(channelNo, YM2612Operators::OPERATOR3, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_AR_OP4: {
+      SetAttackRateData(channelNo, YM2612Operators::OPERATOR4, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+
+    //Decay Rate
+    case IDC_YM2612_DEBUGGER_DR_OP1: {
+      SetDecayRateData(channelNo, YM2612Operators::OPERATOR1, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_DR_OP2: {
+      SetDecayRateData(channelNo, YM2612Operators::OPERATOR2, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_DR_OP3: {
+      SetDecayRateData(channelNo, YM2612Operators::OPERATOR3, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_DR_OP4: {
+      SetDecayRateData(channelNo, YM2612Operators::OPERATOR4, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+
+    //Sustain Rate
+    case IDC_YM2612_DEBUGGER_SR_OP1: {
+      SetSustainRateData(channelNo, YM2612Operators::OPERATOR1, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_SR_OP2: {
+      SetSustainRateData(channelNo, YM2612Operators::OPERATOR2, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_SR_OP3: {
+      SetSustainRateData(channelNo, YM2612Operators::OPERATOR3, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_SR_OP4: {
+      SetSustainRateData(channelNo, YM2612Operators::OPERATOR4, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+
+    //Release Rate
+    case IDC_YM2612_DEBUGGER_RR_OP1: {
+      SetReleaseRateData(channelNo, YM2612Operators::OPERATOR1, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_RR_OP2: {
+      SetReleaseRateData(channelNo, YM2612Operators::OPERATOR2, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_RR_OP3: {
+      SetReleaseRateData(channelNo, YM2612Operators::OPERATOR3, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_RR_OP4: {
+      SetReleaseRateData(channelNo, YM2612Operators::OPERATOR4, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+
+    //SSG-EG Mode
+    case IDC_YM2612_DEBUGGER_SSGEG_OP1: {
+      SetSSGData(channelNo, YM2612Operators::OPERATOR1, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_SSGEG_OP2: {
+      SetSSGData(channelNo, YM2612Operators::OPERATOR2, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_SSGEG_OP3: {
+      SetSSGData(channelNo, YM2612Operators::OPERATOR3, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_SSGEG_OP4: {
+      SetSSGData(channelNo, YM2612Operators::OPERATOR4, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+
+    //Detune
+    case IDC_YM2612_DEBUGGER_DT_OP1: {
+      SetDetuneData(channelNo, YM2612Operators::OPERATOR1, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_DT_OP2: {
+      SetDetuneData(channelNo, YM2612Operators::OPERATOR2, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_DT_OP3: {
+      SetDetuneData(channelNo, YM2612Operators::OPERATOR3, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_DT_OP4: {
+      SetDetuneData(channelNo, YM2612Operators::OPERATOR4, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+
+    //Multiple
+    case IDC_YM2612_DEBUGGER_MUL_OP1: {
+      SetMultipleData(channelNo, YM2612Operators::OPERATOR1, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_MUL_OP2: {
+      SetMultipleData(channelNo, YM2612Operators::OPERATOR2, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_MUL_OP3: {
+      SetMultipleData(channelNo, YM2612Operators::OPERATOR3, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_MUL_OP4: {
+      SetMultipleData(channelNo, YM2612Operators::OPERATOR4, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+
+    //Key Scale
+    case IDC_YM2612_DEBUGGER_KS_OP1: {
+      SetKeyScaleData(channelNo, YM2612Operators::OPERATOR1, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_KS_OP2: {
+      SetKeyScaleData(channelNo, YM2612Operators::OPERATOR2, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_KS_OP3: {
+      SetKeyScaleData(channelNo, YM2612Operators::OPERATOR3, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_KS_OP4: {
+      SetKeyScaleData(channelNo, YM2612Operators::OPERATOR4, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+
+    //Channel Registers
+    case IDC_YM2612_DEBUGGER_ALGORITHM: {
+      SetAlgorithmData(channelNo, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_FEEDBACK: {
+      SetFeedbackData(channelNo, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_FNUM: {
+      SetFrequencyData(channelNo, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_BLOCK: {
+      SetBlockData(channelNo, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_AMS: {
+      SetAMSData(channelNo, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_PMS: {
+      SetPMSData(channelNo, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+
+    //Channel 3 Frequency
+    case IDC_YM2612_DEBUGGER_CH3MODE: {
+      SetCH3Mode(GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_CH3FNUM_OP1: {
+      SetFrequencyDataChannel3(YM2612Operators::OPERATOR1, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_CH3FNUM_OP2: {
+      SetFrequencyDataChannel3(YM2612Operators::OPERATOR2, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_CH3FNUM_OP3: {
+      SetFrequencyDataChannel3(YM2612Operators::OPERATOR3, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_CH3FNUM_OP4: {
+      SetFrequencyDataChannel3(YM2612Operators::OPERATOR4, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_CH3BLOCK_OP1: {
+      SetBlockDataChannel3(YM2612Operators::OPERATOR1, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_CH3BLOCK_OP2: {
+      SetBlockDataChannel3(YM2612Operators::OPERATOR2, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_CH3BLOCK_OP3: {
+      SetBlockDataChannel3(YM2612Operators::OPERATOR3, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_CH3BLOCK_OP4: {
+      SetBlockDataChannel3(YM2612Operators::OPERATOR4, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+
+    //LFO
+    case IDC_YM2612_DEBUGGER_LFOFREQ: {
+      SetLFOData(GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+
+    //DAC
+    case IDC_YM2612_DEBUGGER_DACDATA: {
+      SetDACData(GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+    }
+
+    return FALSE;
+  }
 
   return TRUE;
 }
@@ -1761,7 +1724,7 @@ static int map_val(double val, double max_val, double out_max) {
   return out_max ? (val * out_max / max_val) : 0;
 }
 
-static HPEN t1Pen, t2Pen, rPen, bPen, oPen, gPen, pPen;
+static HPEN tPen, rPen, bPen, oPen, gPen, pPen;
 static HBRUSH adsrBrush;
 
 LRESULT CALLBACK YM2612WndProcDialog(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -1815,8 +1778,7 @@ LRESULT CALLBACK YM2612WndProcDialog(HWND hwnd, UINT msg, WPARAM wparam, LPARAM 
     }
     // ADSR views
 
-    t1Pen = CreatePen(PS_DOT, 1, RGB(47, 79, 79));
-    t2Pen = CreatePen(PS_DOT, 1, RGB(220, 220, 220));
+    tPen = CreatePen(PS_DOT, 1, RGB(47, 79, 79));
     rPen = CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
     bPen = CreatePen(PS_SOLID, 1, RGB(0, 0, 255));
     oPen = CreatePen(PS_SOLID, 1, RGB(255, 165, 0));
@@ -1846,19 +1808,9 @@ LRESULT CALLBACK YM2612WndProcDialog(HWND hwnd, UINT msg, WPARAM wparam, LPARAM 
       int total = 0x7F - GetTotalLevelData(selectedChannel, op);
       total = map_val(total, 0x7F, ADSR_H-1);
 
-      // draw Total Level
-      HPEN hOldPen = (HPEN)SelectObject(di->hDC, t1Pen);
-      move_to_point(di->hDC, 0, total);
-      line_to_point(di->hDC, ADSR_W-1, total);
-      SelectObject(di->hDC, hOldPen);
-      // end draw Total Level
-
-      move_to_point(di->hDC, 0, 0);
-
       int attack_inv = GetAttackRateData(selectedChannel, op);
       int attack = 0x1F - attack_inv;
-      int decay_orig = GetDecayRateData(selectedChannel, op);
-      int decay = decay_orig;
+      int decay = GetDecayRateData(selectedChannel, op);
       int sustain_level = 0x0F - GetSustainLevelData(selectedChannel, op);
       int sustain_rate = GetSustainRateData(selectedChannel, op);
       int release = GetReleaseRateData(selectedChannel, op);
@@ -1872,44 +1824,49 @@ LRESULT CALLBACK YM2612WndProcDialog(HWND hwnd, UINT msg, WPARAM wparam, LPARAM 
       sustain_level = map_val(sustain_level, 0x0F, total);
       sustain_rate = map_val(sustain_rate, 0x1F, sustain_level);
 
+      // draw Total Level
+      HPEN hOldPen = (HPEN)SelectObject(di->hDC, tPen);
+      move_to_point(di->hDC, 0, total);
+      line_to_point(di->hDC, attack, total);
+      SelectObject(di->hDC, hOldPen);
+      // end draw Total Level
+
+      move_to_point(di->hDC, 0, 0);
+
       // draw Attack
       hOldPen = (HPEN)SelectObject(di->hDC, rPen);
       line_to_point(di->hDC, attack, total);
-
-      if (attack_inv < 0x1F) {
-        SelectObject(di->hDC, t2Pen);
-        line_to_point(di->hDC, attack, 0);
-      }
-
-      move_to_point(di->hDC, attack, total);
       SelectObject(di->hDC, hOldPen);
       // end draw Attack
+
+      hOldPen = (HPEN)SelectObject(di->hDC, tPen);
+
+      if (total >= sustain_level) {
+        move_to_point(di->hDC, attack, total);
+        line_to_point(di->hDC, ADSR_W - 1, total);
+        move_to_point(di->hDC, attack, total);
+      }
+      else if (sustain_rate == 0) {
+        move_to_point(di->hDC, attack + decay, sustain_level);
+        line_to_point(di->hDC, ADSR_W - 1, total);
+        move_to_point(di->hDC, attack + decay, sustain_level);
+      } else {
+        move_to_point(di->hDC, attack + decay + sustain_x, sustain_level - sustain_rate);
+        line_to_point(di->hDC, ADSR_W - 1, total);
+        move_to_point(di->hDC, attack + decay + sustain_x, sustain_level - sustain_rate);
+      }
+
+      SelectObject(di->hDC, hOldPen);
 
       // draw Decay
       hOldPen = (HPEN)SelectObject(di->hDC, bPen);
       line_to_point(di->hDC, attack + decay, sustain_level);
-
-      if (decay_orig > 0) {
-        SelectObject(di->hDC, t2Pen);
-        line_to_point(di->hDC, attack + decay, 0);
-      }
-
-      move_to_point(di->hDC, attack + decay, sustain_level);
       SelectObject(di->hDC, hOldPen);
       // end draw Decay
 
-      sustain_rate = sustain_level - sustain_rate;
-
       // draw Sustain
       hOldPen = (HPEN)SelectObject(di->hDC, gPen);
-      line_to_point(di->hDC, attack + decay + sustain_x, sustain_rate);
-
-      if (sustain_rate > 0) {
-        SelectObject(di->hDC, t2Pen);
-        line_to_point(di->hDC, attack + decay + sustain_x, 0);
-      }
-
-      move_to_point(di->hDC, attack + decay + sustain_x, sustain_rate);
+      line_to_point(di->hDC, attack + decay + sustain_x, sustain_level - sustain_rate);
       SelectObject(di->hDC, hOldPen);
       // end draw Sustain
 
@@ -1924,13 +1881,13 @@ LRESULT CALLBACK YM2612WndProcDialog(HWND hwnd, UINT msg, WPARAM wparam, LPARAM 
     }
   }
   case WM_CLOSE:
-    DeleteObject(t1Pen);
-    DeleteObject(t2Pen);
+    DeleteObject(tPen);
     DeleteObject(rPen);
     DeleteObject(bPen);
     DeleteObject(oPen);
     DeleteObject(gPen);
     DeleteObject(pPen);
+    DeleteObject(adsrBrush);
 
     DialogsOpen--;
     YM2612DbgHWnd = NULL;

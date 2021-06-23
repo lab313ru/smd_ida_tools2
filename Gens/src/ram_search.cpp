@@ -40,7 +40,7 @@
 #include "ramwatch.h"
 #include "vdp_ram.h"
 #ifdef DEBUG_Z80
-#include "ym2612_debug.h"
+#include "ym2612_psg_debug.h"
 #endif
 #include "plane_explorer_kmod.h"
 #include "vdp_sprites.h"

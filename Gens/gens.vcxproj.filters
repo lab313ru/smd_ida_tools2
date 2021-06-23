@@ -284,7 +284,7 @@
     <ClCompile Include="src\z80_debugwindow.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\ym2612_debug.cpp">
+    <ClCompile Include="src\ym2612_psg_debug.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\proto\debug_proto_68k.grpc.pb.cc">
@@ -550,9 +550,6 @@
     <ClInclude Include="include\z80_debugwindow.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="ym2612_debug.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="..\proto\debug_proto_68k.grpc.pb.h">
       <Filter>proto</Filter>
     </ClInclude>
@@ -565,7 +562,9 @@
     <ClInclude Include="..\proto\debug_proto_z80.pb.h">
       <Filter>proto</Filter>
     </ClInclude>
-    <ClInclude Include="resource\resource.h" />
+    <ClInclude Include="include\ym2612_psg_debug.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource\gens.rc">
