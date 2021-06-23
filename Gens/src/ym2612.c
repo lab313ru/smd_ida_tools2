@@ -13,7 +13,7 @@
 #include <memory.h>
 
 #include "ym2612.h"
-#include "ym2612_debug.h"
+#include "ym2612_psg_debug.h"
 
 
 /********************************************
@@ -451,7 +451,7 @@ int SLOT_SET(int adr, unsigned char data)
             SL->SLL = SL_TAB[data >> 4];
 
 #ifdef DEBUG_Z80
-            enabled_chn = enabled_channels[nch];
+            enabled_chn = enabled_channels_ym[nch];
 #endif
 
             SL->RR = &DR_TAB[((enabled_chn ? (data & 0xF) : 0x0F) << 2) + 2];
@@ -766,7 +766,7 @@ int YM_SET(int adr, unsigned char data)
             YM2612_Special_Update();
 
 #ifdef DEBUG_Z80
-            enabled_chn = enabled_channels[nch];
+            enabled_chn = enabled_channels_ym[nch];
 #endif
 
             if (enabled_chn && (data & 0x10)) KEY_ON(CH, S0);    // On appuie sur la touche pour le slot 1

@@ -849,6 +849,10 @@
 #define IDC_PSG_FREQ_3                  50048
 #define IDC_PSG_FEEDBACK                50049
 #define IDC_PSG_CLOCK                   50050
+#define IDC_PSG_ENABLE_1                50051
+#define IDC_PSG_ENABLE_2                50052
+#define IDC_PSG_ENABLE_3                50053
+#define IDC_PSG_ENABLE_4                50054
 
 // Next default values for new objects
 //

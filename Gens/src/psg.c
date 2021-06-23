@@ -12,8 +12,10 @@
 
 #include <stdio.h>
 #include <math.h>
-#include "psg.h"
 #include <memory.h>
+
+#include "psg.h"
+#include "ym2612_psg_debug.h"
 
 /* Defines */
 
@@ -100,7 +102,7 @@ void PSG_Write(int data)
 
             PSG_Special_Update();
 
-            PSG.Volume[PSG.Current_Channel] = PSG_Volume_Table[data];
+            PSG.Volume[PSG.Current_Channel] = PSG_Volume_Table[enabled_channels_psg[PSG.Current_Channel] ? data : 0x0F];
 
             PSG_DEBUG_2("channel %d    volume = %.8X\n", PSG.Current_Channel, PSG.Volume[PSG.Current_Channel]);
         }
@@ -343,7 +345,7 @@ void PSG_Init(int clock, int rate)
     }
 
     PSG_Volume_Table[15] = 0;
-	PSG_MaxVolume = PSG_Volume_Table[0];
+    PSG_MaxVolume = PSG_Volume_Table[0];
     /*
         for(i = 0; i < 256; i++)
         {
