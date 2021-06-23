@@ -18,6 +18,8 @@
 *.ilk
 *.gs?
 *.cfg
+*.exp
+*.lib
 *.vcxproj.FileListAbsolute.txt
 DbgClient_server.skeleton.cpp
 DbgServer_server.skeleton.cpp

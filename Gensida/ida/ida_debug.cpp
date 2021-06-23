@@ -922,11 +922,11 @@ static drc_t idaapi read_registers(thid_t tid, int clsmask, regval_t *values, qs
     values[R_SP].ival = regs.sp() & 0xFFFFFF;
     values[R_SR].ival = regs.sr();
 #else
-    values[R_A].ival = (regs.af() >> 8) & 0xFF;
+    values[R_A].ival = regs.a();
     values[R_AF].ival = regs.af();
     values[R_AF2].ival = regs.af2();
-    values[R_B].ival = (regs.bc() >> 8) & 0xFF;
-    values[R_C].ival = (regs.bc() >> 0) & 0xFF;
+    values[R_B].ival = regs.b();
+    values[R_C].ival = regs.c();
     values[R_BC].ival = regs.bc();
     values[R_BC2].ival = regs.bc2();
     values[R_DE].ival = regs.de();
@@ -934,11 +934,11 @@ static drc_t idaapi read_registers(thid_t tid, int clsmask, regval_t *values, qs
     values[R_HL].ival = regs.hl();
     values[R_HL2].ival = regs.hl2();
 
-    values[R_IXH].ival = (regs.ix() >> 8) & 0xFF;
-    values[R_IXL].ival = (regs.ix() >> 0) & 0xFF;
+    values[R_IXH].ival = regs.ixh();
+    values[R_IXL].ival = regs.ixl();
     values[R_IX].ival = regs.ix();
-    values[R_IYH].ival = (regs.iy() >> 8) & 0xFF;
-    values[R_IYL].ival = (regs.iy() >> 0) & 0xFF;
+    values[R_IYH].ival = regs.iyh();
+    values[R_IYL].ival = regs.iyl();
     values[R_IY].ival = regs.iy();
     values[R_I].ival = regs.i();
     values[R_R].ival = regs.r();

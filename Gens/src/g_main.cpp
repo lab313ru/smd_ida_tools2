@@ -1687,12 +1687,24 @@ class DbgServerHandler final : public DbgServer::Service {
     }
 #else
     switch (request->reg()) {
+    case GpRegsEnum::A: {
+      response->set_value(M_Z80.AF.b.A);
+      return Status::OK;
+    }
     case GpRegsEnum::AF: {
       response->set_value(M_Z80.AF.w.AF);
       return Status::OK;
     }
     case GpRegsEnum::AF2: {
       response->set_value(M_Z80.AF2.w.AF2);
+      return Status::OK;
+    }
+    case GpRegsEnum::B: {
+      response->set_value(M_Z80.BC.b.B);
+      return Status::OK;
+    }
+    case GpRegsEnum::C: {
+      response->set_value(M_Z80.BC.b.C);
       return Status::OK;
     }
     case GpRegsEnum::BC: {
@@ -1714,14 +1726,30 @@ class DbgServerHandler final : public DbgServer::Service {
     case GpRegsEnum::HL: {
       response->set_value(M_Z80.HL.w.HL);
       return Status::OK;
-      }
+    }
     case GpRegsEnum::HL2: {
       response->set_value(M_Z80.HL2.w.HL2);
       return Status::OK;
     }
 
+    case GpRegsEnum::IXH: {
+      response->set_value(M_Z80.IX.b.IXH);
+      return Status::OK;
+    }
+    case GpRegsEnum::IXL: {
+      response->set_value(M_Z80.IX.b.IXL);
+      return Status::OK;
+    }
     case GpRegsEnum::IX: {
       response->set_value(M_Z80.IX.w.IX);
+      return Status::OK;
+    }
+    case GpRegsEnum::IYH: {
+      response->set_value(M_Z80.IY.b.IYH);
+      return Status::OK;
+    }
+    case GpRegsEnum::IYL: {
+      response->set_value(M_Z80.IY.b.IYL);
       return Status::OK;
     }
     case GpRegsEnum::IY: {
@@ -1785,8 +1813,11 @@ class DbgServerHandler final : public DbgServer::Service {
     response->set_pc(M68kDW.last_pc & 0xFFFFFF);
     response->set_sr(main68k_context.sr);
 #else
+    response->set_a(M_Z80.AF.b.A);
     response->set_af(M_Z80.AF.w.AF);
     response->set_af2(M_Z80.AF2.w.AF2);
+    response->set_b(M_Z80.BC.b.B);
+    response->set_c(M_Z80.BC.b.C);
     response->set_bc(M_Z80.BC.w.BC);
     response->set_bc2(M_Z80.BC2.w.BC2);
     response->set_de(M_Z80.DE.w.DE);
@@ -1794,7 +1825,11 @@ class DbgServerHandler final : public DbgServer::Service {
     response->set_hl(M_Z80.HL.w.HL);
     response->set_hl2(M_Z80.HL2.w.HL2);
 
+    response->set_ixh(M_Z80.IX.b.IXH);
+    response->set_ixl(M_Z80.IX.b.IXL);
     response->set_ix(M_Z80.IX.w.IX);
+    response->set_iyh(M_Z80.IY.b.IYH);
+    response->set_iyl(M_Z80.IY.b.IYL);
     response->set_iy(M_Z80.IY.w.IY);
     response->set_i(M_Z80.I);
     response->set_r(M_Z80.R.w.R);
@@ -1967,8 +2002,11 @@ class DbgServerHandler final : public DbgServer::Service {
     }
 #else
     switch (request->index()) {
+    case GpRegsEnum::A: M_Z80.AF.b.A = request->value(); break;
     case GpRegsEnum::AF: M_Z80.AF.w.AF = request->value(); break;
     case GpRegsEnum::AF2: M_Z80.AF2.w.AF2 = request->value(); break;
+    case GpRegsEnum::B: M_Z80.BC.b.B = request->value(); break;
+    case GpRegsEnum::C: M_Z80.BC.b.C = request->value(); break;
     case GpRegsEnum::BC: M_Z80.BC.w.BC = request->value(); break;
     case GpRegsEnum::BC2: M_Z80.BC2.w.BC2 = request->value(); break;
     case GpRegsEnum::DE: M_Z80.DE.w.DE = request->value(); break;
@@ -1976,7 +2014,11 @@ class DbgServerHandler final : public DbgServer::Service {
     case GpRegsEnum::HL: M_Z80.HL.w.HL = request->value(); break;
     case GpRegsEnum::HL2: M_Z80.HL2.w.HL2 = request->value(); break;
 
+    case GpRegsEnum::IXH: M_Z80.IX.b.IXH = request->value(); break;
+    case GpRegsEnum::IXL: M_Z80.IX.b.IXL = request->value(); break;
     case GpRegsEnum::IX: M_Z80.IX.w.IX = request->value(); break;
+    case GpRegsEnum::IYH: M_Z80.IY.b.IYH = request->value(); break;
+    case GpRegsEnum::IYL: M_Z80.IY.b.IYL = request->value(); break;
     case GpRegsEnum::IY: M_Z80.IY.w.IY = request->value(); break;
     case GpRegsEnum::I: M_Z80.I = request->value(); break;
     case GpRegsEnum::R: M_Z80.R.w.R = request->value(); break;

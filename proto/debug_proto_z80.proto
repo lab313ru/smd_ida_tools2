@@ -5,26 +5,32 @@ package idadebug;
 import "google/protobuf/empty.proto";
 
 enum GpRegsEnum {
-  DUMMY_REG = 0;
+  A = 0;
   AF = 1;
   AF2 = 2;
-  BC = 3;
-  BC2 = 4;
-  DE = 5;
-  DE2 = 6;
-  HL = 7;
-  HL2 = 8;
+  B = 3;
+  C = 4;
+  BC = 5;
+  BC2 = 6;
+  DE = 7;
+  DE2 = 8;
+  HL = 9;
+  HL2 = 10;
 
-  IX = 9;
-  IY = 10;
-  I = 11;
-  R = 12;
-  PC = 13;
+  IXH = 11;
+  IXL = 12;
+  IX = 13;
+  IYH = 14;
+  IYL = 15;
+  IY = 16;
+  I = 17;
+  R = 18;
+  PC = 19;
 
-  SP = 14;
-  IP = 15;
+  SP = 20;
+  IP = 21;
 
-  BANK = 16;
+  BANK = 22;
 }
 
 message GpReg {
@@ -32,25 +38,32 @@ message GpReg {
 }
 
 message GpRegs {
-  uint32 AF = 1;
-  uint32 AF2 = 2;
-  uint32 BC = 3;
-  uint32 BC2 = 4;
-  uint32 DE = 5;
-  uint32 DE2 = 6;
-  uint32 HL = 7;
-  uint32 HL2 = 8;
+  uint32 A = 1;
+  uint32 AF = 2;
+  uint32 AF2 = 3;
+  uint32 B = 4;
+  uint32 C = 5;
+  uint32 BC = 6;
+  uint32 BC2 = 7;
+  uint32 DE = 8;
+  uint32 DE2 = 9;
+  uint32 HL = 10;
+  uint32 HL2 = 11;
 
-  uint32 IX = 9;
-  uint32 IY = 10;
-  uint32 I = 11;
-  uint32 R = 12;
-  uint32 PC = 13;
+  uint32 IXH = 12;
+  uint32 IXL = 13;
+  uint32 IX = 14;
+  uint32 IYH = 15;
+  uint32 IYL = 16;
+  uint32 IY = 17;
+  uint32 I = 18;
+  uint32 R = 19;
+  uint32 PC = 20;
 
-  uint32 SP = 14;
-  uint32 IP = 15;
+  uint32 SP = 21;
+  uint32 IP = 22;
 
-  uint32 BANK = 16;
+  uint32 BANK = 23;
 }
 
 message GpRegValue {
