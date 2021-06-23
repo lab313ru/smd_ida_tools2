@@ -4537,10 +4537,11 @@ HMENU Build_Main_Menu(void)
     MENU_L(TAS_Tools, i++, Flags, ID_RAM_WATCH, "RAM &Watch");   //Modif U.
     MENU_L(TAS_Tools, i++, Flags, ID_RAM_SEARCH, "&RAM Search"); //Modif N.
     MENU_L(TAS_Tools, i++, Flags, ID_HEX_EDITOR, "&Hex Editor");
+#ifdef DEBUG_68K
     MENU_L(TAS_Tools, i++, Flags, ID_VDP_RAM, "VDP RAM");
     MENU_L(TAS_Tools, i++, Flags, ID_VDP_SPRITES, "VDP Sprites");
     MENU_L(TAS_Tools, i++, Flags, ID_PLANE_EXPLORER, "Plane Explorer");
-#ifdef DEBUG_Z80
+#else
     MENU_L(TAS_Tools, i++, Flags, ID_YM2612_DEBUGGER, "&YM2612 && PSG View");
 #endif
 
