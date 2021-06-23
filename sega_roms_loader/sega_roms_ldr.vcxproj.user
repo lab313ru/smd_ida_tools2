@@ -5,9 +5,19 @@
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerCommand>c:\Program Files\IDA Pro 7.6\ida.exe</LocalDebuggerCommand>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug7|x64'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release75|x64'">
     <LocalDebuggerWorkingDirectory>c:\Program Files\IDA Pro 7.6\</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerCommand>c:\Program Files\IDA Pro 7.6\ida.exe</LocalDebuggerCommand>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug7|x64'">
+    <LocalDebuggerWorkingDirectory>d:\ida75\</LocalDebuggerWorkingDirectory>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerCommand>d:\ida75\ida.exe</LocalDebuggerCommand>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug75|x64'">
+    <LocalDebuggerWorkingDirectory>d:\ida75\</LocalDebuggerWorkingDirectory>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerCommand>d:\ida75\ida.exe</LocalDebuggerCommand>
   </PropertyGroup>
 </Project>

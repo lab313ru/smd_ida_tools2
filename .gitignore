@@ -23,7 +23,10 @@ DbgClient_server.skeleton.cpp
 DbgServer_server.skeleton.cpp
 Gens/asm/main68k.asm
 Gens/asm/sub68k.asm
-Debug7/
+Debug/
+Release/
 Release7/
-Debug7_z80/
-Release7_z80/
+Debug_68k/
+Release_68k/
+Debug_z80/
+Release_z80/
