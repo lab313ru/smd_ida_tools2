@@ -399,6 +399,8 @@ bits 32
 	sub ecx, [ebp + Z80.BasePC]
 	call @z80TracePC@4
 	popa
+	mov zAF, [ebp + Z80.AF]
+	mov zxHL, [ebp + Z80.HL]
 
 %if (GENS_LOG == 1)
 	push eax
@@ -2612,6 +2614,8 @@ Z80I_DI:
 	sub ecx, [ebp + Z80.BasePC]
 	call @z80TracePC@4
 	popa
+	mov zAF, [ebp + Z80.AF]
+	mov zxHL, [ebp + Z80.HL]
 
 %if (GENS_LOG == 1)
 	push eax
@@ -2644,6 +2648,8 @@ Z80I_EI:
 	sub ecx, [ebp + Z80.BasePC]
 	call @z80TracePC@4
 	popa
+	mov zAF, [ebp + Z80.AF]
+	mov zxHL, [ebp + Z80.HL]
 
 %if (GENS_LOG == 1)
 	push eax
@@ -5168,6 +5174,8 @@ DECLF z80_Exec, 8
 	sub ecx, [ebp + Z80.BasePC]
 	call @z80TracePC@4
 	popa
+	mov zAF, [ebp + Z80.AF]
+	mov zxHL, [ebp + Z80.HL]
 
 %if (GENS_LOG == 1)
 	push eax
@@ -5249,6 +5257,14 @@ ALIGN32
 z80_Exec_Interrupt_Happened:
 	CHECK_INT
 	movzx edx, byte [zxPC]
+
+	pusha
+	mov ecx, zxPC
+	sub ecx, [ebp + Z80.BasePC]
+	call @z80TracePC@4
+	popa
+	mov zAF, [ebp + Z80.AF]
+	mov zxHL, [ebp + Z80.HL]
 
 %if (GENS_LOG == 1)
 	push eax
