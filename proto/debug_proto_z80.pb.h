@@ -141,22 +141,26 @@ enum GpRegsEnum : int {
   C = 4,
   BC = 5,
   BC2 = 6,
-  DE = 7,
-  DE2 = 8,
-  HL = 9,
-  HL2 = 10,
-  IXH = 11,
-  IXL = 12,
-  IX = 13,
-  IYH = 14,
-  IYL = 15,
-  IY = 16,
-  I = 17,
-  R = 18,
-  PC = 19,
-  SP = 20,
-  IP = 21,
-  BANK = 22,
+  D = 7,
+  E = 8,
+  DE = 9,
+  DE2 = 10,
+  H = 11,
+  L = 12,
+  HL = 13,
+  HL2 = 14,
+  IXH = 15,
+  IXL = 16,
+  IX = 17,
+  IYH = 18,
+  IYL = 19,
+  IY = 20,
+  I = 21,
+  R = 22,
+  PC = 23,
+  SP = 24,
+  IP = 25,
+  BANK = 26,
   GpRegsEnum_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::min(),
   GpRegsEnum_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::max()
 };
@@ -465,22 +469,26 @@ class GpRegs PROTOBUF_FINAL :
     kCFieldNumber = 5,
     kBCFieldNumber = 6,
     kBC2FieldNumber = 7,
-    kDEFieldNumber = 8,
-    kDE2FieldNumber = 9,
-    kHLFieldNumber = 10,
-    kHL2FieldNumber = 11,
-    kIXHFieldNumber = 12,
-    kIXLFieldNumber = 13,
-    kIXFieldNumber = 14,
-    kIYHFieldNumber = 15,
-    kIYLFieldNumber = 16,
-    kIYFieldNumber = 17,
-    kIFieldNumber = 18,
-    kRFieldNumber = 19,
-    kPCFieldNumber = 20,
-    kSPFieldNumber = 21,
-    kIPFieldNumber = 22,
-    kBANKFieldNumber = 23,
+    kDFieldNumber = 8,
+    kEFieldNumber = 9,
+    kDEFieldNumber = 10,
+    kDE2FieldNumber = 11,
+    kHFieldNumber = 12,
+    kLFieldNumber = 13,
+    kHLFieldNumber = 14,
+    kHL2FieldNumber = 15,
+    kIXHFieldNumber = 16,
+    kIXLFieldNumber = 17,
+    kIXFieldNumber = 18,
+    kIYHFieldNumber = 19,
+    kIYLFieldNumber = 20,
+    kIYFieldNumber = 21,
+    kIFieldNumber = 22,
+    kRFieldNumber = 23,
+    kPCFieldNumber = 24,
+    kSPFieldNumber = 25,
+    kIPFieldNumber = 26,
+    kBANKFieldNumber = 27,
   };
   // uint32 A = 1;
   void clear_a();
@@ -545,7 +553,25 @@ class GpRegs PROTOBUF_FINAL :
   void _internal_set_bc2(::PROTOBUF_NAMESPACE_ID::uint32 value);
   public:
 
-  // uint32 DE = 8;
+  // uint32 D = 8;
+  void clear_d();
+  ::PROTOBUF_NAMESPACE_ID::uint32 d() const;
+  void set_d(::PROTOBUF_NAMESPACE_ID::uint32 value);
+  private:
+  ::PROTOBUF_NAMESPACE_ID::uint32 _internal_d() const;
+  void _internal_set_d(::PROTOBUF_NAMESPACE_ID::uint32 value);
+  public:
+
+  // uint32 E = 9;
+  void clear_e();
+  ::PROTOBUF_NAMESPACE_ID::uint32 e() const;
+  void set_e(::PROTOBUF_NAMESPACE_ID::uint32 value);
+  private:
+  ::PROTOBUF_NAMESPACE_ID::uint32 _internal_e() const;
+  void _internal_set_e(::PROTOBUF_NAMESPACE_ID::uint32 value);
+  public:
+
+  // uint32 DE = 10;
   void clear_de();
   ::PROTOBUF_NAMESPACE_ID::uint32 de() const;
   void set_de(::PROTOBUF_NAMESPACE_ID::uint32 value);
@@ -554,7 +580,7 @@ class GpRegs PROTOBUF_FINAL :
   void _internal_set_de(::PROTOBUF_NAMESPACE_ID::uint32 value);
   public:
 
-  // uint32 DE2 = 9;
+  // uint32 DE2 = 11;
   void clear_de2();
   ::PROTOBUF_NAMESPACE_ID::uint32 de2() const;
   void set_de2(::PROTOBUF_NAMESPACE_ID::uint32 value);
@@ -563,7 +589,25 @@ class GpRegs PROTOBUF_FINAL :
   void _internal_set_de2(::PROTOBUF_NAMESPACE_ID::uint32 value);
   public:
 
-  // uint32 HL = 10;
+  // uint32 H = 12;
+  void clear_h();
+  ::PROTOBUF_NAMESPACE_ID::uint32 h() const;
+  void set_h(::PROTOBUF_NAMESPACE_ID::uint32 value);
+  private:
+  ::PROTOBUF_NAMESPACE_ID::uint32 _internal_h() const;
+  void _internal_set_h(::PROTOBUF_NAMESPACE_ID::uint32 value);
+  public:
+
+  // uint32 L = 13;
+  void clear_l();
+  ::PROTOBUF_NAMESPACE_ID::uint32 l() const;
+  void set_l(::PROTOBUF_NAMESPACE_ID::uint32 value);
+  private:
+  ::PROTOBUF_NAMESPACE_ID::uint32 _internal_l() const;
+  void _internal_set_l(::PROTOBUF_NAMESPACE_ID::uint32 value);
+  public:
+
+  // uint32 HL = 14;
   void clear_hl();
   ::PROTOBUF_NAMESPACE_ID::uint32 hl() const;
   void set_hl(::PROTOBUF_NAMESPACE_ID::uint32 value);
@@ -572,7 +616,7 @@ class GpRegs PROTOBUF_FINAL :
   void _internal_set_hl(::PROTOBUF_NAMESPACE_ID::uint32 value);
   public:
 
-  // uint32 HL2 = 11;
+  // uint32 HL2 = 15;
   void clear_hl2();
   ::PROTOBUF_NAMESPACE_ID::uint32 hl2() const;
   void set_hl2(::PROTOBUF_NAMESPACE_ID::uint32 value);
@@ -581,7 +625,7 @@ class GpRegs PROTOBUF_FINAL :
   void _internal_set_hl2(::PROTOBUF_NAMESPACE_ID::uint32 value);
   public:
 
-  // uint32 IXH = 12;
+  // uint32 IXH = 16;
   void clear_ixh();
   ::PROTOBUF_NAMESPACE_ID::uint32 ixh() const;
   void set_ixh(::PROTOBUF_NAMESPACE_ID::uint32 value);
@@ -590,7 +634,7 @@ class GpRegs PROTOBUF_FINAL :
   void _internal_set_ixh(::PROTOBUF_NAMESPACE_ID::uint32 value);
   public:
 
-  // uint32 IXL = 13;
+  // uint32 IXL = 17;
   void clear_ixl();
   ::PROTOBUF_NAMESPACE_ID::uint32 ixl() const;
   void set_ixl(::PROTOBUF_NAMESPACE_ID::uint32 value);
@@ -599,7 +643,7 @@ class GpRegs PROTOBUF_FINAL :
   void _internal_set_ixl(::PROTOBUF_NAMESPACE_ID::uint32 value);
   public:
 
-  // uint32 IX = 14;
+  // uint32 IX = 18;
   void clear_ix();
   ::PROTOBUF_NAMESPACE_ID::uint32 ix() const;
   void set_ix(::PROTOBUF_NAMESPACE_ID::uint32 value);
@@ -608,7 +652,7 @@ class GpRegs PROTOBUF_FINAL :
   void _internal_set_ix(::PROTOBUF_NAMESPACE_ID::uint32 value);
   public:
 
-  // uint32 IYH = 15;
+  // uint32 IYH = 19;
   void clear_iyh();
   ::PROTOBUF_NAMESPACE_ID::uint32 iyh() const;
   void set_iyh(::PROTOBUF_NAMESPACE_ID::uint32 value);
@@ -617,7 +661,7 @@ class GpRegs PROTOBUF_FINAL :
   void _internal_set_iyh(::PROTOBUF_NAMESPACE_ID::uint32 value);
   public:
 
-  // uint32 IYL = 16;
+  // uint32 IYL = 20;
   void clear_iyl();
   ::PROTOBUF_NAMESPACE_ID::uint32 iyl() const;
   void set_iyl(::PROTOBUF_NAMESPACE_ID::uint32 value);
@@ -626,7 +670,7 @@ class GpRegs PROTOBUF_FINAL :
   void _internal_set_iyl(::PROTOBUF_NAMESPACE_ID::uint32 value);
   public:
 
-  // uint32 IY = 17;
+  // uint32 IY = 21;
   void clear_iy();
   ::PROTOBUF_NAMESPACE_ID::uint32 iy() const;
   void set_iy(::PROTOBUF_NAMESPACE_ID::uint32 value);
@@ -635,7 +679,7 @@ class GpRegs PROTOBUF_FINAL :
   void _internal_set_iy(::PROTOBUF_NAMESPACE_ID::uint32 value);
   public:
 
-  // uint32 I = 18;
+  // uint32 I = 22;
   void clear_i();
   ::PROTOBUF_NAMESPACE_ID::uint32 i() const;
   void set_i(::PROTOBUF_NAMESPACE_ID::uint32 value);
@@ -644,7 +688,7 @@ class GpRegs PROTOBUF_FINAL :
   void _internal_set_i(::PROTOBUF_NAMESPACE_ID::uint32 value);
   public:
 
-  // uint32 R = 19;
+  // uint32 R = 23;
   void clear_r();
   ::PROTOBUF_NAMESPACE_ID::uint32 r() const;
   void set_r(::PROTOBUF_NAMESPACE_ID::uint32 value);
@@ -653,7 +697,7 @@ class GpRegs PROTOBUF_FINAL :
   void _internal_set_r(::PROTOBUF_NAMESPACE_ID::uint32 value);
   public:
 
-  // uint32 PC = 20;
+  // uint32 PC = 24;
   void clear_pc();
   ::PROTOBUF_NAMESPACE_ID::uint32 pc() const;
   void set_pc(::PROTOBUF_NAMESPACE_ID::uint32 value);
@@ -662,7 +706,7 @@ class GpRegs PROTOBUF_FINAL :
   void _internal_set_pc(::PROTOBUF_NAMESPACE_ID::uint32 value);
   public:
 
-  // uint32 SP = 21;
+  // uint32 SP = 25;
   void clear_sp();
   ::PROTOBUF_NAMESPACE_ID::uint32 sp() const;
   void set_sp(::PROTOBUF_NAMESPACE_ID::uint32 value);
@@ -671,7 +715,7 @@ class GpRegs PROTOBUF_FINAL :
   void _internal_set_sp(::PROTOBUF_NAMESPACE_ID::uint32 value);
   public:
 
-  // uint32 IP = 22;
+  // uint32 IP = 26;
   void clear_ip();
   ::PROTOBUF_NAMESPACE_ID::uint32 ip() const;
   void set_ip(::PROTOBUF_NAMESPACE_ID::uint32 value);
@@ -680,7 +724,7 @@ class GpRegs PROTOBUF_FINAL :
   void _internal_set_ip(::PROTOBUF_NAMESPACE_ID::uint32 value);
   public:
 
-  // uint32 BANK = 23;
+  // uint32 BANK = 27;
   void clear_bank();
   ::PROTOBUF_NAMESPACE_ID::uint32 bank() const;
   void set_bank(::PROTOBUF_NAMESPACE_ID::uint32 value);
@@ -703,8 +747,12 @@ class GpRegs PROTOBUF_FINAL :
   ::PROTOBUF_NAMESPACE_ID::uint32 c_;
   ::PROTOBUF_NAMESPACE_ID::uint32 bc_;
   ::PROTOBUF_NAMESPACE_ID::uint32 bc2_;
+  ::PROTOBUF_NAMESPACE_ID::uint32 d_;
+  ::PROTOBUF_NAMESPACE_ID::uint32 e_;
   ::PROTOBUF_NAMESPACE_ID::uint32 de_;
   ::PROTOBUF_NAMESPACE_ID::uint32 de2_;
+  ::PROTOBUF_NAMESPACE_ID::uint32 h_;
+  ::PROTOBUF_NAMESPACE_ID::uint32 l_;
   ::PROTOBUF_NAMESPACE_ID::uint32 hl_;
   ::PROTOBUF_NAMESPACE_ID::uint32 hl2_;
   ::PROTOBUF_NAMESPACE_ID::uint32 ixh_;
@@ -2806,7 +2854,47 @@ inline void GpRegs::set_bc2(::PROTOBUF_NAMESPACE_ID::uint32 value) {
   // @@protoc_insertion_point(field_set:idadebug.GpRegs.BC2)
 }
 
-// uint32 DE = 8;
+// uint32 D = 8;
+inline void GpRegs::clear_d() {
+  d_ = 0u;
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint32 GpRegs::_internal_d() const {
+  return d_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint32 GpRegs::d() const {
+  // @@protoc_insertion_point(field_get:idadebug.GpRegs.D)
+  return _internal_d();
+}
+inline void GpRegs::_internal_set_d(::PROTOBUF_NAMESPACE_ID::uint32 value) {
+  
+  d_ = value;
+}
+inline void GpRegs::set_d(::PROTOBUF_NAMESPACE_ID::uint32 value) {
+  _internal_set_d(value);
+  // @@protoc_insertion_point(field_set:idadebug.GpRegs.D)
+}
+
+// uint32 E = 9;
+inline void GpRegs::clear_e() {
+  e_ = 0u;
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint32 GpRegs::_internal_e() const {
+  return e_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint32 GpRegs::e() const {
+  // @@protoc_insertion_point(field_get:idadebug.GpRegs.E)
+  return _internal_e();
+}
+inline void GpRegs::_internal_set_e(::PROTOBUF_NAMESPACE_ID::uint32 value) {
+  
+  e_ = value;
+}
+inline void GpRegs::set_e(::PROTOBUF_NAMESPACE_ID::uint32 value) {
+  _internal_set_e(value);
+  // @@protoc_insertion_point(field_set:idadebug.GpRegs.E)
+}
+
+// uint32 DE = 10;
 inline void GpRegs::clear_de() {
   de_ = 0u;
 }
@@ -2826,7 +2914,7 @@ inline void GpRegs::set_de(::PROTOBUF_NAMESPACE_ID::uint32 value) {
   // @@protoc_insertion_point(field_set:idadebug.GpRegs.DE)
 }
 
-// uint32 DE2 = 9;
+// uint32 DE2 = 11;
 inline void GpRegs::clear_de2() {
   de2_ = 0u;
 }
@@ -2846,7 +2934,47 @@ inline void GpRegs::set_de2(::PROTOBUF_NAMESPACE_ID::uint32 value) {
   // @@protoc_insertion_point(field_set:idadebug.GpRegs.DE2)
 }
 
-// uint32 HL = 10;
+// uint32 H = 12;
+inline void GpRegs::clear_h() {
+  h_ = 0u;
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint32 GpRegs::_internal_h() const {
+  return h_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint32 GpRegs::h() const {
+  // @@protoc_insertion_point(field_get:idadebug.GpRegs.H)
+  return _internal_h();
+}
+inline void GpRegs::_internal_set_h(::PROTOBUF_NAMESPACE_ID::uint32 value) {
+  
+  h_ = value;
+}
+inline void GpRegs::set_h(::PROTOBUF_NAMESPACE_ID::uint32 value) {
+  _internal_set_h(value);
+  // @@protoc_insertion_point(field_set:idadebug.GpRegs.H)
+}
+
+// uint32 L = 13;
+inline void GpRegs::clear_l() {
+  l_ = 0u;
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint32 GpRegs::_internal_l() const {
+  return l_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint32 GpRegs::l() const {
+  // @@protoc_insertion_point(field_get:idadebug.GpRegs.L)
+  return _internal_l();
+}
+inline void GpRegs::_internal_set_l(::PROTOBUF_NAMESPACE_ID::uint32 value) {
+  
+  l_ = value;
+}
+inline void GpRegs::set_l(::PROTOBUF_NAMESPACE_ID::uint32 value) {
+  _internal_set_l(value);
+  // @@protoc_insertion_point(field_set:idadebug.GpRegs.L)
+}
+
+// uint32 HL = 14;
 inline void GpRegs::clear_hl() {
   hl_ = 0u;
 }
@@ -2866,7 +2994,7 @@ inline void GpRegs::set_hl(::PROTOBUF_NAMESPACE_ID::uint32 value) {
   // @@protoc_insertion_point(field_set:idadebug.GpRegs.HL)
 }
 
-// uint32 HL2 = 11;
+// uint32 HL2 = 15;
 inline void GpRegs::clear_hl2() {
   hl2_ = 0u;
 }
@@ -2886,7 +3014,7 @@ inline void GpRegs::set_hl2(::PROTOBUF_NAMESPACE_ID::uint32 value) {
   // @@protoc_insertion_point(field_set:idadebug.GpRegs.HL2)
 }
 
-// uint32 IXH = 12;
+// uint32 IXH = 16;
 inline void GpRegs::clear_ixh() {
   ixh_ = 0u;
 }
@@ -2906,7 +3034,7 @@ inline void GpRegs::set_ixh(::PROTOBUF_NAMESPACE_ID::uint32 value) {
   // @@protoc_insertion_point(field_set:idadebug.GpRegs.IXH)
 }
 
-// uint32 IXL = 13;
+// uint32 IXL = 17;
 inline void GpRegs::clear_ixl() {
   ixl_ = 0u;
 }
@@ -2926,7 +3054,7 @@ inline void GpRegs::set_ixl(::PROTOBUF_NAMESPACE_ID::uint32 value) {
   // @@protoc_insertion_point(field_set:idadebug.GpRegs.IXL)
 }
 
-// uint32 IX = 14;
+// uint32 IX = 18;
 inline void GpRegs::clear_ix() {
   ix_ = 0u;
 }
@@ -2946,7 +3074,7 @@ inline void GpRegs::set_ix(::PROTOBUF_NAMESPACE_ID::uint32 value) {
   // @@protoc_insertion_point(field_set:idadebug.GpRegs.IX)
 }
 
-// uint32 IYH = 15;
+// uint32 IYH = 19;
 inline void GpRegs::clear_iyh() {
   iyh_ = 0u;
 }
@@ -2966,7 +3094,7 @@ inline void GpRegs::set_iyh(::PROTOBUF_NAMESPACE_ID::uint32 value) {
   // @@protoc_insertion_point(field_set:idadebug.GpRegs.IYH)
 }
 
-// uint32 IYL = 16;
+// uint32 IYL = 20;
 inline void GpRegs::clear_iyl() {
   iyl_ = 0u;
 }
@@ -2986,7 +3114,7 @@ inline void GpRegs::set_iyl(::PROTOBUF_NAMESPACE_ID::uint32 value) {
   // @@protoc_insertion_point(field_set:idadebug.GpRegs.IYL)
 }
 
-// uint32 IY = 17;
+// uint32 IY = 21;
 inline void GpRegs::clear_iy() {
   iy_ = 0u;
 }
@@ -3006,7 +3134,7 @@ inline void GpRegs::set_iy(::PROTOBUF_NAMESPACE_ID::uint32 value) {
   // @@protoc_insertion_point(field_set:idadebug.GpRegs.IY)
 }
 
-// uint32 I = 18;
+// uint32 I = 22;
 inline void GpRegs::clear_i() {
   i_ = 0u;
 }
@@ -3026,7 +3154,7 @@ inline void GpRegs::set_i(::PROTOBUF_NAMESPACE_ID::uint32 value) {
   // @@protoc_insertion_point(field_set:idadebug.GpRegs.I)
 }
 
-// uint32 R = 19;
+// uint32 R = 23;
 inline void GpRegs::clear_r() {
   r_ = 0u;
 }
@@ -3046,7 +3174,7 @@ inline void GpRegs::set_r(::PROTOBUF_NAMESPACE_ID::uint32 value) {
   // @@protoc_insertion_point(field_set:idadebug.GpRegs.R)
 }
 
-// uint32 PC = 20;
+// uint32 PC = 24;
 inline void GpRegs::clear_pc() {
   pc_ = 0u;
 }
@@ -3066,7 +3194,7 @@ inline void GpRegs::set_pc(::PROTOBUF_NAMESPACE_ID::uint32 value) {
   // @@protoc_insertion_point(field_set:idadebug.GpRegs.PC)
 }
 
-// uint32 SP = 21;
+// uint32 SP = 25;
 inline void GpRegs::clear_sp() {
   sp_ = 0u;
 }
@@ -3086,7 +3214,7 @@ inline void GpRegs::set_sp(::PROTOBUF_NAMESPACE_ID::uint32 value) {
   // @@protoc_insertion_point(field_set:idadebug.GpRegs.SP)
 }
 
-// uint32 IP = 22;
+// uint32 IP = 26;
 inline void GpRegs::clear_ip() {
   ip_ = 0u;
 }
@@ -3106,7 +3234,7 @@ inline void GpRegs::set_ip(::PROTOBUF_NAMESPACE_ID::uint32 value) {
   // @@protoc_insertion_point(field_set:idadebug.GpRegs.IP)
 }
 
-// uint32 BANK = 23;
+// uint32 BANK = 27;
 inline void GpRegs::clear_bank() {
   bank_ = 0u;
 }

@@ -39,8 +39,12 @@ constexpr GpRegs::GpRegs(
   , c_(0u)
   , bc_(0u)
   , bc2_(0u)
+  , d_(0u)
+  , e_(0u)
   , de_(0u)
   , de2_(0u)
+  , h_(0u)
+  , l_(0u)
   , hl_(0u)
   , hl2_(0u)
   , ixh_(0u)
@@ -277,8 +281,12 @@ const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_debug_5fproto_5fz80_2eproto::o
   PROTOBUF_FIELD_OFFSET(::idadebug::GpRegs, c_),
   PROTOBUF_FIELD_OFFSET(::idadebug::GpRegs, bc_),
   PROTOBUF_FIELD_OFFSET(::idadebug::GpRegs, bc2_),
+  PROTOBUF_FIELD_OFFSET(::idadebug::GpRegs, d_),
+  PROTOBUF_FIELD_OFFSET(::idadebug::GpRegs, e_),
   PROTOBUF_FIELD_OFFSET(::idadebug::GpRegs, de_),
   PROTOBUF_FIELD_OFFSET(::idadebug::GpRegs, de2_),
+  PROTOBUF_FIELD_OFFSET(::idadebug::GpRegs, h_),
+  PROTOBUF_FIELD_OFFSET(::idadebug::GpRegs, l_),
   PROTOBUF_FIELD_OFFSET(::idadebug::GpRegs, hl_),
   PROTOBUF_FIELD_OFFSET(::idadebug::GpRegs, hl2_),
   PROTOBUF_FIELD_OFFSET(::idadebug::GpRegs, ixh_),
@@ -405,21 +413,21 @@ const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_debug_5fproto_5fz80_2eproto::o
 static const ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   { 0, -1, sizeof(::idadebug::GpReg)},
   { 6, -1, sizeof(::idadebug::GpRegs)},
-  { 34, -1, sizeof(::idadebug::GpRegValue)},
-  { 41, -1, sizeof(::idadebug::MemoryAS)},
-  { 48, -1, sizeof(::idadebug::MemoryAD)},
-  { 55, -1, sizeof(::idadebug::DbgBreakpoint)},
-  { 65, -1, sizeof(::idadebug::DbgBreakpoints)},
-  { 71, -1, sizeof(::idadebug::Callstack)},
-  { 77, -1, sizeof(::idadebug::AnyRegValue)},
-  { 83, -1, sizeof(::idadebug::MemData)},
-  { 89, -1, sizeof(::idadebug::SoundBankRange)},
-  { 96, 103, sizeof(::idadebug::SoundBankMap_RangeEntry_DoNotUse)},
-  { 105, -1, sizeof(::idadebug::SoundBankMap)},
-  { 111, 118, sizeof(::idadebug::PauseChanged_ChangedEntry_DoNotUse)},
-  { 120, -1, sizeof(::idadebug::PauseChanged)},
-  { 127, 134, sizeof(::idadebug::Changed_ChangedEntry_DoNotUse)},
-  { 136, -1, sizeof(::idadebug::Changed)},
+  { 38, -1, sizeof(::idadebug::GpRegValue)},
+  { 45, -1, sizeof(::idadebug::MemoryAS)},
+  { 52, -1, sizeof(::idadebug::MemoryAD)},
+  { 59, -1, sizeof(::idadebug::DbgBreakpoint)},
+  { 69, -1, sizeof(::idadebug::DbgBreakpoints)},
+  { 75, -1, sizeof(::idadebug::Callstack)},
+  { 81, -1, sizeof(::idadebug::AnyRegValue)},
+  { 87, -1, sizeof(::idadebug::MemData)},
+  { 93, -1, sizeof(::idadebug::SoundBankRange)},
+  { 100, 107, sizeof(::idadebug::SoundBankMap_RangeEntry_DoNotUse)},
+  { 109, -1, sizeof(::idadebug::SoundBankMap)},
+  { 115, 122, sizeof(::idadebug::PauseChanged_ChangedEntry_DoNotUse)},
+  { 124, -1, sizeof(::idadebug::PauseChanged)},
+  { 131, 138, sizeof(::idadebug::Changed_ChangedEntry_DoNotUse)},
+  { 140, -1, sizeof(::idadebug::Changed)},
 };
 
 static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] = {
@@ -445,86 +453,87 @@ static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] =
 const char descriptor_table_protodef_debug_5fproto_5fz80_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
   "\n\025debug_proto_z80.proto\022\010idadebug\032\033googl"
   "e/protobuf/empty.proto\"*\n\005GpReg\022!\n\003reg\030\001"
-  " \001(\0162\024.idadebug.GpRegsEnum\"\241\002\n\006GpRegs\022\t\n"
+  " \001(\0162\024.idadebug.GpRegsEnum\"\315\002\n\006GpRegs\022\t\n"
   "\001A\030\001 \001(\r\022\n\n\002AF\030\002 \001(\r\022\013\n\003AF2\030\003 \001(\r\022\t\n\001B\030\004"
   " \001(\r\022\t\n\001C\030\005 \001(\r\022\n\n\002BC\030\006 \001(\r\022\013\n\003BC2\030\007 \001(\r"
-  "\022\n\n\002DE\030\010 \001(\r\022\013\n\003DE2\030\t \001(\r\022\n\n\002HL\030\n \001(\r\022\013\n"
-  "\003HL2\030\013 \001(\r\022\013\n\003IXH\030\014 \001(\r\022\013\n\003IXL\030\r \001(\r\022\n\n\002"
-  "IX\030\016 \001(\r\022\013\n\003IYH\030\017 \001(\r\022\013\n\003IYL\030\020 \001(\r\022\n\n\002IY"
-  "\030\021 \001(\r\022\t\n\001I\030\022 \001(\r\022\t\n\001R\030\023 \001(\r\022\n\n\002PC\030\024 \001(\r"
-  "\022\n\n\002SP\030\025 \001(\r\022\n\n\002IP\030\026 \001(\r\022\014\n\004BANK\030\027 \001(\r\"@"
-  "\n\nGpRegValue\022#\n\005index\030\001 \001(\0162\024.idadebug.G"
-  "pRegsEnum\022\r\n\005value\030\002 \001(\r\")\n\010MemoryAS\022\017\n\007"
-  "address\030\001 \001(\r\022\014\n\004size\030\002 \001(\r\")\n\010MemoryAD\022"
-  "\017\n\007address\030\001 \001(\r\022\014\n\004data\030\002 \001(\014\"q\n\rDbgBre"
-  "akpoint\022\036\n\004type\030\001 \001(\0162\020.idadebug.BpType\022"
-  "\016\n\006bstart\030\002 \001(\r\022\014\n\004bend\030\003 \001(\r\022\017\n\007enabled"
-  "\030\004 \001(\010\022\021\n\tis_forbid\030\005 \001(\010\"7\n\016DbgBreakpoi"
-  "nts\022%\n\004list\030\001 \003(\0132\027.idadebug.DbgBreakpoi"
-  "nt\"\036\n\tCallstack\022\021\n\tcallstack\030\001 \003(\r\"\034\n\013An"
-  "yRegValue\022\r\n\005value\030\001 \001(\r\"\027\n\007MemData\022\014\n\004d"
-  "ata\030\001 \001(\014\"4\n\016SoundBankRange\022\020\n\010bank_min\030"
-  "\001 \001(\r\022\020\n\010bank_max\030\002 \001(\r\"\210\001\n\014SoundBankMap"
-  "\0220\n\005range\030\001 \003(\0132!.idadebug.SoundBankMap."
-  "RangeEntry\032F\n\nRangeEntry\022\013\n\003key\030\001 \001(\r\022\'\n"
-  "\005value\030\002 \001(\0132\030.idadebug.SoundBankRange:\002"
-  "8\001\"\205\001\n\014PauseChanged\022\017\n\007address\030\001 \001(\r\0224\n\007"
-  "changed\030\002 \003(\0132#.idadebug.PauseChanged.Ch"
-  "angedEntry\032.\n\014ChangedEntry\022\013\n\003key\030\001 \001(\r\022"
-  "\r\n\005value\030\002 \001(\r:\0028\001\"j\n\007Changed\022/\n\007changed"
-  "\030\001 \003(\0132\036.idadebug.Changed.ChangedEntry\032."
-  "\n\014ChangedEntry\022\013\n\003key\030\001 \001(\r\022\r\n\005value\030\002 \001"
-  "(\r:\0028\001*\311\001\n\nGpRegsEnum\022\005\n\001A\020\000\022\006\n\002AF\020\001\022\007\n\003"
-  "AF2\020\002\022\005\n\001B\020\003\022\005\n\001C\020\004\022\006\n\002BC\020\005\022\007\n\003BC2\020\006\022\006\n\002"
-  "DE\020\007\022\007\n\003DE2\020\010\022\006\n\002HL\020\t\022\007\n\003HL2\020\n\022\007\n\003IXH\020\013\022"
-  "\007\n\003IXL\020\014\022\006\n\002IX\020\r\022\007\n\003IYH\020\016\022\007\n\003IYL\020\017\022\006\n\002IY"
-  "\020\020\022\005\n\001I\020\021\022\005\n\001R\020\022\022\006\n\002PC\020\023\022\006\n\002SP\020\024\022\006\n\002IP\020\025"
-  "\022\010\n\004BANK\020\026*9\n\006BpType\022\t\n\005DUMMY\020\000\022\t\n\005BP_PC"
-  "\020\001\022\013\n\007BP_READ\020\002\022\014\n\010BP_WRITE\020\0032\335\t\n\tDbgSer"
-  "ver\0226\n\nget_gp_reg\022\017.idadebug.GpReg\032\025.ida"
-  "debug.AnyRegValue\"\000\0229\n\013get_gp_regs\022\026.goo"
-  "gle.protobuf.Empty\032\020.idadebug.GpRegs\"\000\022<"
-  "\n\nset_gp_reg\022\024.idadebug.GpRegValue\032\026.goo"
-  "gle.protobuf.Empty\"\000\0226\n\013read_memory\022\022.id"
-  "adebug.MemoryAS\032\021.idadebug.MemData\"\000\022<\n\014"
-  "write_memory\022\022.idadebug.MemoryAD\032\026.googl"
-  "e.protobuf.Empty\"\000\022E\n\017get_breakpoints\022\026."
-  "google.protobuf.Empty\032\030.idadebug.DbgBrea"
-  "kpoints\"\000\022C\n\016add_breakpoint\022\027.idadebug.D"
-  "bgBreakpoint\032\026.google.protobuf.Empty\"\000\022F"
-  "\n\021toggle_breakpoint\022\027.idadebug.DbgBreakp"
-  "oint\032\026.google.protobuf.Empty\"\000\022F\n\021update"
+  "\022\t\n\001D\030\010 \001(\r\022\t\n\001E\030\t \001(\r\022\n\n\002DE\030\n \001(\r\022\013\n\003DE"
+  "2\030\013 \001(\r\022\t\n\001H\030\014 \001(\r\022\t\n\001L\030\r \001(\r\022\n\n\002HL\030\016 \001("
+  "\r\022\013\n\003HL2\030\017 \001(\r\022\013\n\003IXH\030\020 \001(\r\022\013\n\003IXL\030\021 \001(\r"
+  "\022\n\n\002IX\030\022 \001(\r\022\013\n\003IYH\030\023 \001(\r\022\013\n\003IYL\030\024 \001(\r\022\n"
+  "\n\002IY\030\025 \001(\r\022\t\n\001I\030\026 \001(\r\022\t\n\001R\030\027 \001(\r\022\n\n\002PC\030\030"
+  " \001(\r\022\n\n\002SP\030\031 \001(\r\022\n\n\002IP\030\032 \001(\r\022\014\n\004BANK\030\033 \001"
+  "(\r\"@\n\nGpRegValue\022#\n\005index\030\001 \001(\0162\024.idadeb"
+  "ug.GpRegsEnum\022\r\n\005value\030\002 \001(\r\")\n\010MemoryAS"
+  "\022\017\n\007address\030\001 \001(\r\022\014\n\004size\030\002 \001(\r\")\n\010Memor"
+  "yAD\022\017\n\007address\030\001 \001(\r\022\014\n\004data\030\002 \001(\014\"q\n\rDb"
+  "gBreakpoint\022\036\n\004type\030\001 \001(\0162\020.idadebug.BpT"
+  "ype\022\016\n\006bstart\030\002 \001(\r\022\014\n\004bend\030\003 \001(\r\022\017\n\007ena"
+  "bled\030\004 \001(\010\022\021\n\tis_forbid\030\005 \001(\010\"7\n\016DbgBrea"
+  "kpoints\022%\n\004list\030\001 \003(\0132\027.idadebug.DbgBrea"
+  "kpoint\"\036\n\tCallstack\022\021\n\tcallstack\030\001 \003(\r\"\034"
+  "\n\013AnyRegValue\022\r\n\005value\030\001 \001(\r\"\027\n\007MemData\022"
+  "\014\n\004data\030\001 \001(\014\"4\n\016SoundBankRange\022\020\n\010bank_"
+  "min\030\001 \001(\r\022\020\n\010bank_max\030\002 \001(\r\"\210\001\n\014SoundBan"
+  "kMap\0220\n\005range\030\001 \003(\0132!.idadebug.SoundBank"
+  "Map.RangeEntry\032F\n\nRangeEntry\022\013\n\003key\030\001 \001("
+  "\r\022\'\n\005value\030\002 \001(\0132\030.idadebug.SoundBankRan"
+  "ge:\0028\001\"\205\001\n\014PauseChanged\022\017\n\007address\030\001 \001(\r"
+  "\0224\n\007changed\030\002 \003(\0132#.idadebug.PauseChange"
+  "d.ChangedEntry\032.\n\014ChangedEntry\022\013\n\003key\030\001 "
+  "\001(\r\022\r\n\005value\030\002 \001(\r:\0028\001\"j\n\007Changed\022/\n\007cha"
+  "nged\030\001 \003(\0132\036.idadebug.Changed.ChangedEnt"
+  "ry\032.\n\014ChangedEntry\022\013\n\003key\030\001 \001(\r\022\r\n\005value"
+  "\030\002 \001(\r:\0028\001*\345\001\n\nGpRegsEnum\022\005\n\001A\020\000\022\006\n\002AF\020\001"
+  "\022\007\n\003AF2\020\002\022\005\n\001B\020\003\022\005\n\001C\020\004\022\006\n\002BC\020\005\022\007\n\003BC2\020\006"
+  "\022\005\n\001D\020\007\022\005\n\001E\020\010\022\006\n\002DE\020\t\022\007\n\003DE2\020\n\022\005\n\001H\020\013\022\005"
+  "\n\001L\020\014\022\006\n\002HL\020\r\022\007\n\003HL2\020\016\022\007\n\003IXH\020\017\022\007\n\003IXL\020\020"
+  "\022\006\n\002IX\020\021\022\007\n\003IYH\020\022\022\007\n\003IYL\020\023\022\006\n\002IY\020\024\022\005\n\001I\020"
+  "\025\022\005\n\001R\020\026\022\006\n\002PC\020\027\022\006\n\002SP\020\030\022\006\n\002IP\020\031\022\010\n\004BANK"
+  "\020\032*9\n\006BpType\022\t\n\005DUMMY\020\000\022\t\n\005BP_PC\020\001\022\013\n\007BP"
+  "_READ\020\002\022\014\n\010BP_WRITE\020\0032\335\t\n\tDbgServer\0226\n\ng"
+  "et_gp_reg\022\017.idadebug.GpReg\032\025.idadebug.An"
+  "yRegValue\"\000\0229\n\013get_gp_regs\022\026.google.prot"
+  "obuf.Empty\032\020.idadebug.GpRegs\"\000\022<\n\nset_gp"
+  "_reg\022\024.idadebug.GpRegValue\032\026.google.prot"
+  "obuf.Empty\"\000\0226\n\013read_memory\022\022.idadebug.M"
+  "emoryAS\032\021.idadebug.MemData\"\000\022<\n\014write_me"
+  "mory\022\022.idadebug.MemoryAD\032\026.google.protob"
+  "uf.Empty\"\000\022E\n\017get_breakpoints\022\026.google.p"
+  "rotobuf.Empty\032\030.idadebug.DbgBreakpoints\""
+  "\000\022C\n\016add_breakpoint\022\027.idadebug.DbgBreakp"
+  "oint\032\026.google.protobuf.Empty\"\000\022F\n\021toggle"
   "_breakpoint\022\027.idadebug.DbgBreakpoint\032\026.g"
-  "oogle.protobuf.Empty\"\000\022C\n\016del_breakpoint"
-  "\022\027.idadebug.DbgBreakpoint\032\026.google.proto"
-  "buf.Empty\"\000\022E\n\021clear_breakpoints\022\026.googl"
-  "e.protobuf.Empty\032\026.google.protobuf.Empty"
-  "\"\000\0229\n\005pause\022\026.google.protobuf.Empty\032\026.go"
-  "ogle.protobuf.Empty\"\000\022:\n\006resume\022\026.google"
-  ".protobuf.Empty\032\026.google.protobuf.Empty\""
-  "\000\022C\n\017start_emulation\022\026.google.protobuf.E"
-  "mpty\032\026.google.protobuf.Empty\"\000\022B\n\016exit_e"
-  "mulation\022\026.google.protobuf.Empty\032\026.googl"
-  "e.protobuf.Empty\"\000\022=\n\tstep_into\022\026.google"
-  ".protobuf.Empty\032\026.google.protobuf.Empty\""
-  "\000\022=\n\tstep_over\022\026.google.protobuf.Empty\032\026"
-  ".google.protobuf.Empty\"\000\022>\n\rget_callstac"
-  "k\022\026.google.protobuf.Empty\032\023.idadebug.Cal"
-  "lstack\"\000\022C\n\017get_sound_banks\022\026.google.pro"
-  "tobuf.Empty\032\026.idadebug.SoundBankMap\"\0002\310\001"
-  "\n\tDbgClient\022\?\n\013start_event\022\026.google.prot"
-  "obuf.Empty\032\026.google.protobuf.Empty\"\000\022\?\n\013"
-  "pause_event\022\026.idadebug.PauseChanged\032\026.go"
-  "ogle.protobuf.Empty\"\000\0229\n\nstop_event\022\021.id"
-  "adebug.Changed\032\026.google.protobuf.Empty\"\000"
-  "b\006proto3"
+  "oogle.protobuf.Empty\"\000\022F\n\021update_breakpo"
+  "int\022\027.idadebug.DbgBreakpoint\032\026.google.pr"
+  "otobuf.Empty\"\000\022C\n\016del_breakpoint\022\027.idade"
+  "bug.DbgBreakpoint\032\026.google.protobuf.Empt"
+  "y\"\000\022E\n\021clear_breakpoints\022\026.google.protob"
+  "uf.Empty\032\026.google.protobuf.Empty\"\000\0229\n\005pa"
+  "use\022\026.google.protobuf.Empty\032\026.google.pro"
+  "tobuf.Empty\"\000\022:\n\006resume\022\026.google.protobu"
+  "f.Empty\032\026.google.protobuf.Empty\"\000\022C\n\017sta"
+  "rt_emulation\022\026.google.protobuf.Empty\032\026.g"
+  "oogle.protobuf.Empty\"\000\022B\n\016exit_emulation"
+  "\022\026.google.protobuf.Empty\032\026.google.protob"
+  "uf.Empty\"\000\022=\n\tstep_into\022\026.google.protobu"
+  "f.Empty\032\026.google.protobuf.Empty\"\000\022=\n\tste"
+  "p_over\022\026.google.protobuf.Empty\032\026.google."
+  "protobuf.Empty\"\000\022>\n\rget_callstack\022\026.goog"
+  "le.protobuf.Empty\032\023.idadebug.Callstack\"\000"
+  "\022C\n\017get_sound_banks\022\026.google.protobuf.Em"
+  "pty\032\026.idadebug.SoundBankMap\"\0002\310\001\n\tDbgCli"
+  "ent\022\?\n\013start_event\022\026.google.protobuf.Emp"
+  "ty\032\026.google.protobuf.Empty\"\000\022\?\n\013pause_ev"
+  "ent\022\026.idadebug.PauseChanged\032\026.google.pro"
+  "tobuf.Empty\"\000\0229\n\nstop_event\022\021.idadebug.C"
+  "hanged\032\026.google.protobuf.Empty\"\000b\006proto3"
   ;
 static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_debug_5fproto_5fz80_2eproto_deps[1] = {
   &::descriptor_table_google_2fprotobuf_2fempty_2eproto,
 };
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_debug_5fproto_5fz80_2eproto_once;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_debug_5fproto_5fz80_2eproto = {
-  false, false, 2968, descriptor_table_protodef_debug_5fproto_5fz80_2eproto, "debug_proto_z80.proto", 
+  false, false, 3040, descriptor_table_protodef_debug_5fproto_5fz80_2eproto, "debug_proto_z80.proto", 
   &descriptor_table_debug_5fproto_5fz80_2eproto_once, descriptor_table_debug_5fproto_5fz80_2eproto_deps, 1, 17,
   schemas, file_default_instances, TableStruct_debug_5fproto_5fz80_2eproto::offsets,
   file_level_metadata_debug_5fproto_5fz80_2eproto, file_level_enum_descriptors_debug_5fproto_5fz80_2eproto, file_level_service_descriptors_debug_5fproto_5fz80_2eproto,
@@ -567,6 +576,10 @@ bool GpRegsEnum_IsValid(int value) {
     case 20:
     case 21:
     case 22:
+    case 23:
+    case 24:
+    case 25:
+    case 26:
       return true;
     default:
       return false;
@@ -896,114 +909,142 @@ const char* GpRegs::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::int
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
-      // uint32 DE = 8;
+      // uint32 D = 8;
       case 8:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 64)) {
+          d_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
+      // uint32 E = 9;
+      case 9:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 72)) {
+          e_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
+      // uint32 DE = 10;
+      case 10:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 80)) {
           de_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
-      // uint32 DE2 = 9;
-      case 9:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 72)) {
+      // uint32 DE2 = 11;
+      case 11:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 88)) {
           de2_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
-      // uint32 HL = 10;
-      case 10:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 80)) {
+      // uint32 H = 12;
+      case 12:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 96)) {
+          h_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
+      // uint32 L = 13;
+      case 13:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 104)) {
+          l_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
+      // uint32 HL = 14;
+      case 14:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 112)) {
           hl_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
-      // uint32 HL2 = 11;
-      case 11:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 88)) {
+      // uint32 HL2 = 15;
+      case 15:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 120)) {
           hl2_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
-      // uint32 IXH = 12;
-      case 12:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 96)) {
+      // uint32 IXH = 16;
+      case 16:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 128)) {
           ixh_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
-      // uint32 IXL = 13;
-      case 13:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 104)) {
+      // uint32 IXL = 17;
+      case 17:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 136)) {
           ixl_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
-      // uint32 IX = 14;
-      case 14:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 112)) {
+      // uint32 IX = 18;
+      case 18:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 144)) {
           ix_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
-      // uint32 IYH = 15;
-      case 15:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 120)) {
+      // uint32 IYH = 19;
+      case 19:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 152)) {
           iyh_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
-      // uint32 IYL = 16;
-      case 16:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 128)) {
+      // uint32 IYL = 20;
+      case 20:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 160)) {
           iyl_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
-      // uint32 IY = 17;
-      case 17:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 136)) {
+      // uint32 IY = 21;
+      case 21:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 168)) {
           iy_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
-      // uint32 I = 18;
-      case 18:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 144)) {
+      // uint32 I = 22;
+      case 22:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 176)) {
           i_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
-      // uint32 R = 19;
-      case 19:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 152)) {
+      // uint32 R = 23;
+      case 23:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 184)) {
           r_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
-      // uint32 PC = 20;
-      case 20:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 160)) {
+      // uint32 PC = 24;
+      case 24:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 192)) {
           pc_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
-      // uint32 SP = 21;
-      case 21:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 168)) {
+      // uint32 SP = 25;
+      case 25:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 200)) {
           sp_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
-      // uint32 IP = 22;
-      case 22:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 176)) {
+      // uint32 IP = 26;
+      case 26:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 208)) {
           ip_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
-      // uint32 BANK = 23;
-      case 23:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 184)) {
+      // uint32 BANK = 27;
+      case 27:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 216)) {
           bank_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
@@ -1078,100 +1119,124 @@ failure:
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(7, this->_internal_bc2(), target);
   }
 
-  // uint32 DE = 8;
+  // uint32 D = 8;
+  if (this->d() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(8, this->_internal_d(), target);
+  }
+
+  // uint32 E = 9;
+  if (this->e() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(9, this->_internal_e(), target);
+  }
+
+  // uint32 DE = 10;
   if (this->de() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(8, this->_internal_de(), target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(10, this->_internal_de(), target);
   }
 
-  // uint32 DE2 = 9;
+  // uint32 DE2 = 11;
   if (this->de2() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(9, this->_internal_de2(), target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(11, this->_internal_de2(), target);
   }
 
-  // uint32 HL = 10;
+  // uint32 H = 12;
+  if (this->h() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(12, this->_internal_h(), target);
+  }
+
+  // uint32 L = 13;
+  if (this->l() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(13, this->_internal_l(), target);
+  }
+
+  // uint32 HL = 14;
   if (this->hl() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(10, this->_internal_hl(), target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(14, this->_internal_hl(), target);
   }
 
-  // uint32 HL2 = 11;
+  // uint32 HL2 = 15;
   if (this->hl2() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(11, this->_internal_hl2(), target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(15, this->_internal_hl2(), target);
   }
 
-  // uint32 IXH = 12;
+  // uint32 IXH = 16;
   if (this->ixh() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(12, this->_internal_ixh(), target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(16, this->_internal_ixh(), target);
   }
 
-  // uint32 IXL = 13;
+  // uint32 IXL = 17;
   if (this->ixl() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(13, this->_internal_ixl(), target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(17, this->_internal_ixl(), target);
   }
 
-  // uint32 IX = 14;
+  // uint32 IX = 18;
   if (this->ix() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(14, this->_internal_ix(), target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(18, this->_internal_ix(), target);
   }
 
-  // uint32 IYH = 15;
+  // uint32 IYH = 19;
   if (this->iyh() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(15, this->_internal_iyh(), target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(19, this->_internal_iyh(), target);
   }
 
-  // uint32 IYL = 16;
+  // uint32 IYL = 20;
   if (this->iyl() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(16, this->_internal_iyl(), target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(20, this->_internal_iyl(), target);
   }
 
-  // uint32 IY = 17;
+  // uint32 IY = 21;
   if (this->iy() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(17, this->_internal_iy(), target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(21, this->_internal_iy(), target);
   }
 
-  // uint32 I = 18;
+  // uint32 I = 22;
   if (this->i() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(18, this->_internal_i(), target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(22, this->_internal_i(), target);
   }
 
-  // uint32 R = 19;
+  // uint32 R = 23;
   if (this->r() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(19, this->_internal_r(), target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(23, this->_internal_r(), target);
   }
 
-  // uint32 PC = 20;
+  // uint32 PC = 24;
   if (this->pc() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(20, this->_internal_pc(), target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(24, this->_internal_pc(), target);
   }
 
-  // uint32 SP = 21;
+  // uint32 SP = 25;
   if (this->sp() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(21, this->_internal_sp(), target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(25, this->_internal_sp(), target);
   }
 
-  // uint32 IP = 22;
+  // uint32 IP = 26;
   if (this->ip() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(22, this->_internal_ip(), target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(26, this->_internal_ip(), target);
   }
 
-  // uint32 BANK = 23;
+  // uint32 BANK = 27;
   if (this->bank() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(23, this->_internal_bank(), target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(27, this->_internal_bank(), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -1239,112 +1304,140 @@ size_t GpRegs::ByteSizeLong() const {
         this->_internal_bc2());
   }
 
-  // uint32 DE = 8;
+  // uint32 D = 8;
+  if (this->d() != 0) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32Size(
+        this->_internal_d());
+  }
+
+  // uint32 E = 9;
+  if (this->e() != 0) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32Size(
+        this->_internal_e());
+  }
+
+  // uint32 DE = 10;
   if (this->de() != 0) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32Size(
         this->_internal_de());
   }
 
-  // uint32 DE2 = 9;
+  // uint32 DE2 = 11;
   if (this->de2() != 0) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32Size(
         this->_internal_de2());
   }
 
-  // uint32 HL = 10;
+  // uint32 H = 12;
+  if (this->h() != 0) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32Size(
+        this->_internal_h());
+  }
+
+  // uint32 L = 13;
+  if (this->l() != 0) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32Size(
+        this->_internal_l());
+  }
+
+  // uint32 HL = 14;
   if (this->hl() != 0) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32Size(
         this->_internal_hl());
   }
 
-  // uint32 HL2 = 11;
+  // uint32 HL2 = 15;
   if (this->hl2() != 0) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32Size(
         this->_internal_hl2());
   }
 
-  // uint32 IXH = 12;
+  // uint32 IXH = 16;
   if (this->ixh() != 0) {
-    total_size += 1 +
+    total_size += 2 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32Size(
         this->_internal_ixh());
   }
 
-  // uint32 IXL = 13;
+  // uint32 IXL = 17;
   if (this->ixl() != 0) {
-    total_size += 1 +
+    total_size += 2 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32Size(
         this->_internal_ixl());
   }
 
-  // uint32 IX = 14;
+  // uint32 IX = 18;
   if (this->ix() != 0) {
-    total_size += 1 +
+    total_size += 2 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32Size(
         this->_internal_ix());
   }
 
-  // uint32 IYH = 15;
+  // uint32 IYH = 19;
   if (this->iyh() != 0) {
-    total_size += 1 +
+    total_size += 2 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32Size(
         this->_internal_iyh());
   }
 
-  // uint32 IYL = 16;
+  // uint32 IYL = 20;
   if (this->iyl() != 0) {
     total_size += 2 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32Size(
         this->_internal_iyl());
   }
 
-  // uint32 IY = 17;
+  // uint32 IY = 21;
   if (this->iy() != 0) {
     total_size += 2 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32Size(
         this->_internal_iy());
   }
 
-  // uint32 I = 18;
+  // uint32 I = 22;
   if (this->i() != 0) {
     total_size += 2 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32Size(
         this->_internal_i());
   }
 
-  // uint32 R = 19;
+  // uint32 R = 23;
   if (this->r() != 0) {
     total_size += 2 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32Size(
         this->_internal_r());
   }
 
-  // uint32 PC = 20;
+  // uint32 PC = 24;
   if (this->pc() != 0) {
     total_size += 2 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32Size(
         this->_internal_pc());
   }
 
-  // uint32 SP = 21;
+  // uint32 SP = 25;
   if (this->sp() != 0) {
     total_size += 2 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32Size(
         this->_internal_sp());
   }
 
-  // uint32 IP = 22;
+  // uint32 IP = 26;
   if (this->ip() != 0) {
     total_size += 2 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32Size(
         this->_internal_ip());
   }
 
-  // uint32 BANK = 23;
+  // uint32 BANK = 27;
   if (this->bank() != 0) {
     total_size += 2 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32Size(
@@ -1403,11 +1496,23 @@ void GpRegs::MergeFrom(const GpRegs& from) {
   if (from.bc2() != 0) {
     _internal_set_bc2(from._internal_bc2());
   }
+  if (from.d() != 0) {
+    _internal_set_d(from._internal_d());
+  }
+  if (from.e() != 0) {
+    _internal_set_e(from._internal_e());
+  }
   if (from.de() != 0) {
     _internal_set_de(from._internal_de());
   }
   if (from.de2() != 0) {
     _internal_set_de2(from._internal_de2());
+  }
+  if (from.h() != 0) {
+    _internal_set_h(from._internal_h());
+  }
+  if (from.l() != 0) {
+    _internal_set_l(from._internal_l());
   }
   if (from.hl() != 0) {
     _internal_set_hl(from._internal_hl());

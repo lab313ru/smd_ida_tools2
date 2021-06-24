@@ -1715,12 +1715,28 @@ class DbgServerHandler final : public DbgServer::Service {
       response->set_value(M_Z80.BC2.w.BC2);
       return Status::OK;
     }
+    case GpRegsEnum::D: {
+      response->set_value(M_Z80.DE.b.D);
+      return Status::OK;
+    }
+    case GpRegsEnum::E: {
+      response->set_value(M_Z80.DE.b.E);
+      return Status::OK;
+    }
     case GpRegsEnum::DE: {
       response->set_value(M_Z80.DE.w.DE);
       return Status::OK;
     }
     case GpRegsEnum::DE2: {
       response->set_value(M_Z80.DE2.w.DE2);
+      return Status::OK;
+    }
+    case GpRegsEnum::H: {
+      response->set_value(M_Z80.HL.b.H);
+      return Status::OK;
+    }
+    case GpRegsEnum::L: {
+      response->set_value(M_Z80.HL.b.L);
       return Status::OK;
     }
     case GpRegsEnum::HL: {
@@ -1820,8 +1836,12 @@ class DbgServerHandler final : public DbgServer::Service {
     response->set_c(M_Z80.BC.b.C);
     response->set_bc(M_Z80.BC.w.BC);
     response->set_bc2(M_Z80.BC2.w.BC2);
+    response->set_d(M_Z80.DE.b.D);
+    response->set_e(M_Z80.DE.b.E);
     response->set_de(M_Z80.DE.w.DE);
     response->set_de2(M_Z80.DE2.w.DE2);
+    response->set_h(M_Z80.HL.b.H);
+    response->set_l(M_Z80.HL.b.L);
     response->set_hl(M_Z80.HL.w.HL);
     response->set_hl2(M_Z80.HL2.w.HL2);
 
@@ -2009,8 +2029,12 @@ class DbgServerHandler final : public DbgServer::Service {
     case GpRegsEnum::C: M_Z80.BC.b.C = request->value(); break;
     case GpRegsEnum::BC: M_Z80.BC.w.BC = request->value(); break;
     case GpRegsEnum::BC2: M_Z80.BC2.w.BC2 = request->value(); break;
+    case GpRegsEnum::D: M_Z80.DE.b.D = request->value(); break;
+    case GpRegsEnum::E: M_Z80.DE.b.E = request->value(); break;
     case GpRegsEnum::DE: M_Z80.DE.w.DE = request->value(); break;
     case GpRegsEnum::DE2: M_Z80.DE2.w.DE2 = request->value(); break;
+    case GpRegsEnum::H: M_Z80.HL.b.H = request->value(); break;
+    case GpRegsEnum::L: M_Z80.HL.b.L = request->value(); break;
     case GpRegsEnum::HL: M_Z80.HL.w.HL = request->value(); break;
     case GpRegsEnum::HL2: M_Z80.HL2.w.HL2 = request->value(); break;
 

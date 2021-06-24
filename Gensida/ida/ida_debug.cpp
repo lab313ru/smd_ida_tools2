@@ -174,17 +174,21 @@ register_info_t registers[] = {
   { "C", 0, RC_GENERAL, dt_byte, NULL, 0 },
   { "BC", 0, RC_GENERAL, dt_word, NULL, 0 },
   { "BC'", 0, RC_GENERAL, dt_word, NULL, 0 },
+  { "D", 0, RC_GENERAL, dt_byte, NULL, 0 },
+  { "E", 0, RC_GENERAL, dt_byte, NULL, 0 },
   { "DE", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
   { "DE'", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
+  { "H", 0, RC_GENERAL, dt_byte, NULL, 0 },
+  { "L", 0, RC_GENERAL, dt_byte, NULL, 0 },
   { "HL", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
   { "HL'", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
 
   { "IXH", 0, RC_GENERAL, dt_byte, NULL, 0 },
   { "IXL", 0, RC_GENERAL, dt_byte, NULL, 0 },
-  { "IX", 0, RC_GENERAL, dt_word, NULL, 0 },
+  { "IX", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
   { "IYH", 0, RC_GENERAL, dt_byte, NULL, 0 },
   { "IYL", 0, RC_GENERAL, dt_byte, NULL, 0 },
-  { "IY", 0, RC_GENERAL, dt_word, NULL, 0 },
+  { "IY", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
   { "I", 0, RC_GENERAL, dt_byte, NULL, 0 },
   { "R", 0, RC_GENERAL, dt_word, NULL, 0 },
 
@@ -929,8 +933,12 @@ static drc_t idaapi read_registers(thid_t tid, int clsmask, regval_t *values, qs
     values[R_C].ival = regs.c();
     values[R_BC].ival = regs.bc();
     values[R_BC2].ival = regs.bc2();
+    values[R_D].ival = regs.d();
+    values[R_E].ival = regs.e();
     values[R_DE].ival = regs.de();
     values[R_DE2].ival = regs.de2();
+    values[R_H].ival = regs.h();
+    values[R_L].ival = regs.l();
     values[R_HL].ival = regs.hl();
     values[R_HL2].ival = regs.hl2();
 
