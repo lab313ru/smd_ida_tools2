@@ -2607,6 +2607,12 @@ Z80I_DI:
 	mov zxIFF, ecx
 	sub edi, byte 4
 
+	pusha
+	mov ecx, zxPC
+	sub ecx, [ebp + Z80.BasePC]
+	call @z80TracePC@4
+	popa
+
 %if (GENS_LOG == 1)
 	push eax
 	push ecx
@@ -2632,6 +2638,12 @@ Z80I_EI:
 	xor edi, edi
 	mov zxIFF, ecx
 	sub edi, byte 4
+
+	pusha
+	mov ecx, zxPC
+	sub ecx, [ebp + Z80.BasePC]
+	call @z80TracePC@4
+	popa
 
 %if (GENS_LOG == 1)
 	push eax
