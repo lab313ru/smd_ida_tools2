@@ -2614,8 +2614,6 @@ Z80I_DI:
 	sub ecx, [ebp + Z80.BasePC]
 	call @z80TracePC@4
 	popa
-	mov zAF, [ebp + Z80.AF]
-	mov zxHL, [ebp + Z80.HL]
 
 %if (GENS_LOG == 1)
 	push eax
@@ -2648,8 +2646,6 @@ Z80I_EI:
 	sub ecx, [ebp + Z80.BasePC]
 	call @z80TracePC@4
 	popa
-	mov zAF, [ebp + Z80.AF]
-	mov zxHL, [ebp + Z80.HL]
 
 %if (GENS_LOG == 1)
 	push eax
@@ -5263,8 +5259,6 @@ z80_Exec_Interrupt_Happened:
 	sub ecx, [ebp + Z80.BasePC]
 	call @z80TracePC@4
 	popa
-	mov zAF, [ebp + Z80.AF]
-	mov zxHL, [ebp + Z80.HL]
 
 %if (GENS_LOG == 1)
 	push eax
