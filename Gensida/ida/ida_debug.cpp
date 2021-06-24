@@ -89,9 +89,9 @@ static const char *const SRReg[] = {
   "CF",
   "NF",
   "PF",
-  NULL,
+  "B3",
   "HF",
-  NULL,
+  "B5",
   "ZF",
   "SF",
   NULL,
@@ -168,7 +168,7 @@ register_info_t registers[] = {
   { "SrcHi", NULL, RC_VDP, dt_byte, NULL, 0 },
 #else
   { "A", 0, RC_GENERAL, dt_byte, NULL, 0 },
-  { "AF", 0, RC_GENERAL, dt_word, SRReg, 0xD7 },
+  { "AF", 0, RC_GENERAL, dt_word, SRReg, 0x00FF },
   { "AF'", 0, RC_GENERAL, dt_word, NULL, 0 },
   { "B", 0, RC_GENERAL, dt_byte, NULL, 0 },
   { "C", 0, RC_GENERAL, dt_byte, NULL, 0 },
@@ -619,6 +619,7 @@ public:
     Empty resp;
 
     ClientContext context;
+    context.set_deadline(std::chrono::system_clock::now() + std::chrono::milliseconds(100));
     Status status = stub_->exit_emulation(&context, req, &resp);
 
     hide_wait_box();
