@@ -202,6 +202,32 @@ static inline bool GetOutputRight(YM2612Channels chn) {
   return GetBit(val, 6);
 }
 
+static inline void SetTimerAFrequency(float data) {
+  unsigned int val = (unsigned int)((float)0x400 - data / 0.01877f);
+
+  SetRegisterData(0x24, GetDataSegment(val, 2, 8));
+  SetRegisterData(0x25, GetDataSegment(val, 0, 2));
+}
+
+static inline float GetTimerAFrequency() {
+  unsigned char val2 = GetRegisterData(0x25);
+  unsigned int data = SetLowerBits(0, 10, 2, val2);
+  unsigned char val1 = GetRegisterData(0x24);
+  data = SetUpperBits(data, 10, 8, GetDataSegment(val1, 0, 8));
+
+  return (float)(0x400 - data) * 0.01877f;
+}
+
+static inline void SetTimerBFrequency(float data) {
+  unsigned char val = (unsigned char)((double)0x100 - data / 0.30034f);
+  SetRegisterData(0x26, val);
+}
+
+static inline float GetTimerBFrequency() {
+  unsigned char data = GetRegisterData(0x26);
+  return (float)(0x100 - data) * 0.30034f;
+}
+
 static inline void SetTimerAEnable(bool enabled) {
   unsigned char val = GetRegisterData(0x27);
   SetRegisterData(0x27, SetBit(val, 2, enabled));
@@ -708,9 +734,28 @@ static unsigned int GetDlgItemBin(HWND hwnd, int controlID)
   return value;
 }
 
-static double GetDlgItemDouble(HWND hwnd, int controlID)
+static void UpdateDlgItemFloat(HWND hwnd, int controlID, float data)
 {
-  double value = 0;
+  const unsigned int maxTextLength = 1024;
+  char currentTextTemp[maxTextLength];
+  if (GetDlgItemText(hwnd, controlID, currentTextTemp, maxTextLength) == 0)
+  {
+    currentTextTemp[0] = L'\0';
+  }
+  std::string currentText = currentTextTemp;
+  std::stringstream text;
+  //	text << std::fixed << std::setprecision(10);
+  text << std::setprecision(4);
+  text << data;
+  if (text.str() != currentText)
+  {
+    SetDlgItemText(hwnd, controlID, text.str().c_str());
+  }
+}
+
+static float GetDlgItemFloat(HWND hwnd, int controlID)
+{
+  float value = 0;
 
   const unsigned int maxTextLength = 1024;
   char currentTextTemp[maxTextLength];
@@ -736,25 +781,6 @@ static void UpdateDlgItemHex(HWND hwnd, int controlID, unsigned int width, unsig
   std::string currentText = currentTextTemp;
   std::stringstream text;
   text << std::setw(width) << std::setfill('0') << std::hex << std::uppercase;
-  text << data;
-  if (text.str() != currentText)
-  {
-    SetDlgItemText(hwnd, controlID, text.str().c_str());
-  }
-}
-
-static void UpdateDlgItemFloat(HWND hwnd, int controlID, float data)
-{
-  const unsigned int maxTextLength = 1024;
-  char currentTextTemp[maxTextLength];
-  if (GetDlgItemText(hwnd, controlID, currentTextTemp, maxTextLength) == 0)
-  {
-    currentTextTemp[0] = L'\0';
-  }
-  std::string currentText = currentTextTemp;
-  std::stringstream text;
-  //	text << std::fixed << std::setprecision(10);
-  text << std::setprecision(10);
   text << data;
   if (text.str() != currentText)
   {
@@ -1123,6 +1149,16 @@ static INT_PTR YM2612_Debugger_Update(HWND hwnd)
   CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_TIMERB_LOADED, (GetTimerBLoad()) ? BST_CHECKED : BST_UNCHECKED);
   CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_TIMERA_OVERFLOW, (GetTimerAOverflow()) ? BST_CHECKED : BST_UNCHECKED);
   CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_TIMERB_OVERFLOW, (GetTimerBOverflow()) ? BST_CHECKED : BST_UNCHECKED);
+
+  if (currentControlFocus != IDC_YM2612_DEBUGGER_TIMERA_FREQ)
+  {
+    UpdateDlgItemFloat(hwnd, IDC_YM2612_DEBUGGER_TIMERA_FREQ, GetTimerAFrequency());
+  }
+
+  if (currentControlFocus != IDC_YM2612_DEBUGGER_TIMERB_FREQ)
+  {
+    UpdateDlgItemFloat(hwnd, IDC_YM2612_DEBUGGER_TIMERB_FREQ, GetTimerBFrequency());
+  }
 
   //LFO
   CheckDlgButton(hwnd, IDC_YM2612_DEBUGGER_LFOENABLED, (GetLFOEnabled()) ? BST_CHECKED : BST_UNCHECKED);
@@ -1644,6 +1680,14 @@ static INT_PTR YM2612_msgWM_COMMAND(HWND hwnd, WPARAM wparam, LPARAM lparam)
       break; }
     case IDC_YM2612_DEBUGGER_PMS: {
       SetPMSData(channelNo, GetDlgItemHex(hwnd, LOWORD(wparam)));
+      break; }
+
+    // Timers A/B Frequency
+    case IDC_YM2612_DEBUGGER_TIMERA_FREQ: {
+      SetTimerAFrequency(GetDlgItemFloat(hwnd, LOWORD(wparam)));
+      break; }
+    case IDC_YM2612_DEBUGGER_TIMERB_FREQ: {
+      SetTimerBFrequency(GetDlgItemFloat(hwnd, LOWORD(wparam)));
       break; }
 
     //Channel 3 Frequency

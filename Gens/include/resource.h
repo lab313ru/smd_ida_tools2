@@ -853,6 +853,8 @@
 #define IDC_PSG_ENABLE_2                50052
 #define IDC_PSG_ENABLE_3                50053
 #define IDC_PSG_ENABLE_4                50054
+#define IDC_YM2612_DEBUGGER_TIMERA_FREQ 50055
+#define IDC_YM2612_DEBUGGER_TIMERB_FREQ 50056
 
 // Next default values for new objects
 //
