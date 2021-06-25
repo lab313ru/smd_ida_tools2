@@ -167,32 +167,34 @@ register_info_t registers[] = {
   { "SrcMid", NULL, RC_VDP, dt_byte, NULL, 0 },
   { "SrcHi", NULL, RC_VDP, dt_byte, NULL, 0 },
 #else
-  { "A", 0, RC_GENERAL, dt_byte, NULL, 0 },
   { "AF", 0, RC_GENERAL, dt_word, SRReg, 0x00FF },
-  { "AF'", 0, RC_GENERAL, dt_word, NULL, 0 },
+  { "BC", 0, RC_GENERAL, dt_word, NULL, 0 },
+  { "DE", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
+  { "HL", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
+
+  { "IX", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
+  { "IY", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
+
+  { "A", 0, RC_GENERAL, dt_byte, NULL, 0 },
   { "B", 0, RC_GENERAL, dt_byte, NULL, 0 },
   { "C", 0, RC_GENERAL, dt_byte, NULL, 0 },
-  { "BC", 0, RC_GENERAL, dt_word, NULL, 0 },
-  { "BC'", 0, RC_GENERAL, dt_word, NULL, 0 },
   { "D", 0, RC_GENERAL, dt_byte, NULL, 0 },
   { "E", 0, RC_GENERAL, dt_byte, NULL, 0 },
-  { "DE", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
-  { "DE'", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
   { "H", 0, RC_GENERAL, dt_byte, NULL, 0 },
   { "L", 0, RC_GENERAL, dt_byte, NULL, 0 },
-  { "HL", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
-  { "HL'", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
 
   { "IXH", 0, RC_GENERAL, dt_byte, NULL, 0 },
   { "IXL", 0, RC_GENERAL, dt_byte, NULL, 0 },
-  { "IX", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
   { "IYH", 0, RC_GENERAL, dt_byte, NULL, 0 },
   { "IYL", 0, RC_GENERAL, dt_byte, NULL, 0 },
-  { "IY", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
+
+  { "AF'", 0, RC_GENERAL, dt_word, NULL, 0 },
+  { "BC'", 0, RC_GENERAL, dt_word, NULL, 0 },
+  { "DE'", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
+  { "HL'", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
+
   { "I", 0, RC_GENERAL, dt_byte, NULL, 0 },
   { "R", 0, RC_GENERAL, dt_word, NULL, 0 },
-
-  { "PC", REGISTER_ADDRESS, RC_GENERAL, dt_word, NULL, 0 },
 
   { "SP", REGISTER_ADDRESS | REGISTER_SP, RC_GENERAL, dt_word, NULL, 0 },
   { "IP", REGISTER_ADDRESS | REGISTER_IP, RC_GENERAL, dt_word, NULL, 0 },
@@ -927,31 +929,34 @@ static drc_t idaapi read_registers(thid_t tid, int clsmask, regval_t *values, qs
     values[R_SP].ival = regs.sp() & 0xFFFFFF;
     values[R_SR].ival = regs.sr();
 #else
-    values[R_A].ival = regs.a();
     values[R_AF].ival = regs.af();
-    values[R_AF2].ival = regs.af2();
+    values[R_BC].ival = regs.bc();
+    values[R_DE].ival = regs.de();
+    values[R_HL].ival = regs.hl();
+
+    values[R_IX].ival = regs.ix();
+    values[R_IY].ival = regs.iy();
+
+    values[R_A].ival = regs.a();
     values[R_B].ival = regs.b();
     values[R_C].ival = regs.c();
-    values[R_BC].ival = regs.bc();
-    values[R_BC2].ival = regs.bc2();
     values[R_D].ival = regs.d();
     values[R_E].ival = regs.e();
-    values[R_DE].ival = regs.de();
-    values[R_DE2].ival = regs.de2();
     values[R_H].ival = regs.h();
     values[R_L].ival = regs.l();
-    values[R_HL].ival = regs.hl();
-    values[R_HL2].ival = regs.hl2();
 
     values[R_IXH].ival = regs.ixh();
     values[R_IXL].ival = regs.ixl();
-    values[R_IX].ival = regs.ix();
     values[R_IYH].ival = regs.iyh();
     values[R_IYL].ival = regs.iyl();
-    values[R_IY].ival = regs.iy();
+
+    values[R_AF2].ival = regs.af2();
+    values[R_BC2].ival = regs.bc2();
+    values[R_DE2].ival = regs.de2();
+    values[R_HL2].ival = regs.hl2();
+
     values[R_I].ival = regs.i();
     values[R_R].ival = regs.r();
-    values[R_PC].ival = regs.pc();
 
     values[R_SP].ival = regs.sp();
     values[R_IP].ival = regs.ip();

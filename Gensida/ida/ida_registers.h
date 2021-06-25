@@ -66,32 +66,38 @@ enum register_t {
   R_V22,
   R_V23,
 #else
-  R_A,
   R_AF,
-  R_AF2,
+  R_BC,
+  R_DE,
+  R_HL,
+  
+  R_IX,
+  R_IY,
+
+  R_A,
   R_B,
   R_C,
-  R_BC,
-  R_BC2,
   R_D,
   R_E,
-  R_DE,
-  R_DE2,
   R_H,
   R_L,
-  R_HL,
-  R_HL2,
+
   R_IXH,
   R_IXL,
-  R_IX,
   R_IYH,
   R_IYL,
-  R_IY,
+
+  R_AF2,
+  R_BC2,
+  R_DE2,
+  R_HL2,
+
   R_I,
   R_R,
-  R_PC,
+
   R_SP,
   R_IP,
+
   R_BANK,
 #endif
 };
