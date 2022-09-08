@@ -92,6 +92,9 @@ using google::protobuf::Map;
 #include <cstdio>
 #include <cstring>
 
+#undef min
+#undef max
+
 //std::shared_ptr<DbgClientClient> client;
 
 extern "C" void Read_To_68K_Space(int adr);
@@ -2778,7 +2781,7 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             GetWindowRect(HWnd, &r);
             Window_Pos.x = r.left;
             Window_Pos.y = r.top;
-            ScaleFactor = min(
+            ScaleFactor = std::min(
                 (float)(r.right - r.left) / 320 / ((Render_W == 0) ? 1 : 2),
                 (float)(r.bottom - r.top) / 240 / ((Render_W == 0) ? 1 : 2)
             );
@@ -3754,7 +3757,7 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             int chgtrack = command - ID_MOVIE_CHANGETRACK_ALL;
             track ^= chgtrack;
-            sprintf(Str_Tmp, "Recording player %d %sed", min(chgtrack, 3), (track & chgtrack) ? "start" : "end");
+            sprintf(Str_Tmp, "Recording player %d %sed", std::min(chgtrack, 3), (track & chgtrack) ? "start" : "end");
             Put_Info(Str_Tmp);
             if (!MainMovie.TriplePlayerHack) track &= 3;
             return 0;
@@ -3772,7 +3775,7 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 if (!track) track = maxtrack;
             }
             if (track == maxtrack) sprintf(Str_Tmp, "Recording all players.");
-            else sprintf(Str_Tmp, "Recording player %d.", min(track, 3));
+            else sprintf(Str_Tmp, "Recording player %d.", std::min((int)track, 3));
             Put_Info(Str_Tmp);
         }
         break;
@@ -3790,7 +3793,7 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 if (!track) track = maxtrack;
             }
             if (track == maxtrack) sprintf(Str_Tmp, "Recording all players.");
-            else sprintf(Str_Tmp, "Recording player %d.", min(track, 3));
+            else sprintf(Str_Tmp, "Recording player %d.", std::min((int)track, 3));
             Put_Info(Str_Tmp);
         }
         break;

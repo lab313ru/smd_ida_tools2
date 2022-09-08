@@ -589,6 +589,25 @@ static bool is_vdp_send_cmd(uint32 val)
     }
 }
 
+//-------------------------------------------------------------------------
+static bool is_call16_const_cmd(uint32 val)
+{
+    return (val & 0xFFFF0000) == 0x4EB80000;
+}
+
+//--------------------------------------------
+static void do_call16_const(ea_t ea, uint32 val)
+{
+    insn_t insn;
+    decode_insn(&insn, ea);
+
+    insn_add_dref(insn, val, 2, dr_O);
+
+    char buf[MAXSTR];
+    ::qsnprintf(buf, MAXSTR, "jsr 0x%.4X", val);
+    append_cmt(ea, buf, false);
+}
+
 //--------------------------------------------------------------------------
 static bool is_vdp_rw_cmd(uint32 val)
 {
@@ -642,38 +661,38 @@ static bool do_cmt_vdp_reg_const(ea_t ea, uint32 val)
     {
     case 0x8000:
     {
-        if (val & mask(0))	append_cmt(ea, "DISPLAY_OFF", false);
+        if (val & mask(0))  append_cmt(ea, "DISPLAY_OFF", false);
         else append_cmt(ea, "DISPLAY_ON", false);
 
-        if (val & mask(1))	append_cmt(ea, "PAUSE_HV_WHEN_EXT_INT", false);
+        if (val & mask(1))  append_cmt(ea, "PAUSE_HV_WHEN_EXT_INT", false);
         else append_cmt(ea, "NORMAL_HV_COUNTER", false);
 
-        if (val & mask(2))	append_cmt(ea, "EIGHT_COLORS_MODE", false);
+        if (val & mask(2))  append_cmt(ea, "EIGHT_COLORS_MODE", false);
         else append_cmt(ea, "FULL_COLORS_MODE", false);
 
-        if (val & mask(4))	append_cmt(ea, "ENABLE_HBLANK", false);
+        if (val & mask(4))  append_cmt(ea, "ENABLE_HBLANK", false);
         else append_cmt(ea, "DISABLE_HBLANK", false);
 
         return true;
     }
     case 0x8100:
     {
-        if (val & mask(2))	append_cmt(ea, "GENESIS_DISPLAY_MODE_BIT2", false);
+        if (val & mask(2))  append_cmt(ea, "GENESIS_DISPLAY_MODE_BIT2", false);
         else append_cmt(ea, "SMS_DISPLAY_MODE_BIT2", false);
 
-        if (val & mask(3))	append_cmt(ea, "SET_PAL_MODE", false);
+        if (val & mask(3))  append_cmt(ea, "SET_PAL_MODE", false);
         else append_cmt(ea, "SET_NTSC_MODE", false);
 
-        if (val & mask(4))	append_cmt(ea, "ENABLE_DMA", false);
+        if (val & mask(4))  append_cmt(ea, "ENABLE_DMA", false);
         else append_cmt(ea, "DISABLE_DMA", false);
 
-        if (val & mask(5))	append_cmt(ea, "ENABLE_VBLANK", false);
+        if (val & mask(5))  append_cmt(ea, "ENABLE_VBLANK", false);
         else append_cmt(ea, "DISABLE_VBLANK", false);
 
-        if (val & mask(6))	append_cmt(ea, "ENABLE_DISPLAY", false);
+        if (val & mask(6))  append_cmt(ea, "ENABLE_DISPLAY", false);
         else append_cmt(ea, "DISABLE_DISPLAY", false);
 
-        if (val & mask(7))	append_cmt(ea, "TMS9918_DISPLAY_MODE_BIT7", false);
+        if (val & mask(7))  append_cmt(ea, "TMS9918_DISPLAY_MODE_BIT7", false);
         else append_cmt(ea, "GENESIS_DISPLAY_MODE_BIT7", false);
 
         return true;
@@ -708,7 +727,7 @@ static bool do_cmt_vdp_reg_const(ea_t ea, uint32 val)
     }
     case 0x8600:
     {
-        if (val & mask(5))	append_cmt(ea, "ENABLE_SPRITES_REBASE", false);
+        if (val & mask(5))  append_cmt(ea, "ENABLE_SPRITES_REBASE", false);
         else append_cmt(ea, "DISABLE_SPRITES_REBASE", false);
 
         return true;
@@ -740,10 +759,10 @@ static bool do_cmt_vdp_reg_const(ea_t ea, uint32 val)
         case 3 /*11*/: append_cmt(ea, "SET_HSCROLL_TYPE_AS_LINE__SCROLL", false); break;
         }
 
-        if (val & mask(2))	append_cmt(ea, "_2CELLS_COLUMN_VSCROLL_MODE", false);
+        if (val & mask(2))  append_cmt(ea, "_2CELLS_COLUMN_VSCROLL_MODE", false);
         else append_cmt(ea, "FULLSCREEN_VSCROLL_MODE", false);
 
-        if (val & mask(3))	append_cmt(ea, "ENABLE_EXT_INTERRUPT", false);
+        if (val & mask(3))  append_cmt(ea, "ENABLE_EXT_INTERRUPT", false);
         else append_cmt(ea, "DISABLE_EXT_INTERRUPT", false);
 
         return true;
@@ -783,10 +802,10 @@ static bool do_cmt_vdp_reg_const(ea_t ea, uint32 val)
     }
     case 0x8E00:
     {
-        if (val & mask(0))	append_cmt(ea, "ENABLE_PLANE_A_REBASE", false);
+        if (val & mask(0))  append_cmt(ea, "ENABLE_PLANE_A_REBASE", false);
         else append_cmt(ea, "DISABLE_PLANE_A_REBASE", false);
 
-        if (val & mask(4))	append_cmt(ea, "ENABLE_PLANE_B_REBASE", false);
+        if (val & mask(4))  append_cmt(ea, "ENABLE_PLANE_B_REBASE", false);
         else append_cmt(ea, "DISABLE_PLANE_B_REBASE", false);
 
         return true;
@@ -1106,6 +1125,10 @@ struct smd_constant_action_t : public action_handler_t
         do_cmt_vdp_reg_const(ea, value);
         do_cmt_vdp_reg_const(ea, value >> 16);
       }
+      else if (is_call16_const_cmd(value))
+      {
+        do_call16_const(ea, value & 0xFFFF);
+      }
     }
     return 1;
   }
@@ -1144,7 +1167,6 @@ static plugmod_t* idaapi init(void)
 {
     if (init_plugin())
     {
-        dbg = &debugger;
         plugin_inited = true;
         dbg_started = false;
         my_dbg = false;
@@ -1159,6 +1181,8 @@ static plugmod_t* idaapi init(void)
 #endif
 
         print_version();
+
+        dbg = &debugger; // temporary workaround for a dbg pointer absence
         return PLUGIN_KEEP;
     }
     return PLUGIN_SKIP;
@@ -1181,6 +1205,10 @@ static void idaapi term(void)
 
         plugin_inited = false;
         dbg_started = false;
+
+        if (dbg == &debugger) {
+            dbg = nullptr;
+        }
     }
 }
 

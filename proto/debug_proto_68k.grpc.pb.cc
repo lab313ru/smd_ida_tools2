@@ -48,44 +48,44 @@ static const char* DbgServer_method_names[] = {
 
 std::unique_ptr< DbgServer::Stub> DbgServer::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
   (void)options;
-  std::unique_ptr< DbgServer::Stub> stub(new DbgServer::Stub(channel));
+  std::unique_ptr< DbgServer::Stub> stub(new DbgServer::Stub(channel, options));
   return stub;
 }
 
-DbgServer::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
-  : channel_(channel), rpcmethod_get_gp_reg_(DbgServer_method_names[0], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_get_gp_regs_(DbgServer_method_names[1], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_set_gp_reg_(DbgServer_method_names[2], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_get_vdp_reg_(DbgServer_method_names[3], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_get_vdp_regs_(DbgServer_method_names[4], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_set_vdp_reg_(DbgServer_method_names[5], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_get_dma_info_(DbgServer_method_names[6], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_read_memory_(DbgServer_method_names[7], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_write_memory_(DbgServer_method_names[8], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_get_breakpoints_(DbgServer_method_names[9], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_add_breakpoint_(DbgServer_method_names[10], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_toggle_breakpoint_(DbgServer_method_names[11], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_update_breakpoint_(DbgServer_method_names[12], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_del_breakpoint_(DbgServer_method_names[13], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_clear_breakpoints_(DbgServer_method_names[14], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_pause_(DbgServer_method_names[15], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_resume_(DbgServer_method_names[16], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_start_emulation_(DbgServer_method_names[17], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_exit_emulation_(DbgServer_method_names[18], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_step_into_(DbgServer_method_names[19], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_step_over_(DbgServer_method_names[20], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_get_callstack_(DbgServer_method_names[21], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+DbgServer::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options)
+  : channel_(channel), rpcmethod_get_gp_reg_(DbgServer_method_names[0], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_get_gp_regs_(DbgServer_method_names[1], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_set_gp_reg_(DbgServer_method_names[2], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_get_vdp_reg_(DbgServer_method_names[3], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_get_vdp_regs_(DbgServer_method_names[4], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_set_vdp_reg_(DbgServer_method_names[5], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_get_dma_info_(DbgServer_method_names[6], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_read_memory_(DbgServer_method_names[7], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_write_memory_(DbgServer_method_names[8], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_get_breakpoints_(DbgServer_method_names[9], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_add_breakpoint_(DbgServer_method_names[10], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_toggle_breakpoint_(DbgServer_method_names[11], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_update_breakpoint_(DbgServer_method_names[12], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_del_breakpoint_(DbgServer_method_names[13], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_clear_breakpoints_(DbgServer_method_names[14], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_pause_(DbgServer_method_names[15], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_resume_(DbgServer_method_names[16], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_start_emulation_(DbgServer_method_names[17], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_exit_emulation_(DbgServer_method_names[18], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_step_into_(DbgServer_method_names[19], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_step_over_(DbgServer_method_names[20], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_get_callstack_(DbgServer_method_names[21], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   {}
 
 ::grpc::Status DbgServer::Stub::get_gp_reg(::grpc::ClientContext* context, const ::idadebug::GpReg& request, ::idadebug::AnyRegValue* response) {
   return ::grpc::internal::BlockingUnaryCall< ::idadebug::GpReg, ::idadebug::AnyRegValue, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_get_gp_reg_, context, request, response);
 }
 
-void DbgServer::Stub::experimental_async::get_gp_reg(::grpc::ClientContext* context, const ::idadebug::GpReg* request, ::idadebug::AnyRegValue* response, std::function<void(::grpc::Status)> f) {
+void DbgServer::Stub::async::get_gp_reg(::grpc::ClientContext* context, const ::idadebug::GpReg* request, ::idadebug::AnyRegValue* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::idadebug::GpReg, ::idadebug::AnyRegValue, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_get_gp_reg_, context, request, response, std::move(f));
 }
 
-void DbgServer::Stub::experimental_async::get_gp_reg(::grpc::ClientContext* context, const ::idadebug::GpReg* request, ::idadebug::AnyRegValue* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void DbgServer::Stub::async::get_gp_reg(::grpc::ClientContext* context, const ::idadebug::GpReg* request, ::idadebug::AnyRegValue* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_get_gp_reg_, context, request, response, reactor);
 }
 
@@ -104,11 +104,11 @@ void DbgServer::Stub::experimental_async::get_gp_reg(::grpc::ClientContext* cont
   return ::grpc::internal::BlockingUnaryCall< ::google::protobuf::Empty, ::idadebug::GpRegs, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_get_gp_regs_, context, request, response);
 }
 
-void DbgServer::Stub::experimental_async::get_gp_regs(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::GpRegs* response, std::function<void(::grpc::Status)> f) {
+void DbgServer::Stub::async::get_gp_regs(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::GpRegs* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::google::protobuf::Empty, ::idadebug::GpRegs, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_get_gp_regs_, context, request, response, std::move(f));
 }
 
-void DbgServer::Stub::experimental_async::get_gp_regs(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::GpRegs* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void DbgServer::Stub::async::get_gp_regs(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::GpRegs* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_get_gp_regs_, context, request, response, reactor);
 }
 
@@ -127,11 +127,11 @@ void DbgServer::Stub::experimental_async::get_gp_regs(::grpc::ClientContext* con
   return ::grpc::internal::BlockingUnaryCall< ::idadebug::GpRegValue, ::google::protobuf::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_set_gp_reg_, context, request, response);
 }
 
-void DbgServer::Stub::experimental_async::set_gp_reg(::grpc::ClientContext* context, const ::idadebug::GpRegValue* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)> f) {
+void DbgServer::Stub::async::set_gp_reg(::grpc::ClientContext* context, const ::idadebug::GpRegValue* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::idadebug::GpRegValue, ::google::protobuf::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_set_gp_reg_, context, request, response, std::move(f));
 }
 
-void DbgServer::Stub::experimental_async::set_gp_reg(::grpc::ClientContext* context, const ::idadebug::GpRegValue* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void DbgServer::Stub::async::set_gp_reg(::grpc::ClientContext* context, const ::idadebug::GpRegValue* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_set_gp_reg_, context, request, response, reactor);
 }
 
@@ -150,11 +150,11 @@ void DbgServer::Stub::experimental_async::set_gp_reg(::grpc::ClientContext* cont
   return ::grpc::internal::BlockingUnaryCall< ::idadebug::VdpReg, ::idadebug::AnyRegValue, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_get_vdp_reg_, context, request, response);
 }
 
-void DbgServer::Stub::experimental_async::get_vdp_reg(::grpc::ClientContext* context, const ::idadebug::VdpReg* request, ::idadebug::AnyRegValue* response, std::function<void(::grpc::Status)> f) {
+void DbgServer::Stub::async::get_vdp_reg(::grpc::ClientContext* context, const ::idadebug::VdpReg* request, ::idadebug::AnyRegValue* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::idadebug::VdpReg, ::idadebug::AnyRegValue, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_get_vdp_reg_, context, request, response, std::move(f));
 }
 
-void DbgServer::Stub::experimental_async::get_vdp_reg(::grpc::ClientContext* context, const ::idadebug::VdpReg* request, ::idadebug::AnyRegValue* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void DbgServer::Stub::async::get_vdp_reg(::grpc::ClientContext* context, const ::idadebug::VdpReg* request, ::idadebug::AnyRegValue* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_get_vdp_reg_, context, request, response, reactor);
 }
 
@@ -173,11 +173,11 @@ void DbgServer::Stub::experimental_async::get_vdp_reg(::grpc::ClientContext* con
   return ::grpc::internal::BlockingUnaryCall< ::google::protobuf::Empty, ::idadebug::VdpRegs, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_get_vdp_regs_, context, request, response);
 }
 
-void DbgServer::Stub::experimental_async::get_vdp_regs(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::VdpRegs* response, std::function<void(::grpc::Status)> f) {
+void DbgServer::Stub::async::get_vdp_regs(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::VdpRegs* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::google::protobuf::Empty, ::idadebug::VdpRegs, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_get_vdp_regs_, context, request, response, std::move(f));
 }
 
-void DbgServer::Stub::experimental_async::get_vdp_regs(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::VdpRegs* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void DbgServer::Stub::async::get_vdp_regs(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::VdpRegs* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_get_vdp_regs_, context, request, response, reactor);
 }
 
@@ -196,11 +196,11 @@ void DbgServer::Stub::experimental_async::get_vdp_regs(::grpc::ClientContext* co
   return ::grpc::internal::BlockingUnaryCall< ::idadebug::VdpRegValue, ::google::protobuf::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_set_vdp_reg_, context, request, response);
 }
 
-void DbgServer::Stub::experimental_async::set_vdp_reg(::grpc::ClientContext* context, const ::idadebug::VdpRegValue* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)> f) {
+void DbgServer::Stub::async::set_vdp_reg(::grpc::ClientContext* context, const ::idadebug::VdpRegValue* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::idadebug::VdpRegValue, ::google::protobuf::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_set_vdp_reg_, context, request, response, std::move(f));
 }
 
-void DbgServer::Stub::experimental_async::set_vdp_reg(::grpc::ClientContext* context, const ::idadebug::VdpRegValue* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void DbgServer::Stub::async::set_vdp_reg(::grpc::ClientContext* context, const ::idadebug::VdpRegValue* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_set_vdp_reg_, context, request, response, reactor);
 }
 
@@ -219,11 +219,11 @@ void DbgServer::Stub::experimental_async::set_vdp_reg(::grpc::ClientContext* con
   return ::grpc::internal::BlockingUnaryCall< ::google::protobuf::Empty, ::idadebug::DmaInfo, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_get_dma_info_, context, request, response);
 }
 
-void DbgServer::Stub::experimental_async::get_dma_info(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::DmaInfo* response, std::function<void(::grpc::Status)> f) {
+void DbgServer::Stub::async::get_dma_info(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::DmaInfo* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::google::protobuf::Empty, ::idadebug::DmaInfo, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_get_dma_info_, context, request, response, std::move(f));
 }
 
-void DbgServer::Stub::experimental_async::get_dma_info(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::DmaInfo* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void DbgServer::Stub::async::get_dma_info(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::DmaInfo* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_get_dma_info_, context, request, response, reactor);
 }
 
@@ -242,11 +242,11 @@ void DbgServer::Stub::experimental_async::get_dma_info(::grpc::ClientContext* co
   return ::grpc::internal::BlockingUnaryCall< ::idadebug::MemoryAS, ::idadebug::MemData, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_read_memory_, context, request, response);
 }
 
-void DbgServer::Stub::experimental_async::read_memory(::grpc::ClientContext* context, const ::idadebug::MemoryAS* request, ::idadebug::MemData* response, std::function<void(::grpc::Status)> f) {
+void DbgServer::Stub::async::read_memory(::grpc::ClientContext* context, const ::idadebug::MemoryAS* request, ::idadebug::MemData* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::idadebug::MemoryAS, ::idadebug::MemData, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_read_memory_, context, request, response, std::move(f));
 }
 
-void DbgServer::Stub::experimental_async::read_memory(::grpc::ClientContext* context, const ::idadebug::MemoryAS* request, ::idadebug::MemData* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void DbgServer::Stub::async::read_memory(::grpc::ClientContext* context, const ::idadebug::MemoryAS* request, ::idadebug::MemData* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_read_memory_, context, request, response, reactor);
 }
 
@@ -265,11 +265,11 @@ void DbgServer::Stub::experimental_async::read_memory(::grpc::ClientContext* con
   return ::grpc::internal::BlockingUnaryCall< ::idadebug::MemoryAD, ::google::protobuf::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_write_memory_, context, request, response);
 }
 
-void DbgServer::Stub::experimental_async::write_memory(::grpc::ClientContext* context, const ::idadebug::MemoryAD* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)> f) {
+void DbgServer::Stub::async::write_memory(::grpc::ClientContext* context, const ::idadebug::MemoryAD* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::idadebug::MemoryAD, ::google::protobuf::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_write_memory_, context, request, response, std::move(f));
 }
 
-void DbgServer::Stub::experimental_async::write_memory(::grpc::ClientContext* context, const ::idadebug::MemoryAD* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void DbgServer::Stub::async::write_memory(::grpc::ClientContext* context, const ::idadebug::MemoryAD* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_write_memory_, context, request, response, reactor);
 }
 
@@ -288,11 +288,11 @@ void DbgServer::Stub::experimental_async::write_memory(::grpc::ClientContext* co
   return ::grpc::internal::BlockingUnaryCall< ::google::protobuf::Empty, ::idadebug::DbgBreakpoints, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_get_breakpoints_, context, request, response);
 }
 
-void DbgServer::Stub::experimental_async::get_breakpoints(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::DbgBreakpoints* response, std::function<void(::grpc::Status)> f) {
+void DbgServer::Stub::async::get_breakpoints(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::DbgBreakpoints* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::google::protobuf::Empty, ::idadebug::DbgBreakpoints, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_get_breakpoints_, context, request, response, std::move(f));
 }
 
-void DbgServer::Stub::experimental_async::get_breakpoints(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::DbgBreakpoints* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void DbgServer::Stub::async::get_breakpoints(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::DbgBreakpoints* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_get_breakpoints_, context, request, response, reactor);
 }
 
@@ -311,11 +311,11 @@ void DbgServer::Stub::experimental_async::get_breakpoints(::grpc::ClientContext*
   return ::grpc::internal::BlockingUnaryCall< ::idadebug::DbgBreakpoint, ::google::protobuf::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_add_breakpoint_, context, request, response);
 }
 
-void DbgServer::Stub::experimental_async::add_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)> f) {
+void DbgServer::Stub::async::add_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::idadebug::DbgBreakpoint, ::google::protobuf::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_add_breakpoint_, context, request, response, std::move(f));
 }
 
-void DbgServer::Stub::experimental_async::add_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void DbgServer::Stub::async::add_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_add_breakpoint_, context, request, response, reactor);
 }
 
@@ -334,11 +334,11 @@ void DbgServer::Stub::experimental_async::add_breakpoint(::grpc::ClientContext* 
   return ::grpc::internal::BlockingUnaryCall< ::idadebug::DbgBreakpoint, ::google::protobuf::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_toggle_breakpoint_, context, request, response);
 }
 
-void DbgServer::Stub::experimental_async::toggle_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)> f) {
+void DbgServer::Stub::async::toggle_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::idadebug::DbgBreakpoint, ::google::protobuf::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_toggle_breakpoint_, context, request, response, std::move(f));
 }
 
-void DbgServer::Stub::experimental_async::toggle_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void DbgServer::Stub::async::toggle_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_toggle_breakpoint_, context, request, response, reactor);
 }
 
@@ -357,11 +357,11 @@ void DbgServer::Stub::experimental_async::toggle_breakpoint(::grpc::ClientContex
   return ::grpc::internal::BlockingUnaryCall< ::idadebug::DbgBreakpoint, ::google::protobuf::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_update_breakpoint_, context, request, response);
 }
 
-void DbgServer::Stub::experimental_async::update_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)> f) {
+void DbgServer::Stub::async::update_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::idadebug::DbgBreakpoint, ::google::protobuf::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_update_breakpoint_, context, request, response, std::move(f));
 }
 
-void DbgServer::Stub::experimental_async::update_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void DbgServer::Stub::async::update_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_update_breakpoint_, context, request, response, reactor);
 }
 
@@ -380,11 +380,11 @@ void DbgServer::Stub::experimental_async::update_breakpoint(::grpc::ClientContex
   return ::grpc::internal::BlockingUnaryCall< ::idadebug::DbgBreakpoint, ::google::protobuf::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_del_breakpoint_, context, request, response);
 }
 
-void DbgServer::Stub::experimental_async::del_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)> f) {
+void DbgServer::Stub::async::del_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::idadebug::DbgBreakpoint, ::google::protobuf::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_del_breakpoint_, context, request, response, std::move(f));
 }
 
-void DbgServer::Stub::experimental_async::del_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void DbgServer::Stub::async::del_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_del_breakpoint_, context, request, response, reactor);
 }
 
@@ -403,11 +403,11 @@ void DbgServer::Stub::experimental_async::del_breakpoint(::grpc::ClientContext* 
   return ::grpc::internal::BlockingUnaryCall< ::google::protobuf::Empty, ::google::protobuf::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_clear_breakpoints_, context, request, response);
 }
 
-void DbgServer::Stub::experimental_async::clear_breakpoints(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)> f) {
+void DbgServer::Stub::async::clear_breakpoints(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::google::protobuf::Empty, ::google::protobuf::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_clear_breakpoints_, context, request, response, std::move(f));
 }
 
-void DbgServer::Stub::experimental_async::clear_breakpoints(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void DbgServer::Stub::async::clear_breakpoints(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_clear_breakpoints_, context, request, response, reactor);
 }
 
@@ -426,11 +426,11 @@ void DbgServer::Stub::experimental_async::clear_breakpoints(::grpc::ClientContex
   return ::grpc::internal::BlockingUnaryCall< ::google::protobuf::Empty, ::google::protobuf::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_pause_, context, request, response);
 }
 
-void DbgServer::Stub::experimental_async::pause(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)> f) {
+void DbgServer::Stub::async::pause(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::google::protobuf::Empty, ::google::protobuf::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_pause_, context, request, response, std::move(f));
 }
 
-void DbgServer::Stub::experimental_async::pause(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void DbgServer::Stub::async::pause(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_pause_, context, request, response, reactor);
 }
 
@@ -449,11 +449,11 @@ void DbgServer::Stub::experimental_async::pause(::grpc::ClientContext* context, 
   return ::grpc::internal::BlockingUnaryCall< ::google::protobuf::Empty, ::google::protobuf::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_resume_, context, request, response);
 }
 
-void DbgServer::Stub::experimental_async::resume(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)> f) {
+void DbgServer::Stub::async::resume(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::google::protobuf::Empty, ::google::protobuf::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_resume_, context, request, response, std::move(f));
 }
 
-void DbgServer::Stub::experimental_async::resume(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void DbgServer::Stub::async::resume(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_resume_, context, request, response, reactor);
 }
 
@@ -472,11 +472,11 @@ void DbgServer::Stub::experimental_async::resume(::grpc::ClientContext* context,
   return ::grpc::internal::BlockingUnaryCall< ::google::protobuf::Empty, ::google::protobuf::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_start_emulation_, context, request, response);
 }
 
-void DbgServer::Stub::experimental_async::start_emulation(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)> f) {
+void DbgServer::Stub::async::start_emulation(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::google::protobuf::Empty, ::google::protobuf::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_start_emulation_, context, request, response, std::move(f));
 }
 
-void DbgServer::Stub::experimental_async::start_emulation(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void DbgServer::Stub::async::start_emulation(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_start_emulation_, context, request, response, reactor);
 }
 
@@ -495,11 +495,11 @@ void DbgServer::Stub::experimental_async::start_emulation(::grpc::ClientContext*
   return ::grpc::internal::BlockingUnaryCall< ::google::protobuf::Empty, ::google::protobuf::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_exit_emulation_, context, request, response);
 }
 
-void DbgServer::Stub::experimental_async::exit_emulation(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)> f) {
+void DbgServer::Stub::async::exit_emulation(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::google::protobuf::Empty, ::google::protobuf::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_exit_emulation_, context, request, response, std::move(f));
 }
 
-void DbgServer::Stub::experimental_async::exit_emulation(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void DbgServer::Stub::async::exit_emulation(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_exit_emulation_, context, request, response, reactor);
 }
 
@@ -518,11 +518,11 @@ void DbgServer::Stub::experimental_async::exit_emulation(::grpc::ClientContext* 
   return ::grpc::internal::BlockingUnaryCall< ::google::protobuf::Empty, ::google::protobuf::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_step_into_, context, request, response);
 }
 
-void DbgServer::Stub::experimental_async::step_into(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)> f) {
+void DbgServer::Stub::async::step_into(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::google::protobuf::Empty, ::google::protobuf::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_step_into_, context, request, response, std::move(f));
 }
 
-void DbgServer::Stub::experimental_async::step_into(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void DbgServer::Stub::async::step_into(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_step_into_, context, request, response, reactor);
 }
 
@@ -541,11 +541,11 @@ void DbgServer::Stub::experimental_async::step_into(::grpc::ClientContext* conte
   return ::grpc::internal::BlockingUnaryCall< ::google::protobuf::Empty, ::google::protobuf::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_step_over_, context, request, response);
 }
 
-void DbgServer::Stub::experimental_async::step_over(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)> f) {
+void DbgServer::Stub::async::step_over(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::google::protobuf::Empty, ::google::protobuf::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_step_over_, context, request, response, std::move(f));
 }
 
-void DbgServer::Stub::experimental_async::step_over(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void DbgServer::Stub::async::step_over(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_step_over_, context, request, response, reactor);
 }
 
@@ -564,11 +564,11 @@ void DbgServer::Stub::experimental_async::step_over(::grpc::ClientContext* conte
   return ::grpc::internal::BlockingUnaryCall< ::google::protobuf::Empty, ::idadebug::Callstack, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_get_callstack_, context, request, response);
 }
 
-void DbgServer::Stub::experimental_async::get_callstack(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::Callstack* response, std::function<void(::grpc::Status)> f) {
+void DbgServer::Stub::async::get_callstack(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::Callstack* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::google::protobuf::Empty, ::idadebug::Callstack, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_get_callstack_, context, request, response, std::move(f));
 }
 
-void DbgServer::Stub::experimental_async::get_callstack(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::Callstack* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void DbgServer::Stub::async::get_callstack(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::Callstack* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_get_callstack_, context, request, response, reactor);
 }
 
@@ -972,25 +972,25 @@ static const char* DbgClient_method_names[] = {
 
 std::unique_ptr< DbgClient::Stub> DbgClient::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
   (void)options;
-  std::unique_ptr< DbgClient::Stub> stub(new DbgClient::Stub(channel));
+  std::unique_ptr< DbgClient::Stub> stub(new DbgClient::Stub(channel, options));
   return stub;
 }
 
-DbgClient::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
-  : channel_(channel), rpcmethod_start_event_(DbgClient_method_names[0], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_pause_event_(DbgClient_method_names[1], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_stop_event_(DbgClient_method_names[2], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+DbgClient::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options)
+  : channel_(channel), rpcmethod_start_event_(DbgClient_method_names[0], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_pause_event_(DbgClient_method_names[1], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_stop_event_(DbgClient_method_names[2], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   {}
 
 ::grpc::Status DbgClient::Stub::start_event(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::google::protobuf::Empty* response) {
   return ::grpc::internal::BlockingUnaryCall< ::google::protobuf::Empty, ::google::protobuf::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_start_event_, context, request, response);
 }
 
-void DbgClient::Stub::experimental_async::start_event(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)> f) {
+void DbgClient::Stub::async::start_event(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::google::protobuf::Empty, ::google::protobuf::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_start_event_, context, request, response, std::move(f));
 }
 
-void DbgClient::Stub::experimental_async::start_event(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void DbgClient::Stub::async::start_event(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_start_event_, context, request, response, reactor);
 }
 
@@ -1009,11 +1009,11 @@ void DbgClient::Stub::experimental_async::start_event(::grpc::ClientContext* con
   return ::grpc::internal::BlockingUnaryCall< ::idadebug::PauseChanged, ::google::protobuf::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_pause_event_, context, request, response);
 }
 
-void DbgClient::Stub::experimental_async::pause_event(::grpc::ClientContext* context, const ::idadebug::PauseChanged* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)> f) {
+void DbgClient::Stub::async::pause_event(::grpc::ClientContext* context, const ::idadebug::PauseChanged* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::idadebug::PauseChanged, ::google::protobuf::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_pause_event_, context, request, response, std::move(f));
 }
 
-void DbgClient::Stub::experimental_async::pause_event(::grpc::ClientContext* context, const ::idadebug::PauseChanged* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void DbgClient::Stub::async::pause_event(::grpc::ClientContext* context, const ::idadebug::PauseChanged* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_pause_event_, context, request, response, reactor);
 }
 
@@ -1032,11 +1032,11 @@ void DbgClient::Stub::experimental_async::pause_event(::grpc::ClientContext* con
   return ::grpc::internal::BlockingUnaryCall< ::idadebug::Changed, ::google::protobuf::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_stop_event_, context, request, response);
 }
 
-void DbgClient::Stub::experimental_async::stop_event(::grpc::ClientContext* context, const ::idadebug::Changed* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)> f) {
+void DbgClient::Stub::async::stop_event(::grpc::ClientContext* context, const ::idadebug::Changed* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::idadebug::Changed, ::google::protobuf::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_stop_event_, context, request, response, std::move(f));
 }
 
-void DbgClient::Stub::experimental_async::stop_event(::grpc::ClientContext* context, const ::idadebug::Changed* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void DbgClient::Stub::async::stop_event(::grpc::ClientContext* context, const ::idadebug::Changed* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_stop_event_, context, request, response, reactor);
 }
 

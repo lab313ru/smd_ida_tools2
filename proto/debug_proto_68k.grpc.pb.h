@@ -7,7 +7,6 @@
 #include "debug_proto_68k.pb.h"
 
 #include <functional>
-#include <grpc/impl/codegen/port_platform.h>
 #include <grpcpp/impl/codegen/async_generic_service.h>
 #include <grpcpp/impl/codegen/async_stream.h>
 #include <grpcpp/impl/codegen/async_unary_call.h>
@@ -190,150 +189,58 @@ class DbgServer final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::idadebug::Callstack>> PrepareAsyncget_callstack(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::idadebug::Callstack>>(PrepareAsyncget_callstackRaw(context, request, cq));
     }
-    class experimental_async_interface {
+    class async_interface {
      public:
-      virtual ~experimental_async_interface() {}
+      virtual ~async_interface() {}
       virtual void get_gp_reg(::grpc::ClientContext* context, const ::idadebug::GpReg* request, ::idadebug::AnyRegValue* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void get_gp_reg(::grpc::ClientContext* context, const ::idadebug::GpReg* request, ::idadebug::AnyRegValue* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void get_gp_reg(::grpc::ClientContext* context, const ::idadebug::GpReg* request, ::idadebug::AnyRegValue* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       virtual void get_gp_regs(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::GpRegs* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void get_gp_regs(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::GpRegs* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void get_gp_regs(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::GpRegs* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       virtual void set_gp_reg(::grpc::ClientContext* context, const ::idadebug::GpRegValue* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void set_gp_reg(::grpc::ClientContext* context, const ::idadebug::GpRegValue* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void set_gp_reg(::grpc::ClientContext* context, const ::idadebug::GpRegValue* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       virtual void get_vdp_reg(::grpc::ClientContext* context, const ::idadebug::VdpReg* request, ::idadebug::AnyRegValue* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void get_vdp_reg(::grpc::ClientContext* context, const ::idadebug::VdpReg* request, ::idadebug::AnyRegValue* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void get_vdp_reg(::grpc::ClientContext* context, const ::idadebug::VdpReg* request, ::idadebug::AnyRegValue* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       virtual void get_vdp_regs(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::VdpRegs* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void get_vdp_regs(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::VdpRegs* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void get_vdp_regs(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::VdpRegs* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       virtual void set_vdp_reg(::grpc::ClientContext* context, const ::idadebug::VdpRegValue* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void set_vdp_reg(::grpc::ClientContext* context, const ::idadebug::VdpRegValue* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void set_vdp_reg(::grpc::ClientContext* context, const ::idadebug::VdpRegValue* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       virtual void get_dma_info(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::DmaInfo* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void get_dma_info(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::DmaInfo* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void get_dma_info(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::DmaInfo* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       virtual void read_memory(::grpc::ClientContext* context, const ::idadebug::MemoryAS* request, ::idadebug::MemData* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void read_memory(::grpc::ClientContext* context, const ::idadebug::MemoryAS* request, ::idadebug::MemData* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void read_memory(::grpc::ClientContext* context, const ::idadebug::MemoryAS* request, ::idadebug::MemData* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       virtual void write_memory(::grpc::ClientContext* context, const ::idadebug::MemoryAD* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void write_memory(::grpc::ClientContext* context, const ::idadebug::MemoryAD* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void write_memory(::grpc::ClientContext* context, const ::idadebug::MemoryAD* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       virtual void get_breakpoints(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::DbgBreakpoints* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void get_breakpoints(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::DbgBreakpoints* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void get_breakpoints(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::DbgBreakpoints* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       virtual void add_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void add_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void add_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       virtual void toggle_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void toggle_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void toggle_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       virtual void update_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void update_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void update_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       virtual void del_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void del_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void del_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       virtual void clear_breakpoints(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void clear_breakpoints(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void clear_breakpoints(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       virtual void pause(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void pause(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void pause(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       virtual void resume(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void resume(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void resume(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       virtual void start_emulation(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void start_emulation(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void start_emulation(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       virtual void exit_emulation(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void exit_emulation(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void exit_emulation(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       virtual void step_into(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void step_into(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void step_into(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       virtual void step_over(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void step_over(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void step_over(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       virtual void get_callstack(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::Callstack* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void get_callstack(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::Callstack* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void get_callstack(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::Callstack* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
     };
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-    typedef class experimental_async_interface async_interface;
-    #endif
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-    async_interface* async() { return experimental_async(); }
-    #endif
-    virtual class experimental_async_interface* experimental_async() { return nullptr; }
-  private:
+    typedef class async_interface experimental_async_interface;
+    virtual class async_interface* async() { return nullptr; }
+    class async_interface* experimental_async() { return async(); }
+   private:
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::idadebug::AnyRegValue>* Asyncget_gp_regRaw(::grpc::ClientContext* context, const ::idadebug::GpReg& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::idadebug::AnyRegValue>* PrepareAsyncget_gp_regRaw(::grpc::ClientContext* context, const ::idadebug::GpReg& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::idadebug::GpRegs>* Asyncget_gp_regsRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) = 0;
@@ -381,7 +288,7 @@ class DbgServer final {
   };
   class Stub final : public StubInterface {
    public:
-    Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel);
+    Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
     ::grpc::Status get_gp_reg(::grpc::ClientContext* context, const ::idadebug::GpReg& request, ::idadebug::AnyRegValue* response) override;
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::idadebug::AnyRegValue>> Asyncget_gp_reg(::grpc::ClientContext* context, const ::idadebug::GpReg& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::idadebug::AnyRegValue>>(Asyncget_gp_regRaw(context, request, cq));
@@ -536,152 +443,64 @@ class DbgServer final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::idadebug::Callstack>> PrepareAsyncget_callstack(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::idadebug::Callstack>>(PrepareAsyncget_callstackRaw(context, request, cq));
     }
-    class experimental_async final :
-      public StubInterface::experimental_async_interface {
+    class async final :
+      public StubInterface::async_interface {
      public:
       void get_gp_reg(::grpc::ClientContext* context, const ::idadebug::GpReg* request, ::idadebug::AnyRegValue* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void get_gp_reg(::grpc::ClientContext* context, const ::idadebug::GpReg* request, ::idadebug::AnyRegValue* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void get_gp_reg(::grpc::ClientContext* context, const ::idadebug::GpReg* request, ::idadebug::AnyRegValue* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void get_gp_regs(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::GpRegs* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void get_gp_regs(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::GpRegs* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void get_gp_regs(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::GpRegs* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void set_gp_reg(::grpc::ClientContext* context, const ::idadebug::GpRegValue* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void set_gp_reg(::grpc::ClientContext* context, const ::idadebug::GpRegValue* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void set_gp_reg(::grpc::ClientContext* context, const ::idadebug::GpRegValue* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void get_vdp_reg(::grpc::ClientContext* context, const ::idadebug::VdpReg* request, ::idadebug::AnyRegValue* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void get_vdp_reg(::grpc::ClientContext* context, const ::idadebug::VdpReg* request, ::idadebug::AnyRegValue* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void get_vdp_reg(::grpc::ClientContext* context, const ::idadebug::VdpReg* request, ::idadebug::AnyRegValue* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void get_vdp_regs(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::VdpRegs* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void get_vdp_regs(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::VdpRegs* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void get_vdp_regs(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::VdpRegs* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void set_vdp_reg(::grpc::ClientContext* context, const ::idadebug::VdpRegValue* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void set_vdp_reg(::grpc::ClientContext* context, const ::idadebug::VdpRegValue* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void set_vdp_reg(::grpc::ClientContext* context, const ::idadebug::VdpRegValue* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void get_dma_info(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::DmaInfo* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void get_dma_info(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::DmaInfo* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void get_dma_info(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::DmaInfo* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void read_memory(::grpc::ClientContext* context, const ::idadebug::MemoryAS* request, ::idadebug::MemData* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void read_memory(::grpc::ClientContext* context, const ::idadebug::MemoryAS* request, ::idadebug::MemData* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void read_memory(::grpc::ClientContext* context, const ::idadebug::MemoryAS* request, ::idadebug::MemData* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void write_memory(::grpc::ClientContext* context, const ::idadebug::MemoryAD* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void write_memory(::grpc::ClientContext* context, const ::idadebug::MemoryAD* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void write_memory(::grpc::ClientContext* context, const ::idadebug::MemoryAD* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void get_breakpoints(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::DbgBreakpoints* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void get_breakpoints(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::DbgBreakpoints* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void get_breakpoints(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::DbgBreakpoints* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void add_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void add_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void add_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void toggle_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void toggle_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void toggle_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void update_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void update_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void update_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void del_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void del_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void del_breakpoint(::grpc::ClientContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void clear_breakpoints(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void clear_breakpoints(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void clear_breakpoints(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void pause(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void pause(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void pause(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void resume(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void resume(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void resume(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void start_emulation(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void start_emulation(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void start_emulation(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void exit_emulation(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void exit_emulation(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void exit_emulation(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void step_into(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void step_into(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void step_into(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void step_over(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void step_over(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void step_over(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void get_callstack(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::Callstack* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void get_callstack(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::Callstack* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void get_callstack(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::idadebug::Callstack* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
      private:
       friend class Stub;
-      explicit experimental_async(Stub* stub): stub_(stub) { }
+      explicit async(Stub* stub): stub_(stub) { }
       Stub* stub() { return stub_; }
       Stub* stub_;
     };
-    class experimental_async_interface* experimental_async() override { return &async_stub_; }
+    class async* async() override { return &async_stub_; }
 
    private:
     std::shared_ptr< ::grpc::ChannelInterface> channel_;
-    class experimental_async async_stub_{this};
+    class async async_stub_{this};
     ::grpc::ClientAsyncResponseReader< ::idadebug::AnyRegValue>* Asyncget_gp_regRaw(::grpc::ClientContext* context, const ::idadebug::GpReg& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::idadebug::AnyRegValue>* PrepareAsyncget_gp_regRaw(::grpc::ClientContext* context, const ::idadebug::GpReg& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::idadebug::GpRegs>* Asyncget_gp_regsRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) override;
@@ -1220,36 +1039,22 @@ class DbgServer final {
   };
   typedef WithAsyncMethod_get_gp_reg<WithAsyncMethod_get_gp_regs<WithAsyncMethod_set_gp_reg<WithAsyncMethod_get_vdp_reg<WithAsyncMethod_get_vdp_regs<WithAsyncMethod_set_vdp_reg<WithAsyncMethod_get_dma_info<WithAsyncMethod_read_memory<WithAsyncMethod_write_memory<WithAsyncMethod_get_breakpoints<WithAsyncMethod_add_breakpoint<WithAsyncMethod_toggle_breakpoint<WithAsyncMethod_update_breakpoint<WithAsyncMethod_del_breakpoint<WithAsyncMethod_clear_breakpoints<WithAsyncMethod_pause<WithAsyncMethod_resume<WithAsyncMethod_start_emulation<WithAsyncMethod_exit_emulation<WithAsyncMethod_step_into<WithAsyncMethod_step_over<WithAsyncMethod_get_callstack<Service > > > > > > > > > > > > > > > > > > > > > > AsyncService;
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_get_gp_reg : public BaseClass {
+  class WithCallbackMethod_get_gp_reg : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_get_gp_reg() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(0,
+    WithCallbackMethod_get_gp_reg() {
+      ::grpc::Service::MarkMethodCallback(0,
           new ::grpc::internal::CallbackUnaryHandler< ::idadebug::GpReg, ::idadebug::AnyRegValue>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::idadebug::GpReg* request, ::idadebug::AnyRegValue* response) { return this->get_gp_reg(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::idadebug::GpReg* request, ::idadebug::AnyRegValue* response) { return this->get_gp_reg(context, request, response); }));}
     void SetMessageAllocatorFor_get_gp_reg(
-        ::grpc::experimental::MessageAllocator< ::idadebug::GpReg, ::idadebug::AnyRegValue>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::idadebug::GpReg, ::idadebug::AnyRegValue>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(0);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(0);
-    #endif
       static_cast<::grpc::internal::CallbackUnaryHandler< ::idadebug::GpReg, ::idadebug::AnyRegValue>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_get_gp_reg() override {
+    ~WithCallbackMethod_get_gp_reg() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1257,46 +1062,26 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* get_gp_reg(
-      ::grpc::CallbackServerContext* /*context*/, const ::idadebug::GpReg* /*request*/, ::idadebug::AnyRegValue* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* get_gp_reg(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::idadebug::GpReg* /*request*/, ::idadebug::AnyRegValue* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::idadebug::GpReg* /*request*/, ::idadebug::AnyRegValue* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_get_gp_regs : public BaseClass {
+  class WithCallbackMethod_get_gp_regs : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_get_gp_regs() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(1,
+    WithCallbackMethod_get_gp_regs() {
+      ::grpc::Service::MarkMethodCallback(1,
           new ::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::idadebug::GpRegs>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::google::protobuf::Empty* request, ::idadebug::GpRegs* response) { return this->get_gp_regs(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::google::protobuf::Empty* request, ::idadebug::GpRegs* response) { return this->get_gp_regs(context, request, response); }));}
     void SetMessageAllocatorFor_get_gp_regs(
-        ::grpc::experimental::MessageAllocator< ::google::protobuf::Empty, ::idadebug::GpRegs>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::google::protobuf::Empty, ::idadebug::GpRegs>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(1);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(1);
-    #endif
       static_cast<::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::idadebug::GpRegs>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_get_gp_regs() override {
+    ~WithCallbackMethod_get_gp_regs() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1304,46 +1089,26 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* get_gp_regs(
-      ::grpc::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::idadebug::GpRegs* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* get_gp_regs(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::idadebug::GpRegs* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::idadebug::GpRegs* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_set_gp_reg : public BaseClass {
+  class WithCallbackMethod_set_gp_reg : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_set_gp_reg() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(2,
+    WithCallbackMethod_set_gp_reg() {
+      ::grpc::Service::MarkMethodCallback(2,
           new ::grpc::internal::CallbackUnaryHandler< ::idadebug::GpRegValue, ::google::protobuf::Empty>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::idadebug::GpRegValue* request, ::google::protobuf::Empty* response) { return this->set_gp_reg(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::idadebug::GpRegValue* request, ::google::protobuf::Empty* response) { return this->set_gp_reg(context, request, response); }));}
     void SetMessageAllocatorFor_set_gp_reg(
-        ::grpc::experimental::MessageAllocator< ::idadebug::GpRegValue, ::google::protobuf::Empty>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::idadebug::GpRegValue, ::google::protobuf::Empty>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(2);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(2);
-    #endif
       static_cast<::grpc::internal::CallbackUnaryHandler< ::idadebug::GpRegValue, ::google::protobuf::Empty>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_set_gp_reg() override {
+    ~WithCallbackMethod_set_gp_reg() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1351,46 +1116,26 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* set_gp_reg(
-      ::grpc::CallbackServerContext* /*context*/, const ::idadebug::GpRegValue* /*request*/, ::google::protobuf::Empty* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* set_gp_reg(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::idadebug::GpRegValue* /*request*/, ::google::protobuf::Empty* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::idadebug::GpRegValue* /*request*/, ::google::protobuf::Empty* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_get_vdp_reg : public BaseClass {
+  class WithCallbackMethod_get_vdp_reg : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_get_vdp_reg() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(3,
+    WithCallbackMethod_get_vdp_reg() {
+      ::grpc::Service::MarkMethodCallback(3,
           new ::grpc::internal::CallbackUnaryHandler< ::idadebug::VdpReg, ::idadebug::AnyRegValue>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::idadebug::VdpReg* request, ::idadebug::AnyRegValue* response) { return this->get_vdp_reg(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::idadebug::VdpReg* request, ::idadebug::AnyRegValue* response) { return this->get_vdp_reg(context, request, response); }));}
     void SetMessageAllocatorFor_get_vdp_reg(
-        ::grpc::experimental::MessageAllocator< ::idadebug::VdpReg, ::idadebug::AnyRegValue>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::idadebug::VdpReg, ::idadebug::AnyRegValue>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(3);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(3);
-    #endif
       static_cast<::grpc::internal::CallbackUnaryHandler< ::idadebug::VdpReg, ::idadebug::AnyRegValue>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_get_vdp_reg() override {
+    ~WithCallbackMethod_get_vdp_reg() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1398,46 +1143,26 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* get_vdp_reg(
-      ::grpc::CallbackServerContext* /*context*/, const ::idadebug::VdpReg* /*request*/, ::idadebug::AnyRegValue* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* get_vdp_reg(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::idadebug::VdpReg* /*request*/, ::idadebug::AnyRegValue* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::idadebug::VdpReg* /*request*/, ::idadebug::AnyRegValue* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_get_vdp_regs : public BaseClass {
+  class WithCallbackMethod_get_vdp_regs : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_get_vdp_regs() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(4,
+    WithCallbackMethod_get_vdp_regs() {
+      ::grpc::Service::MarkMethodCallback(4,
           new ::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::idadebug::VdpRegs>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::google::protobuf::Empty* request, ::idadebug::VdpRegs* response) { return this->get_vdp_regs(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::google::protobuf::Empty* request, ::idadebug::VdpRegs* response) { return this->get_vdp_regs(context, request, response); }));}
     void SetMessageAllocatorFor_get_vdp_regs(
-        ::grpc::experimental::MessageAllocator< ::google::protobuf::Empty, ::idadebug::VdpRegs>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::google::protobuf::Empty, ::idadebug::VdpRegs>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(4);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(4);
-    #endif
       static_cast<::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::idadebug::VdpRegs>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_get_vdp_regs() override {
+    ~WithCallbackMethod_get_vdp_regs() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1445,46 +1170,26 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* get_vdp_regs(
-      ::grpc::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::idadebug::VdpRegs* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* get_vdp_regs(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::idadebug::VdpRegs* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::idadebug::VdpRegs* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_set_vdp_reg : public BaseClass {
+  class WithCallbackMethod_set_vdp_reg : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_set_vdp_reg() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(5,
+    WithCallbackMethod_set_vdp_reg() {
+      ::grpc::Service::MarkMethodCallback(5,
           new ::grpc::internal::CallbackUnaryHandler< ::idadebug::VdpRegValue, ::google::protobuf::Empty>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::idadebug::VdpRegValue* request, ::google::protobuf::Empty* response) { return this->set_vdp_reg(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::idadebug::VdpRegValue* request, ::google::protobuf::Empty* response) { return this->set_vdp_reg(context, request, response); }));}
     void SetMessageAllocatorFor_set_vdp_reg(
-        ::grpc::experimental::MessageAllocator< ::idadebug::VdpRegValue, ::google::protobuf::Empty>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::idadebug::VdpRegValue, ::google::protobuf::Empty>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(5);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(5);
-    #endif
       static_cast<::grpc::internal::CallbackUnaryHandler< ::idadebug::VdpRegValue, ::google::protobuf::Empty>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_set_vdp_reg() override {
+    ~WithCallbackMethod_set_vdp_reg() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1492,46 +1197,26 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* set_vdp_reg(
-      ::grpc::CallbackServerContext* /*context*/, const ::idadebug::VdpRegValue* /*request*/, ::google::protobuf::Empty* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* set_vdp_reg(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::idadebug::VdpRegValue* /*request*/, ::google::protobuf::Empty* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::idadebug::VdpRegValue* /*request*/, ::google::protobuf::Empty* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_get_dma_info : public BaseClass {
+  class WithCallbackMethod_get_dma_info : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_get_dma_info() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(6,
+    WithCallbackMethod_get_dma_info() {
+      ::grpc::Service::MarkMethodCallback(6,
           new ::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::idadebug::DmaInfo>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::google::protobuf::Empty* request, ::idadebug::DmaInfo* response) { return this->get_dma_info(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::google::protobuf::Empty* request, ::idadebug::DmaInfo* response) { return this->get_dma_info(context, request, response); }));}
     void SetMessageAllocatorFor_get_dma_info(
-        ::grpc::experimental::MessageAllocator< ::google::protobuf::Empty, ::idadebug::DmaInfo>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::google::protobuf::Empty, ::idadebug::DmaInfo>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(6);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(6);
-    #endif
       static_cast<::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::idadebug::DmaInfo>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_get_dma_info() override {
+    ~WithCallbackMethod_get_dma_info() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1539,46 +1224,26 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* get_dma_info(
-      ::grpc::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::idadebug::DmaInfo* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* get_dma_info(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::idadebug::DmaInfo* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::idadebug::DmaInfo* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_read_memory : public BaseClass {
+  class WithCallbackMethod_read_memory : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_read_memory() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(7,
+    WithCallbackMethod_read_memory() {
+      ::grpc::Service::MarkMethodCallback(7,
           new ::grpc::internal::CallbackUnaryHandler< ::idadebug::MemoryAS, ::idadebug::MemData>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::idadebug::MemoryAS* request, ::idadebug::MemData* response) { return this->read_memory(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::idadebug::MemoryAS* request, ::idadebug::MemData* response) { return this->read_memory(context, request, response); }));}
     void SetMessageAllocatorFor_read_memory(
-        ::grpc::experimental::MessageAllocator< ::idadebug::MemoryAS, ::idadebug::MemData>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::idadebug::MemoryAS, ::idadebug::MemData>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(7);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(7);
-    #endif
       static_cast<::grpc::internal::CallbackUnaryHandler< ::idadebug::MemoryAS, ::idadebug::MemData>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_read_memory() override {
+    ~WithCallbackMethod_read_memory() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1586,46 +1251,26 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* read_memory(
-      ::grpc::CallbackServerContext* /*context*/, const ::idadebug::MemoryAS* /*request*/, ::idadebug::MemData* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* read_memory(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::idadebug::MemoryAS* /*request*/, ::idadebug::MemData* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::idadebug::MemoryAS* /*request*/, ::idadebug::MemData* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_write_memory : public BaseClass {
+  class WithCallbackMethod_write_memory : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_write_memory() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(8,
+    WithCallbackMethod_write_memory() {
+      ::grpc::Service::MarkMethodCallback(8,
           new ::grpc::internal::CallbackUnaryHandler< ::idadebug::MemoryAD, ::google::protobuf::Empty>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::idadebug::MemoryAD* request, ::google::protobuf::Empty* response) { return this->write_memory(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::idadebug::MemoryAD* request, ::google::protobuf::Empty* response) { return this->write_memory(context, request, response); }));}
     void SetMessageAllocatorFor_write_memory(
-        ::grpc::experimental::MessageAllocator< ::idadebug::MemoryAD, ::google::protobuf::Empty>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::idadebug::MemoryAD, ::google::protobuf::Empty>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(8);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(8);
-    #endif
       static_cast<::grpc::internal::CallbackUnaryHandler< ::idadebug::MemoryAD, ::google::protobuf::Empty>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_write_memory() override {
+    ~WithCallbackMethod_write_memory() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1633,46 +1278,26 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* write_memory(
-      ::grpc::CallbackServerContext* /*context*/, const ::idadebug::MemoryAD* /*request*/, ::google::protobuf::Empty* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* write_memory(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::idadebug::MemoryAD* /*request*/, ::google::protobuf::Empty* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::idadebug::MemoryAD* /*request*/, ::google::protobuf::Empty* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_get_breakpoints : public BaseClass {
+  class WithCallbackMethod_get_breakpoints : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_get_breakpoints() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(9,
+    WithCallbackMethod_get_breakpoints() {
+      ::grpc::Service::MarkMethodCallback(9,
           new ::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::idadebug::DbgBreakpoints>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::google::protobuf::Empty* request, ::idadebug::DbgBreakpoints* response) { return this->get_breakpoints(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::google::protobuf::Empty* request, ::idadebug::DbgBreakpoints* response) { return this->get_breakpoints(context, request, response); }));}
     void SetMessageAllocatorFor_get_breakpoints(
-        ::grpc::experimental::MessageAllocator< ::google::protobuf::Empty, ::idadebug::DbgBreakpoints>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::google::protobuf::Empty, ::idadebug::DbgBreakpoints>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(9);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(9);
-    #endif
       static_cast<::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::idadebug::DbgBreakpoints>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_get_breakpoints() override {
+    ~WithCallbackMethod_get_breakpoints() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1680,46 +1305,26 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* get_breakpoints(
-      ::grpc::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::idadebug::DbgBreakpoints* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* get_breakpoints(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::idadebug::DbgBreakpoints* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::idadebug::DbgBreakpoints* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_add_breakpoint : public BaseClass {
+  class WithCallbackMethod_add_breakpoint : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_add_breakpoint() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(10,
+    WithCallbackMethod_add_breakpoint() {
+      ::grpc::Service::MarkMethodCallback(10,
           new ::grpc::internal::CallbackUnaryHandler< ::idadebug::DbgBreakpoint, ::google::protobuf::Empty>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response) { return this->add_breakpoint(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response) { return this->add_breakpoint(context, request, response); }));}
     void SetMessageAllocatorFor_add_breakpoint(
-        ::grpc::experimental::MessageAllocator< ::idadebug::DbgBreakpoint, ::google::protobuf::Empty>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::idadebug::DbgBreakpoint, ::google::protobuf::Empty>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(10);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(10);
-    #endif
       static_cast<::grpc::internal::CallbackUnaryHandler< ::idadebug::DbgBreakpoint, ::google::protobuf::Empty>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_add_breakpoint() override {
+    ~WithCallbackMethod_add_breakpoint() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1727,46 +1332,26 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* add_breakpoint(
-      ::grpc::CallbackServerContext* /*context*/, const ::idadebug::DbgBreakpoint* /*request*/, ::google::protobuf::Empty* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* add_breakpoint(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::idadebug::DbgBreakpoint* /*request*/, ::google::protobuf::Empty* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::idadebug::DbgBreakpoint* /*request*/, ::google::protobuf::Empty* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_toggle_breakpoint : public BaseClass {
+  class WithCallbackMethod_toggle_breakpoint : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_toggle_breakpoint() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(11,
+    WithCallbackMethod_toggle_breakpoint() {
+      ::grpc::Service::MarkMethodCallback(11,
           new ::grpc::internal::CallbackUnaryHandler< ::idadebug::DbgBreakpoint, ::google::protobuf::Empty>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response) { return this->toggle_breakpoint(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response) { return this->toggle_breakpoint(context, request, response); }));}
     void SetMessageAllocatorFor_toggle_breakpoint(
-        ::grpc::experimental::MessageAllocator< ::idadebug::DbgBreakpoint, ::google::protobuf::Empty>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::idadebug::DbgBreakpoint, ::google::protobuf::Empty>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(11);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(11);
-    #endif
       static_cast<::grpc::internal::CallbackUnaryHandler< ::idadebug::DbgBreakpoint, ::google::protobuf::Empty>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_toggle_breakpoint() override {
+    ~WithCallbackMethod_toggle_breakpoint() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1774,46 +1359,26 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* toggle_breakpoint(
-      ::grpc::CallbackServerContext* /*context*/, const ::idadebug::DbgBreakpoint* /*request*/, ::google::protobuf::Empty* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* toggle_breakpoint(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::idadebug::DbgBreakpoint* /*request*/, ::google::protobuf::Empty* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::idadebug::DbgBreakpoint* /*request*/, ::google::protobuf::Empty* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_update_breakpoint : public BaseClass {
+  class WithCallbackMethod_update_breakpoint : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_update_breakpoint() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(12,
+    WithCallbackMethod_update_breakpoint() {
+      ::grpc::Service::MarkMethodCallback(12,
           new ::grpc::internal::CallbackUnaryHandler< ::idadebug::DbgBreakpoint, ::google::protobuf::Empty>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response) { return this->update_breakpoint(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response) { return this->update_breakpoint(context, request, response); }));}
     void SetMessageAllocatorFor_update_breakpoint(
-        ::grpc::experimental::MessageAllocator< ::idadebug::DbgBreakpoint, ::google::protobuf::Empty>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::idadebug::DbgBreakpoint, ::google::protobuf::Empty>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(12);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(12);
-    #endif
       static_cast<::grpc::internal::CallbackUnaryHandler< ::idadebug::DbgBreakpoint, ::google::protobuf::Empty>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_update_breakpoint() override {
+    ~WithCallbackMethod_update_breakpoint() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1821,46 +1386,26 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* update_breakpoint(
-      ::grpc::CallbackServerContext* /*context*/, const ::idadebug::DbgBreakpoint* /*request*/, ::google::protobuf::Empty* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* update_breakpoint(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::idadebug::DbgBreakpoint* /*request*/, ::google::protobuf::Empty* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::idadebug::DbgBreakpoint* /*request*/, ::google::protobuf::Empty* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_del_breakpoint : public BaseClass {
+  class WithCallbackMethod_del_breakpoint : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_del_breakpoint() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(13,
+    WithCallbackMethod_del_breakpoint() {
+      ::grpc::Service::MarkMethodCallback(13,
           new ::grpc::internal::CallbackUnaryHandler< ::idadebug::DbgBreakpoint, ::google::protobuf::Empty>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response) { return this->del_breakpoint(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::idadebug::DbgBreakpoint* request, ::google::protobuf::Empty* response) { return this->del_breakpoint(context, request, response); }));}
     void SetMessageAllocatorFor_del_breakpoint(
-        ::grpc::experimental::MessageAllocator< ::idadebug::DbgBreakpoint, ::google::protobuf::Empty>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::idadebug::DbgBreakpoint, ::google::protobuf::Empty>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(13);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(13);
-    #endif
       static_cast<::grpc::internal::CallbackUnaryHandler< ::idadebug::DbgBreakpoint, ::google::protobuf::Empty>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_del_breakpoint() override {
+    ~WithCallbackMethod_del_breakpoint() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1868,46 +1413,26 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* del_breakpoint(
-      ::grpc::CallbackServerContext* /*context*/, const ::idadebug::DbgBreakpoint* /*request*/, ::google::protobuf::Empty* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* del_breakpoint(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::idadebug::DbgBreakpoint* /*request*/, ::google::protobuf::Empty* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::idadebug::DbgBreakpoint* /*request*/, ::google::protobuf::Empty* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_clear_breakpoints : public BaseClass {
+  class WithCallbackMethod_clear_breakpoints : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_clear_breakpoints() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(14,
+    WithCallbackMethod_clear_breakpoints() {
+      ::grpc::Service::MarkMethodCallback(14,
           new ::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::google::protobuf::Empty>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response) { return this->clear_breakpoints(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response) { return this->clear_breakpoints(context, request, response); }));}
     void SetMessageAllocatorFor_clear_breakpoints(
-        ::grpc::experimental::MessageAllocator< ::google::protobuf::Empty, ::google::protobuf::Empty>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::google::protobuf::Empty, ::google::protobuf::Empty>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(14);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(14);
-    #endif
       static_cast<::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::google::protobuf::Empty>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_clear_breakpoints() override {
+    ~WithCallbackMethod_clear_breakpoints() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1915,46 +1440,26 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* clear_breakpoints(
-      ::grpc::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::google::protobuf::Empty* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* clear_breakpoints(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::google::protobuf::Empty* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::google::protobuf::Empty* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_pause : public BaseClass {
+  class WithCallbackMethod_pause : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_pause() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(15,
+    WithCallbackMethod_pause() {
+      ::grpc::Service::MarkMethodCallback(15,
           new ::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::google::protobuf::Empty>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response) { return this->pause(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response) { return this->pause(context, request, response); }));}
     void SetMessageAllocatorFor_pause(
-        ::grpc::experimental::MessageAllocator< ::google::protobuf::Empty, ::google::protobuf::Empty>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::google::protobuf::Empty, ::google::protobuf::Empty>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(15);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(15);
-    #endif
       static_cast<::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::google::protobuf::Empty>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_pause() override {
+    ~WithCallbackMethod_pause() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1962,46 +1467,26 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* pause(
-      ::grpc::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::google::protobuf::Empty* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* pause(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::google::protobuf::Empty* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::google::protobuf::Empty* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_resume : public BaseClass {
+  class WithCallbackMethod_resume : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_resume() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(16,
+    WithCallbackMethod_resume() {
+      ::grpc::Service::MarkMethodCallback(16,
           new ::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::google::protobuf::Empty>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response) { return this->resume(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response) { return this->resume(context, request, response); }));}
     void SetMessageAllocatorFor_resume(
-        ::grpc::experimental::MessageAllocator< ::google::protobuf::Empty, ::google::protobuf::Empty>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::google::protobuf::Empty, ::google::protobuf::Empty>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(16);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(16);
-    #endif
       static_cast<::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::google::protobuf::Empty>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_resume() override {
+    ~WithCallbackMethod_resume() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -2009,46 +1494,26 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* resume(
-      ::grpc::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::google::protobuf::Empty* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* resume(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::google::protobuf::Empty* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::google::protobuf::Empty* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_start_emulation : public BaseClass {
+  class WithCallbackMethod_start_emulation : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_start_emulation() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(17,
+    WithCallbackMethod_start_emulation() {
+      ::grpc::Service::MarkMethodCallback(17,
           new ::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::google::protobuf::Empty>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response) { return this->start_emulation(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response) { return this->start_emulation(context, request, response); }));}
     void SetMessageAllocatorFor_start_emulation(
-        ::grpc::experimental::MessageAllocator< ::google::protobuf::Empty, ::google::protobuf::Empty>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::google::protobuf::Empty, ::google::protobuf::Empty>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(17);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(17);
-    #endif
       static_cast<::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::google::protobuf::Empty>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_start_emulation() override {
+    ~WithCallbackMethod_start_emulation() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -2056,46 +1521,26 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* start_emulation(
-      ::grpc::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::google::protobuf::Empty* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* start_emulation(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::google::protobuf::Empty* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::google::protobuf::Empty* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_exit_emulation : public BaseClass {
+  class WithCallbackMethod_exit_emulation : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_exit_emulation() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(18,
+    WithCallbackMethod_exit_emulation() {
+      ::grpc::Service::MarkMethodCallback(18,
           new ::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::google::protobuf::Empty>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response) { return this->exit_emulation(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response) { return this->exit_emulation(context, request, response); }));}
     void SetMessageAllocatorFor_exit_emulation(
-        ::grpc::experimental::MessageAllocator< ::google::protobuf::Empty, ::google::protobuf::Empty>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::google::protobuf::Empty, ::google::protobuf::Empty>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(18);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(18);
-    #endif
       static_cast<::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::google::protobuf::Empty>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_exit_emulation() override {
+    ~WithCallbackMethod_exit_emulation() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -2103,46 +1548,26 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* exit_emulation(
-      ::grpc::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::google::protobuf::Empty* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* exit_emulation(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::google::protobuf::Empty* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::google::protobuf::Empty* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_step_into : public BaseClass {
+  class WithCallbackMethod_step_into : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_step_into() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(19,
+    WithCallbackMethod_step_into() {
+      ::grpc::Service::MarkMethodCallback(19,
           new ::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::google::protobuf::Empty>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response) { return this->step_into(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response) { return this->step_into(context, request, response); }));}
     void SetMessageAllocatorFor_step_into(
-        ::grpc::experimental::MessageAllocator< ::google::protobuf::Empty, ::google::protobuf::Empty>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::google::protobuf::Empty, ::google::protobuf::Empty>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(19);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(19);
-    #endif
       static_cast<::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::google::protobuf::Empty>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_step_into() override {
+    ~WithCallbackMethod_step_into() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -2150,46 +1575,26 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* step_into(
-      ::grpc::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::google::protobuf::Empty* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* step_into(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::google::protobuf::Empty* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::google::protobuf::Empty* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_step_over : public BaseClass {
+  class WithCallbackMethod_step_over : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_step_over() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(20,
+    WithCallbackMethod_step_over() {
+      ::grpc::Service::MarkMethodCallback(20,
           new ::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::google::protobuf::Empty>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response) { return this->step_over(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response) { return this->step_over(context, request, response); }));}
     void SetMessageAllocatorFor_step_over(
-        ::grpc::experimental::MessageAllocator< ::google::protobuf::Empty, ::google::protobuf::Empty>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::google::protobuf::Empty, ::google::protobuf::Empty>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(20);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(20);
-    #endif
       static_cast<::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::google::protobuf::Empty>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_step_over() override {
+    ~WithCallbackMethod_step_over() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -2197,46 +1602,26 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* step_over(
-      ::grpc::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::google::protobuf::Empty* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* step_over(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::google::protobuf::Empty* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::google::protobuf::Empty* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_get_callstack : public BaseClass {
+  class WithCallbackMethod_get_callstack : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_get_callstack() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(21,
+    WithCallbackMethod_get_callstack() {
+      ::grpc::Service::MarkMethodCallback(21,
           new ::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::idadebug::Callstack>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::google::protobuf::Empty* request, ::idadebug::Callstack* response) { return this->get_callstack(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::google::protobuf::Empty* request, ::idadebug::Callstack* response) { return this->get_callstack(context, request, response); }));}
     void SetMessageAllocatorFor_get_callstack(
-        ::grpc::experimental::MessageAllocator< ::google::protobuf::Empty, ::idadebug::Callstack>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::google::protobuf::Empty, ::idadebug::Callstack>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(21);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(21);
-    #endif
       static_cast<::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::idadebug::Callstack>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_get_callstack() override {
+    ~WithCallbackMethod_get_callstack() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -2244,20 +1629,11 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* get_callstack(
-      ::grpc::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::idadebug::Callstack* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* get_callstack(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::idadebug::Callstack* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::idadebug::Callstack* /*response*/)  { return nullptr; }
   };
-  #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-  typedef ExperimentalWithCallbackMethod_get_gp_reg<ExperimentalWithCallbackMethod_get_gp_regs<ExperimentalWithCallbackMethod_set_gp_reg<ExperimentalWithCallbackMethod_get_vdp_reg<ExperimentalWithCallbackMethod_get_vdp_regs<ExperimentalWithCallbackMethod_set_vdp_reg<ExperimentalWithCallbackMethod_get_dma_info<ExperimentalWithCallbackMethod_read_memory<ExperimentalWithCallbackMethod_write_memory<ExperimentalWithCallbackMethod_get_breakpoints<ExperimentalWithCallbackMethod_add_breakpoint<ExperimentalWithCallbackMethod_toggle_breakpoint<ExperimentalWithCallbackMethod_update_breakpoint<ExperimentalWithCallbackMethod_del_breakpoint<ExperimentalWithCallbackMethod_clear_breakpoints<ExperimentalWithCallbackMethod_pause<ExperimentalWithCallbackMethod_resume<ExperimentalWithCallbackMethod_start_emulation<ExperimentalWithCallbackMethod_exit_emulation<ExperimentalWithCallbackMethod_step_into<ExperimentalWithCallbackMethod_step_over<ExperimentalWithCallbackMethod_get_callstack<Service > > > > > > > > > > > > > > > > > > > > > > CallbackService;
-  #endif
-
-  typedef ExperimentalWithCallbackMethod_get_gp_reg<ExperimentalWithCallbackMethod_get_gp_regs<ExperimentalWithCallbackMethod_set_gp_reg<ExperimentalWithCallbackMethod_get_vdp_reg<ExperimentalWithCallbackMethod_get_vdp_regs<ExperimentalWithCallbackMethod_set_vdp_reg<ExperimentalWithCallbackMethod_get_dma_info<ExperimentalWithCallbackMethod_read_memory<ExperimentalWithCallbackMethod_write_memory<ExperimentalWithCallbackMethod_get_breakpoints<ExperimentalWithCallbackMethod_add_breakpoint<ExperimentalWithCallbackMethod_toggle_breakpoint<ExperimentalWithCallbackMethod_update_breakpoint<ExperimentalWithCallbackMethod_del_breakpoint<ExperimentalWithCallbackMethod_clear_breakpoints<ExperimentalWithCallbackMethod_pause<ExperimentalWithCallbackMethod_resume<ExperimentalWithCallbackMethod_start_emulation<ExperimentalWithCallbackMethod_exit_emulation<ExperimentalWithCallbackMethod_step_into<ExperimentalWithCallbackMethod_step_over<ExperimentalWithCallbackMethod_get_callstack<Service > > > > > > > > > > > > > > > > > > > > > > ExperimentalCallbackService;
+  typedef WithCallbackMethod_get_gp_reg<WithCallbackMethod_get_gp_regs<WithCallbackMethod_set_gp_reg<WithCallbackMethod_get_vdp_reg<WithCallbackMethod_get_vdp_regs<WithCallbackMethod_set_vdp_reg<WithCallbackMethod_get_dma_info<WithCallbackMethod_read_memory<WithCallbackMethod_write_memory<WithCallbackMethod_get_breakpoints<WithCallbackMethod_add_breakpoint<WithCallbackMethod_toggle_breakpoint<WithCallbackMethod_update_breakpoint<WithCallbackMethod_del_breakpoint<WithCallbackMethod_clear_breakpoints<WithCallbackMethod_pause<WithCallbackMethod_resume<WithCallbackMethod_start_emulation<WithCallbackMethod_exit_emulation<WithCallbackMethod_step_into<WithCallbackMethod_step_over<WithCallbackMethod_get_callstack<Service > > > > > > > > > > > > > > > > > > > > > > CallbackService;
+  typedef CallbackService ExperimentalCallbackService;
   template <class BaseClass>
   class WithGenericMethod_get_gp_reg : public BaseClass {
    private:
@@ -3073,27 +2449,17 @@ class DbgServer final {
     }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_get_gp_reg : public BaseClass {
+  class WithRawCallbackMethod_get_gp_reg : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_get_gp_reg() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(0,
+    WithRawCallbackMethod_get_gp_reg() {
+      ::grpc::Service::MarkMethodRawCallback(0,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->get_gp_reg(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->get_gp_reg(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_get_gp_reg() override {
+    ~WithRawCallbackMethod_get_gp_reg() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -3101,37 +2467,21 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* get_gp_reg(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* get_gp_reg(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_get_gp_regs : public BaseClass {
+  class WithRawCallbackMethod_get_gp_regs : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_get_gp_regs() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(1,
+    WithRawCallbackMethod_get_gp_regs() {
+      ::grpc::Service::MarkMethodRawCallback(1,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->get_gp_regs(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->get_gp_regs(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_get_gp_regs() override {
+    ~WithRawCallbackMethod_get_gp_regs() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -3139,37 +2489,21 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* get_gp_regs(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* get_gp_regs(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_set_gp_reg : public BaseClass {
+  class WithRawCallbackMethod_set_gp_reg : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_set_gp_reg() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(2,
+    WithRawCallbackMethod_set_gp_reg() {
+      ::grpc::Service::MarkMethodRawCallback(2,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->set_gp_reg(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->set_gp_reg(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_set_gp_reg() override {
+    ~WithRawCallbackMethod_set_gp_reg() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -3177,37 +2511,21 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* set_gp_reg(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* set_gp_reg(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_get_vdp_reg : public BaseClass {
+  class WithRawCallbackMethod_get_vdp_reg : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_get_vdp_reg() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(3,
+    WithRawCallbackMethod_get_vdp_reg() {
+      ::grpc::Service::MarkMethodRawCallback(3,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->get_vdp_reg(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->get_vdp_reg(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_get_vdp_reg() override {
+    ~WithRawCallbackMethod_get_vdp_reg() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -3215,37 +2533,21 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* get_vdp_reg(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* get_vdp_reg(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_get_vdp_regs : public BaseClass {
+  class WithRawCallbackMethod_get_vdp_regs : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_get_vdp_regs() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(4,
+    WithRawCallbackMethod_get_vdp_regs() {
+      ::grpc::Service::MarkMethodRawCallback(4,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->get_vdp_regs(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->get_vdp_regs(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_get_vdp_regs() override {
+    ~WithRawCallbackMethod_get_vdp_regs() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -3253,37 +2555,21 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* get_vdp_regs(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* get_vdp_regs(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_set_vdp_reg : public BaseClass {
+  class WithRawCallbackMethod_set_vdp_reg : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_set_vdp_reg() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(5,
+    WithRawCallbackMethod_set_vdp_reg() {
+      ::grpc::Service::MarkMethodRawCallback(5,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->set_vdp_reg(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->set_vdp_reg(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_set_vdp_reg() override {
+    ~WithRawCallbackMethod_set_vdp_reg() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -3291,37 +2577,21 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* set_vdp_reg(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* set_vdp_reg(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_get_dma_info : public BaseClass {
+  class WithRawCallbackMethod_get_dma_info : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_get_dma_info() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(6,
+    WithRawCallbackMethod_get_dma_info() {
+      ::grpc::Service::MarkMethodRawCallback(6,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->get_dma_info(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->get_dma_info(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_get_dma_info() override {
+    ~WithRawCallbackMethod_get_dma_info() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -3329,37 +2599,21 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* get_dma_info(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* get_dma_info(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_read_memory : public BaseClass {
+  class WithRawCallbackMethod_read_memory : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_read_memory() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(7,
+    WithRawCallbackMethod_read_memory() {
+      ::grpc::Service::MarkMethodRawCallback(7,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->read_memory(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->read_memory(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_read_memory() override {
+    ~WithRawCallbackMethod_read_memory() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -3367,37 +2621,21 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* read_memory(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* read_memory(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_write_memory : public BaseClass {
+  class WithRawCallbackMethod_write_memory : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_write_memory() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(8,
+    WithRawCallbackMethod_write_memory() {
+      ::grpc::Service::MarkMethodRawCallback(8,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->write_memory(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->write_memory(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_write_memory() override {
+    ~WithRawCallbackMethod_write_memory() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -3405,37 +2643,21 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* write_memory(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* write_memory(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_get_breakpoints : public BaseClass {
+  class WithRawCallbackMethod_get_breakpoints : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_get_breakpoints() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(9,
+    WithRawCallbackMethod_get_breakpoints() {
+      ::grpc::Service::MarkMethodRawCallback(9,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->get_breakpoints(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->get_breakpoints(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_get_breakpoints() override {
+    ~WithRawCallbackMethod_get_breakpoints() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -3443,37 +2665,21 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* get_breakpoints(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* get_breakpoints(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_add_breakpoint : public BaseClass {
+  class WithRawCallbackMethod_add_breakpoint : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_add_breakpoint() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(10,
+    WithRawCallbackMethod_add_breakpoint() {
+      ::grpc::Service::MarkMethodRawCallback(10,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->add_breakpoint(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->add_breakpoint(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_add_breakpoint() override {
+    ~WithRawCallbackMethod_add_breakpoint() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -3481,37 +2687,21 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* add_breakpoint(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* add_breakpoint(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_toggle_breakpoint : public BaseClass {
+  class WithRawCallbackMethod_toggle_breakpoint : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_toggle_breakpoint() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(11,
+    WithRawCallbackMethod_toggle_breakpoint() {
+      ::grpc::Service::MarkMethodRawCallback(11,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->toggle_breakpoint(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->toggle_breakpoint(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_toggle_breakpoint() override {
+    ~WithRawCallbackMethod_toggle_breakpoint() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -3519,37 +2709,21 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* toggle_breakpoint(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* toggle_breakpoint(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_update_breakpoint : public BaseClass {
+  class WithRawCallbackMethod_update_breakpoint : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_update_breakpoint() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(12,
+    WithRawCallbackMethod_update_breakpoint() {
+      ::grpc::Service::MarkMethodRawCallback(12,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->update_breakpoint(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->update_breakpoint(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_update_breakpoint() override {
+    ~WithRawCallbackMethod_update_breakpoint() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -3557,37 +2731,21 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* update_breakpoint(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* update_breakpoint(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_del_breakpoint : public BaseClass {
+  class WithRawCallbackMethod_del_breakpoint : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_del_breakpoint() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(13,
+    WithRawCallbackMethod_del_breakpoint() {
+      ::grpc::Service::MarkMethodRawCallback(13,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->del_breakpoint(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->del_breakpoint(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_del_breakpoint() override {
+    ~WithRawCallbackMethod_del_breakpoint() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -3595,37 +2753,21 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* del_breakpoint(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* del_breakpoint(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_clear_breakpoints : public BaseClass {
+  class WithRawCallbackMethod_clear_breakpoints : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_clear_breakpoints() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(14,
+    WithRawCallbackMethod_clear_breakpoints() {
+      ::grpc::Service::MarkMethodRawCallback(14,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->clear_breakpoints(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->clear_breakpoints(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_clear_breakpoints() override {
+    ~WithRawCallbackMethod_clear_breakpoints() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -3633,37 +2775,21 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* clear_breakpoints(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* clear_breakpoints(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_pause : public BaseClass {
+  class WithRawCallbackMethod_pause : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_pause() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(15,
+    WithRawCallbackMethod_pause() {
+      ::grpc::Service::MarkMethodRawCallback(15,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->pause(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->pause(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_pause() override {
+    ~WithRawCallbackMethod_pause() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -3671,37 +2797,21 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* pause(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* pause(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_resume : public BaseClass {
+  class WithRawCallbackMethod_resume : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_resume() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(16,
+    WithRawCallbackMethod_resume() {
+      ::grpc::Service::MarkMethodRawCallback(16,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->resume(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->resume(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_resume() override {
+    ~WithRawCallbackMethod_resume() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -3709,37 +2819,21 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* resume(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* resume(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_start_emulation : public BaseClass {
+  class WithRawCallbackMethod_start_emulation : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_start_emulation() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(17,
+    WithRawCallbackMethod_start_emulation() {
+      ::grpc::Service::MarkMethodRawCallback(17,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->start_emulation(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->start_emulation(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_start_emulation() override {
+    ~WithRawCallbackMethod_start_emulation() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -3747,37 +2841,21 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* start_emulation(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* start_emulation(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_exit_emulation : public BaseClass {
+  class WithRawCallbackMethod_exit_emulation : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_exit_emulation() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(18,
+    WithRawCallbackMethod_exit_emulation() {
+      ::grpc::Service::MarkMethodRawCallback(18,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->exit_emulation(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->exit_emulation(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_exit_emulation() override {
+    ~WithRawCallbackMethod_exit_emulation() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -3785,37 +2863,21 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* exit_emulation(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* exit_emulation(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_step_into : public BaseClass {
+  class WithRawCallbackMethod_step_into : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_step_into() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(19,
+    WithRawCallbackMethod_step_into() {
+      ::grpc::Service::MarkMethodRawCallback(19,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->step_into(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->step_into(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_step_into() override {
+    ~WithRawCallbackMethod_step_into() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -3823,37 +2885,21 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* step_into(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* step_into(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_step_over : public BaseClass {
+  class WithRawCallbackMethod_step_over : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_step_over() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(20,
+    WithRawCallbackMethod_step_over() {
+      ::grpc::Service::MarkMethodRawCallback(20,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->step_over(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->step_over(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_step_over() override {
+    ~WithRawCallbackMethod_step_over() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -3861,37 +2907,21 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* step_over(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* step_over(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_get_callstack : public BaseClass {
+  class WithRawCallbackMethod_get_callstack : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_get_callstack() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(21,
+    WithRawCallbackMethod_get_callstack() {
+      ::grpc::Service::MarkMethodRawCallback(21,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->get_callstack(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->get_callstack(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_get_callstack() override {
+    ~WithRawCallbackMethod_get_callstack() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -3899,14 +2929,8 @@ class DbgServer final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* get_callstack(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* get_callstack(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
   class WithStreamedUnaryMethod_get_gp_reg : public BaseClass {
@@ -4536,36 +3560,20 @@ class DbgClient final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::google::protobuf::Empty>> PrepareAsyncstop_event(::grpc::ClientContext* context, const ::idadebug::Changed& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::google::protobuf::Empty>>(PrepareAsyncstop_eventRaw(context, request, cq));
     }
-    class experimental_async_interface {
+    class async_interface {
      public:
-      virtual ~experimental_async_interface() {}
+      virtual ~async_interface() {}
       virtual void start_event(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void start_event(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void start_event(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       virtual void pause_event(::grpc::ClientContext* context, const ::idadebug::PauseChanged* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void pause_event(::grpc::ClientContext* context, const ::idadebug::PauseChanged* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void pause_event(::grpc::ClientContext* context, const ::idadebug::PauseChanged* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       virtual void stop_event(::grpc::ClientContext* context, const ::idadebug::Changed* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void stop_event(::grpc::ClientContext* context, const ::idadebug::Changed* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void stop_event(::grpc::ClientContext* context, const ::idadebug::Changed* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
     };
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-    typedef class experimental_async_interface async_interface;
-    #endif
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-    async_interface* async() { return experimental_async(); }
-    #endif
-    virtual class experimental_async_interface* experimental_async() { return nullptr; }
-  private:
+    typedef class async_interface experimental_async_interface;
+    virtual class async_interface* async() { return nullptr; }
+    class async_interface* experimental_async() { return async(); }
+   private:
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::google::protobuf::Empty>* Asyncstart_eventRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::google::protobuf::Empty>* PrepareAsyncstart_eventRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::google::protobuf::Empty>* Asyncpause_eventRaw(::grpc::ClientContext* context, const ::idadebug::PauseChanged& request, ::grpc::CompletionQueue* cq) = 0;
@@ -4575,7 +3583,7 @@ class DbgClient final {
   };
   class Stub final : public StubInterface {
    public:
-    Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel);
+    Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
     ::grpc::Status start_event(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::google::protobuf::Empty* response) override;
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::google::protobuf::Empty>> Asyncstart_event(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::google::protobuf::Empty>>(Asyncstart_eventRaw(context, request, cq));
@@ -4597,38 +3605,26 @@ class DbgClient final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::google::protobuf::Empty>> PrepareAsyncstop_event(::grpc::ClientContext* context, const ::idadebug::Changed& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::google::protobuf::Empty>>(PrepareAsyncstop_eventRaw(context, request, cq));
     }
-    class experimental_async final :
-      public StubInterface::experimental_async_interface {
+    class async final :
+      public StubInterface::async_interface {
      public:
       void start_event(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void start_event(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void start_event(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void pause_event(::grpc::ClientContext* context, const ::idadebug::PauseChanged* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void pause_event(::grpc::ClientContext* context, const ::idadebug::PauseChanged* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void pause_event(::grpc::ClientContext* context, const ::idadebug::PauseChanged* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void stop_event(::grpc::ClientContext* context, const ::idadebug::Changed* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void stop_event(::grpc::ClientContext* context, const ::idadebug::Changed* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void stop_event(::grpc::ClientContext* context, const ::idadebug::Changed* request, ::google::protobuf::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
      private:
       friend class Stub;
-      explicit experimental_async(Stub* stub): stub_(stub) { }
+      explicit async(Stub* stub): stub_(stub) { }
       Stub* stub() { return stub_; }
       Stub* stub_;
     };
-    class experimental_async_interface* experimental_async() override { return &async_stub_; }
+    class async* async() override { return &async_stub_; }
 
    private:
     std::shared_ptr< ::grpc::ChannelInterface> channel_;
-    class experimental_async async_stub_{this};
+    class async async_stub_{this};
     ::grpc::ClientAsyncResponseReader< ::google::protobuf::Empty>* Asyncstart_eventRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::google::protobuf::Empty>* PrepareAsyncstart_eventRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::google::protobuf::Empty>* Asyncpause_eventRaw(::grpc::ClientContext* context, const ::idadebug::PauseChanged& request, ::grpc::CompletionQueue* cq) override;
@@ -4711,36 +3707,22 @@ class DbgClient final {
   };
   typedef WithAsyncMethod_start_event<WithAsyncMethod_pause_event<WithAsyncMethod_stop_event<Service > > > AsyncService;
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_start_event : public BaseClass {
+  class WithCallbackMethod_start_event : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_start_event() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(0,
+    WithCallbackMethod_start_event() {
+      ::grpc::Service::MarkMethodCallback(0,
           new ::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::google::protobuf::Empty>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response) { return this->start_event(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response) { return this->start_event(context, request, response); }));}
     void SetMessageAllocatorFor_start_event(
-        ::grpc::experimental::MessageAllocator< ::google::protobuf::Empty, ::google::protobuf::Empty>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::google::protobuf::Empty, ::google::protobuf::Empty>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(0);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(0);
-    #endif
       static_cast<::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::google::protobuf::Empty>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_start_event() override {
+    ~WithCallbackMethod_start_event() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -4748,46 +3730,26 @@ class DbgClient final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* start_event(
-      ::grpc::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::google::protobuf::Empty* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* start_event(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::google::protobuf::Empty* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::google::protobuf::Empty* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_pause_event : public BaseClass {
+  class WithCallbackMethod_pause_event : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_pause_event() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(1,
+    WithCallbackMethod_pause_event() {
+      ::grpc::Service::MarkMethodCallback(1,
           new ::grpc::internal::CallbackUnaryHandler< ::idadebug::PauseChanged, ::google::protobuf::Empty>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::idadebug::PauseChanged* request, ::google::protobuf::Empty* response) { return this->pause_event(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::idadebug::PauseChanged* request, ::google::protobuf::Empty* response) { return this->pause_event(context, request, response); }));}
     void SetMessageAllocatorFor_pause_event(
-        ::grpc::experimental::MessageAllocator< ::idadebug::PauseChanged, ::google::protobuf::Empty>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::idadebug::PauseChanged, ::google::protobuf::Empty>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(1);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(1);
-    #endif
       static_cast<::grpc::internal::CallbackUnaryHandler< ::idadebug::PauseChanged, ::google::protobuf::Empty>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_pause_event() override {
+    ~WithCallbackMethod_pause_event() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -4795,46 +3757,26 @@ class DbgClient final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* pause_event(
-      ::grpc::CallbackServerContext* /*context*/, const ::idadebug::PauseChanged* /*request*/, ::google::protobuf::Empty* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* pause_event(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::idadebug::PauseChanged* /*request*/, ::google::protobuf::Empty* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::idadebug::PauseChanged* /*request*/, ::google::protobuf::Empty* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_stop_event : public BaseClass {
+  class WithCallbackMethod_stop_event : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_stop_event() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(2,
+    WithCallbackMethod_stop_event() {
+      ::grpc::Service::MarkMethodCallback(2,
           new ::grpc::internal::CallbackUnaryHandler< ::idadebug::Changed, ::google::protobuf::Empty>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::idadebug::Changed* request, ::google::protobuf::Empty* response) { return this->stop_event(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::idadebug::Changed* request, ::google::protobuf::Empty* response) { return this->stop_event(context, request, response); }));}
     void SetMessageAllocatorFor_stop_event(
-        ::grpc::experimental::MessageAllocator< ::idadebug::Changed, ::google::protobuf::Empty>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::idadebug::Changed, ::google::protobuf::Empty>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(2);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(2);
-    #endif
       static_cast<::grpc::internal::CallbackUnaryHandler< ::idadebug::Changed, ::google::protobuf::Empty>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_stop_event() override {
+    ~WithCallbackMethod_stop_event() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -4842,20 +3784,11 @@ class DbgClient final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* stop_event(
-      ::grpc::CallbackServerContext* /*context*/, const ::idadebug::Changed* /*request*/, ::google::protobuf::Empty* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* stop_event(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::idadebug::Changed* /*request*/, ::google::protobuf::Empty* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::idadebug::Changed* /*request*/, ::google::protobuf::Empty* /*response*/)  { return nullptr; }
   };
-  #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-  typedef ExperimentalWithCallbackMethod_start_event<ExperimentalWithCallbackMethod_pause_event<ExperimentalWithCallbackMethod_stop_event<Service > > > CallbackService;
-  #endif
-
-  typedef ExperimentalWithCallbackMethod_start_event<ExperimentalWithCallbackMethod_pause_event<ExperimentalWithCallbackMethod_stop_event<Service > > > ExperimentalCallbackService;
+  typedef WithCallbackMethod_start_event<WithCallbackMethod_pause_event<WithCallbackMethod_stop_event<Service > > > CallbackService;
+  typedef CallbackService ExperimentalCallbackService;
   template <class BaseClass>
   class WithGenericMethod_start_event : public BaseClass {
    private:
@@ -4968,27 +3901,17 @@ class DbgClient final {
     }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_start_event : public BaseClass {
+  class WithRawCallbackMethod_start_event : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_start_event() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(0,
+    WithRawCallbackMethod_start_event() {
+      ::grpc::Service::MarkMethodRawCallback(0,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->start_event(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->start_event(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_start_event() override {
+    ~WithRawCallbackMethod_start_event() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -4996,37 +3919,21 @@ class DbgClient final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* start_event(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* start_event(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_pause_event : public BaseClass {
+  class WithRawCallbackMethod_pause_event : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_pause_event() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(1,
+    WithRawCallbackMethod_pause_event() {
+      ::grpc::Service::MarkMethodRawCallback(1,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->pause_event(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->pause_event(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_pause_event() override {
+    ~WithRawCallbackMethod_pause_event() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -5034,37 +3941,21 @@ class DbgClient final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* pause_event(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* pause_event(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_stop_event : public BaseClass {
+  class WithRawCallbackMethod_stop_event : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_stop_event() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(2,
+    WithRawCallbackMethod_stop_event() {
+      ::grpc::Service::MarkMethodRawCallback(2,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->stop_event(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->stop_event(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_stop_event() override {
+    ~WithRawCallbackMethod_stop_event() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -5072,14 +3963,8 @@ class DbgClient final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* stop_event(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* stop_event(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
   class WithStreamedUnaryMethod_start_event : public BaseClass {

@@ -1,53 +1,28 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug7|x64'">
-    <LocalDebuggerCommand>c:\Program Files\IDA Pro 7.6\ida.exe</LocalDebuggerCommand>
-    <LocalDebuggerWorkingDirectory>c:\Program Files\IDA Pro 7.6\</LocalDebuggerWorkingDirectory>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug8_68k|x64'">
+    <LocalDebuggerCommand>c:\Program Files\IDA Pro 8.0\ida.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerWorkingDirectory>c:\Program Files\IDA Pro 8.0\</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release7|x64'">
-    <LocalDebuggerCommand>$(IDA_DIR68)\idaq.exe</LocalDebuggerCommand>
-    <LocalDebuggerWorkingDirectory>$(OutDir)</LocalDebuggerWorkingDirectory>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug8_z80|x64'">
+    <LocalDebuggerCommand>c:\Program Files\IDA Pro 8.0\ida.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerWorkingDirectory>c:\Program Files\IDA Pro 8.0\</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug7_68k|x64'">
-    <LocalDebuggerCommand>c:\Program Files\IDA Pro 7.6\ida.exe</LocalDebuggerCommand>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release8_68k|x64'">
+    <LocalDebuggerCommand>c:\Program Files\IDA Pro 8.0\ida.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerWorkingDirectory>c:\Program Files\IDA Pro 7.6\</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerWorkingDirectory>c:\Program Files\IDA Pro 8.0\</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug75_68k|x64'">
-    <LocalDebuggerCommand>c:\Program Files\IDA Pro 7.6\ida.exe</LocalDebuggerCommand>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release8_z80|x64'">
+    <LocalDebuggerCommand>c:\Program Files\IDA Pro 8.0\ida.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerWorkingDirectory>c:\Program Files\IDA Pro 7.6\</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerWorkingDirectory>c:\Program Files\IDA Pro 8.0\</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug7_z80|x64'">
-    <LocalDebuggerCommand>c:\Program Files\IDA Pro 7.6\ida.exe</LocalDebuggerCommand>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug80_68k|x64'">
+    <LocalDebuggerCommand>c:\Program Files\IDA Pro 8.0\ida.exe</LocalDebuggerCommand>
+    <LocalDebuggerWorkingDirectory>c:\Program Files\IDA Pro 8.0\</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerWorkingDirectory>c:\Program Files\IDA Pro 7.6\</LocalDebuggerWorkingDirectory>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug75_z80|x64'">
-    <LocalDebuggerCommand>c:\Program Files\IDA Pro 7.6\ida.exe</LocalDebuggerCommand>
-    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerWorkingDirectory>c:\Program Files\IDA Pro 7.6\</LocalDebuggerWorkingDirectory>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release7_68k|x64'">
-    <LocalDebuggerCommand>c:\Program Files\IDA Pro 7.6\ida.exe</LocalDebuggerCommand>
-    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerWorkingDirectory>c:\Program Files\IDA Pro 7.6\</LocalDebuggerWorkingDirectory>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release75_68k|x64'">
-    <LocalDebuggerCommand>c:\Program Files\IDA Pro 7.6\ida.exe</LocalDebuggerCommand>
-    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerWorkingDirectory>c:\Program Files\IDA Pro 7.6\</LocalDebuggerWorkingDirectory>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release7_z80|x64'">
-    <LocalDebuggerCommand>c:\Program Files\IDA Pro 7.6\ida.exe</LocalDebuggerCommand>
-    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerWorkingDirectory>c:\Program Files\IDA Pro 7.6\</LocalDebuggerWorkingDirectory>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release75_z80|x64'">
-    <LocalDebuggerCommand>c:\Program Files\IDA Pro 7.6\ida.exe</LocalDebuggerCommand>
-    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerWorkingDirectory>c:\Program Files\IDA Pro 7.6\</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
 </Project>
