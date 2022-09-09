@@ -1116,6 +1116,10 @@ struct smd_constant_action_t : public action_handler_t
       {
         do_cmt_z80_bus_command(ea, out.Op2.addr, value);
       }
+      else if (is_call16_const_cmd(value))
+      {
+        do_call16_const(ea, value & 0xFFFF);
+      }
       else if (is_vdp_rw_cmd(value))
       {
         do_cmt_vdp_rw_command(ea, value);
@@ -1124,10 +1128,6 @@ struct smd_constant_action_t : public action_handler_t
       {
         do_cmt_vdp_reg_const(ea, value);
         do_cmt_vdp_reg_const(ea, value >> 16);
-      }
-      else if (is_call16_const_cmd(value))
-      {
-        do_call16_const(ea, value & 0xFFFF);
       }
     }
     return 1;
