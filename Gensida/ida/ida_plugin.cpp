@@ -12,8 +12,6 @@
 // A copy of the GPL 2.0 should have been included with the program.
 // If not, see http ://www.gnu.org/licenses/
 
-//#include <Windows.h>
-
 #include <Windows.h>
 #include <Psapi.h>
 #include <ida.hpp>
@@ -39,42 +37,42 @@ static bool dbg_started;
 static bool my_dbg;
 
 #ifdef DEBUG_68K
-static ssize_t idaapi hook_dbg(void *user_data, int notification_code, va_list va)
+static ssize_t idaapi hook_dbg(void* user_data, int notification_code, va_list va)
 {
-    switch (notification_code)
-    {
-    case dbg_notification_t::dbg_process_start:
-        dbg_started = true;
-        break;
+  switch (notification_code)
+  {
+  case dbg_notification_t::dbg_process_start:
+    dbg_started = true;
+    break;
 
-    case dbg_notification_t::dbg_process_exit:
-        dbg_started = false;
-        break;
-    }
-    return 0;
+  case dbg_notification_t::dbg_process_exit:
+    dbg_started = false;
+    break;
+  }
+  return 0;
 }
 
 static int idaapi idp_to_dbg_reg(int idp_reg)
 {
-    int reg_idx = idp_reg;
-    if (idp_reg >= 0 && idp_reg <= 7)
-        reg_idx = R_D0 + idp_reg;
-    else if (idp_reg >= 8 && idp_reg <= 39)
-        reg_idx = R_A0 + (idp_reg % 8);
-    else if (idp_reg == 91)
-        reg_idx = R_PC;
-    else if (idp_reg == 92 || idp_reg == 93)
-        reg_idx = R_SR;
-    else if (idp_reg == 94)
-        reg_idx = R_A7;
-    else
-    {
-        char buf[MAXSTR];
-        ::qsnprintf(buf, MAXSTR, "reg: %d\n", idp_reg);
-        warning("SEND THIS MESSAGE TO newinferno@gmail.com:\n%s\n", buf);
-        return 0;
-    }
-    return reg_idx;
+  int reg_idx = idp_reg;
+  if (idp_reg >= 0 && idp_reg <= 7)
+    reg_idx = R_D0 + idp_reg;
+  else if (idp_reg >= 8 && idp_reg <= 39)
+    reg_idx = R_A0 + (idp_reg % 8);
+  else if (idp_reg == 91)
+    reg_idx = R_PC;
+  else if (idp_reg == 92 || idp_reg == 93)
+    reg_idx = R_SR;
+  else if (idp_reg == 94)
+    reg_idx = R_A7;
+  else
+  {
+    char buf[MAXSTR];
+    ::qsnprintf(buf, MAXSTR, "reg: %d\n", idp_reg);
+    warning("SEND THIS MESSAGE TO newinferno@gmail.com:\n%s\n", buf);
+    return 0;
+  }
+  return reg_idx;
 }
 #endif
 
@@ -220,357 +218,552 @@ static void print_op(ea_t ea, op_t* op)
 /// this thing patches IDA to output structures in a full form, not like s1 <0>, but s1 <0, 0, 0>
 /// </summary>
 static uint8_t* dirty_win_hack() {
-    // if not found, look for seq "01 1F 30 02 1F 00 00 00" in ida.dll
-    static const uint8_t find_pat[] = { 0x48, 0x89, 0x5C, 0x24, 0x08, 0x48, 0x89, 0x74, 0x24, 0x10, 0x57, 0x48, 0x83, 0xEC, 0x20, 0x8B, 0xFA, 0x8B, 0xD9, 0x8B, 0xF1 };
+  // if not found, look for seq "01 1F 30 02 1F 00 00 00" in ida.dll
+  static const uint8_t find_pat[] = { 0x48, 0x89, 0x5C, 0x24, 0x08, 0x48, 0x89, 0x74, 0x24, 0x10, 0x57, 0x48, 0x83, 0xEC, 0x20, 0x8B, 0xFA, 0x8B, 0xD9, 0x8B, 0xF1 };
 
-    MODULEINFO modinfo = { 0 };
-    HMODULE hModule = GetModuleHandle(TEXT("ida.dll"));
+  MODULEINFO modinfo = { 0 };
+  HMODULE hModule = GetModuleHandle(TEXT("ida.dll"));
 
-    if (hModule == 0) {
-        return NULL;
+  if (hModule == 0) {
+    return NULL;
+  }
+
+  GetModuleInformation(GetCurrentProcess(), hModule, &modinfo, sizeof(MODULEINFO));
+
+  uint8_t* p = (uint8_t*)modinfo.lpBaseOfDll;
+  auto base = 0;
+
+  for (; base < modinfo.SizeOfImage; ++base) {
+    if (!memcmp(&p[base], find_pat, sizeof(find_pat))) {
+      break;
     }
+  }
 
-    GetModuleInformation(GetCurrentProcess(), hModule, &modinfo, sizeof(MODULEINFO));
+  if (base == modinfo.SizeOfImage) {
+    return NULL;
+  }
 
-    uint8_t* p = (uint8_t*)modinfo.lpBaseOfDll;
-    auto base = 0;
+  p = &p[base + 0x3E]; // lea rax, empty_struc
 
-    for (; base < modinfo.SizeOfImage; ++base) {
-        if (!memcmp(&p[base], find_pat, sizeof(find_pat))) {
-            break;
-        }
-    }
+  DWORD oldProtection;
+  VirtualProtect(p, 7, PAGE_EXECUTE_READWRITE, &oldProtection);
+  p[0] = 0x33; // xor eax, eax
+  p[1] = 0xC0;
+  p[2] = 0x90; // nop
+  p[3] = 0x90;
+  p[4] = 0x90;
+  p[5] = 0x90;
+  p[6] = 0x90;
 
-    if (base == modinfo.SizeOfImage) {
-        return NULL;
-    }
+  VirtualProtect(p, 7, oldProtection, NULL);
 
-    p = &p[base + 0x3E]; // lea rax, empty_struc
-
-    DWORD oldProtection;
-    VirtualProtect(p, 7, PAGE_EXECUTE_READWRITE, &oldProtection);
-    p[0] = 0x33; // xor eax, eax
-    p[1] = 0xC0;
-    p[2] = 0x90; // nop
-    p[3] = 0x90;
-    p[4] = 0x90;
-    p[5] = 0x90;
-    p[6] = 0x90;
-
-    VirtualProtect(p, 7, oldProtection, NULL);
-
-    return p;
+  return p;
 }
 
 static void undo_dirty_win_hack(uint8_t* p) {
-    if (p == NULL) {
-        return;
-    }
+  if (p == NULL) {
+    return;
+  }
 
-    DWORD oldProtection;
-    VirtualProtect(p, 7, PAGE_EXECUTE_READWRITE, &oldProtection);
-    p[0] = 0x48;
-    p[1] = 0x8D;
-    p[2] = 0x05;
-    p[3] = 0x17;
-    p[4] = 0xD4;
-    p[5] = 0x2E;
-    p[6] = 0x00;
+  DWORD oldProtection;
+  VirtualProtect(p, 7, PAGE_EXECUTE_READWRITE, &oldProtection);
+  p[0] = 0x48;
+  p[1] = 0x8D;
+  p[2] = 0x05;
+  p[3] = 0x17;
+  p[4] = 0xD4;
+  p[5] = 0x2E;
+  p[6] = 0x00;
 
-    VirtualProtect(p, 7, oldProtection, NULL);
+  VirtualProtect(p, 7, oldProtection, NULL);
 }
 
 static enum asm_out_state {
-    asm_out_none,
-    asm_out_del_start,
-    asm_out_del_end,
-    asm_out_bin_start,
-    asm_out_bin_end,
-    asm_out_inc_start,
-    asm_out_inc_end,
-};
+  asm_out_none,
+  asm_out_del_start,
+  asm_out_del_end,
+  asm_out_bin_start,
+  asm_out_bin_end,
+  asm_out_inc_start,
+  asm_out_inc_end,
+  asm_out_struct_start,
+  asm_out_rom_end,
+} asm_o_state;
 
 static uint8_t* patch_offset = NULL;
-
-static asm_out_state asm_o_state = asm_out_none;
 static ea_t bin_inc_start = BADADDR;
 static qstring bin_inc_path;
 static qstrvec_t inc_listing;
 
-static void fix_arrows(qstring &line) {
-    line.replace("\xe2\x86\x93", "   "); // arrow down
-    line.replace("\xe2\x86\x91", "   "); // arrow up
+static void fix_arrows(qstring& line) {
+  line.replace("\xe2\x86\x93", "   "); // arrow down
+  line.replace("\xe2\x86\x91", "   "); // arrow up
 }
 
-static ea_t remove_offset(qstring &line) {
-    ea_t addr = BADADDR;
+static ea_t remove_offset(qstring& line) {
+  ea_t addr = BADADDR;
 
-    size_t p1 = line.find(':');
-    size_t p2 = line.find(' ', p1+1);
+  size_t p1 = line.find(':');
+  size_t p2 = line.find(' ', p1 + 1);
 
-    if (p2 == qstring::npos) {
-        line.clear();
-        return addr;
-    }
-
-    qstring addr_str = line.substr(p1 + 1, p2);
-
-    addr = strtoul(addr_str.c_str(), nullptr, 16);
-
-    line = line.substr(p2 + 1);
-
+  if (p2 == qstring::npos) {
+    line.clear();
     return addr;
+  }
+
+  qstring addr_str = line.substr(p1 + 1, p2);
+
+  addr = strtoul(addr_str.c_str(), nullptr, 16);
+
+  line = line.substr(p2 + 1);
+
+  return addr;
 }
 
 static asm_out_state check_delete(qstring& line) {
-    if (line.find("DEL_START") != qstring::npos) {
-        return asm_out_del_start;
-    }
-    else if ((line.find("DEL_END") != qstring::npos) && (asm_o_state == asm_out_del_start)) {
-        line.clear();
-        return asm_out_del_end;
+  if (line.find("DEL_START") != qstring::npos) {
+    return asm_out_del_start;
+  }
+  else if ((line.find("DEL_END") != qstring::npos) && (asm_o_state == asm_out_del_start)) {
+    line.clear();
+    return asm_out_del_end;
+  }
+
+  return asm_o_state;
+}
+
+static const std::regex re_check_ats("^((?:\\w*@+\\w*)+):");
+static const std::regex re_check_binclude("^BIN_START \"(.+)\"");
+static const std::regex re_check_include("^INC_START \"(.+)\"");
+static const std::regex re_check_subroutine("^; =+ S U B R O U T I N E =+$");
+static const std::regex re_check_licensed_to("^; \\|[ \\t]+Licensed to:.+$");
+static const std::regex re_check_org("^ORG[ \\t]+(\\$[0-9a-fA-F]+)$");
+static const std::regex re_check_align("^[ \\t]+align[ \\t]+(\\d+)");
+static const std::regex re_check_quotates("([^#'])'(.+?)'");
+static const std::regex re_s_parse_name("^(\\w+)[ \\t]+struc .+$");
+static const std::regex re_s_parse_field("^(\\w+):[ \\t]+(.+)$");
+static const std::regex re_s_parse_end("^\\w+[ \\t]+ends(?:.+)?$");
+static const std::regex re_equ_parse("^(\\w+):[ \\t]+equ (.+)$");
+
+static int path_create_dir(const qstring& path) {
+  size_t start = 0;
+
+  while (1) {
+    size_t p = path.find('/', start);
+
+    if (p == qstring::npos) {
+      break;
     }
 
-    return asm_o_state;
+    qstring sub = path.substr(0, p);
+    qmkdir(sub.c_str(), 0777);
+
+    start = p + 1;
+  }
+
+  return 1;
 }
 
 static asm_out_state check_binclude(qstring& line, ea_t addr) {
-    std::regex re("BIN_START \"(.+)\"");
-    std::cmatch match;
+  std::cmatch match;
 
-    if (std::regex_match(line.c_str(), match, re) == true) {
-        bin_inc_start = addr;
+  if (std::regex_match(line.c_str(), match, re_check_binclude) == true) {
+    bin_inc_start = addr;
 
-        bin_inc_path.clear();
-        bin_inc_path.append(match.str(1).c_str());
+    bin_inc_path.clear();
+    bin_inc_path.append(match.str(1).c_str());
 
-        return asm_out_bin_start;
+    return asm_out_bin_start;
+  }
+  else if ((line.find("BIN_END") != qstring::npos) && (asm_o_state == asm_out_bin_start)) {
+    addr = next_head(addr, BADADDR);
+    size_t size = addr - bin_inc_start;
+    uint8_t* tmp = (uint8_t*)malloc(size);
+    get_bytes(tmp, size, bin_inc_start, 0);
+
+    if (!path_create_dir(bin_inc_path)) {
+      free(tmp);
+      return asm_o_state;
     }
-    else if ((line.find("BIN_END") != qstring::npos) && (asm_o_state == asm_out_bin_start)) {
-        addr = next_head(addr, BADADDR);
-        size_t size = addr - bin_inc_start;
-        uint8_t* tmp = (uint8_t*)malloc(size);
-        get_bytes(tmp, size, bin_inc_start, 0);
 
-        FILE* f = qfopen(bin_inc_path.c_str(), "wb");
+    FILE* f = qfopen(bin_inc_path.c_str(), "wb");
 
-        if (f == nullptr) {
-            free(tmp);
-            return asm_o_state;
-        }
-
-        qfwrite(f, tmp, size);
-        qfclose(f);
-
-        free(tmp);
-
-        qstring name = get_name(bin_inc_start);
-        line.clear();
-
-        if (!name.empty()) {
-            line.append(name);
-            line.append(":\n");
-        }
-
-        line.cat_sprnt("    binclude \"%s\"\n    align 2, 0", bin_inc_path.c_str());
-
-        return asm_out_bin_end;
+    if (f == nullptr) {
+      free(tmp);
+      return asm_o_state;
     }
-    
-    return asm_o_state;
+
+    qfwrite(f, tmp, size);
+    qfclose(f);
+
+    free(tmp);
+
+    qstring name = get_name(bin_inc_start);
+    line.clear();
+
+    if (!name.empty()) {
+      line.append(name);
+      line.append(":\n");
+    }
+
+    line.cat_sprnt("    binclude \"%s\"\n    align 2, 0", bin_inc_path.c_str());
+
+    return asm_out_bin_end;
+  }
+
+  return asm_o_state;
 }
 
 static asm_out_state check_include(qstring& line, ea_t addr) {
-    std::regex re("INC_START \"(.+)\"");
-    std::cmatch match;
+  std::cmatch match;
 
-    if (std::regex_match(line.c_str(), match, re) == true) {
-        bin_inc_start = addr;
+  if (std::regex_match(line.c_str(), match, re_check_include) == true) {
+    bin_inc_start = addr;
 
-        bin_inc_path.clear();
-        bin_inc_path.append(match.str(1).c_str());
+    bin_inc_path.clear();
+    bin_inc_path.append(match.str(1).c_str());
 
-        inc_listing.clear();
+    inc_listing.clear();
 
-        return asm_out_inc_start;
-    } else if ((line.find("INC_END") != qstring::npos) && (asm_o_state == asm_out_inc_start)) {
-        FILE* f = qfopen(bin_inc_path.c_str(), "wb");
-
-        if (f == nullptr) {
-            return asm_o_state;
-        }
-
-        for each (const auto var in inc_listing) {
-            qfwrite(f, var.c_str(), var.length());
-            qfwrite(f, "\n", 1);
-        }
-
-        qfclose(f);
-
-        qstring name = get_name(bin_inc_start);
-        line.clear();
-
-        if (!name.empty()) {
-            line.append(name);
-            line.append(":\n");
-        }
-
-        line.cat_sprnt("    include \"%s\"\n    align 2, 0", bin_inc_path.c_str());
-
-        return asm_out_inc_end;
+    return asm_out_inc_start;
+  }
+  else if ((line.find("INC_END") != qstring::npos) && (asm_o_state == asm_out_inc_start)) {
+    if (!path_create_dir(bin_inc_path)) {
+      return asm_o_state;
     }
-    else if (asm_o_state == asm_out_inc_start) {
-        inc_listing.add(line);
+
+    FILE* f = qfopen(bin_inc_path.c_str(), "wb");
+
+    if (f == nullptr) {
+      return asm_o_state;
     }
-    
-    return asm_o_state;
+
+    for each (const auto var in inc_listing) {
+      qfwrite(f, var.c_str(), var.length());
+      qfwrite(f, "\n", 1);
+    }
+
+    qfclose(f);
+
+    qstring name = get_name(bin_inc_start);
+    line.clear();
+
+    if (!name.empty()) {
+      line.append(name);
+      line.append(":\n");
+    }
+
+    line.cat_sprnt("    include \"%s\"\n    align 2, 0", bin_inc_path.c_str());
+
+    return asm_out_inc_end;
+  }
+  else if (asm_o_state == asm_out_inc_start) {
+    inc_listing.add(line);
+  }
+
+  return asm_o_state;
+}
+
+static int check_subroutine(const qstring& line) {
+  std::cmatch match;
+
+  if (std::regex_match(line.c_str(), match, re_check_subroutine) != true) {
+    return 1;
+  }
+
+  return 0;
+}
+
+static int check_licensed_to(const qstring& line) {
+  std::cmatch match;
+
+  if (std::regex_match(line.c_str(), match, re_check_licensed_to) != true) {
+    return 1;
+  }
+
+  return 0;
 }
 
 static void check_org(qstring& line) {
-    std::regex re("^ORG[ \\t]+(\\$[0-9a-fA-F]+)$");
+  std::string rep = std::regex_replace(line.c_str(), re_check_org, "    org $1");
 
-    std::string rep = std::regex_replace(line.c_str(), re, "    org $1");
-
-    line.clear();
-    line.append(rep.c_str());
+  line.clear();
+  line.append(rep.c_str());
 }
 
 static void check_align(qstring& line) {
-    std::regex re("align[ \\t]+(\\d+)");
-    std::string rep = std::regex_replace(line.c_str(), re, "align $1, 0");
+  std::string rep = std::regex_replace(line.c_str(), re_check_align, "align $1, 0");
 
-    line.clear();
-    line.append(rep.c_str());
+  line.clear();
+  line.append(rep.c_str());
 }
 
 static void check_quotates(qstring& line) {
-    std::regex re("([^#'])'(.+?)'");
-    std::string rep = std::regex_replace(line.c_str(), re, "$1\"$2\"");
+  std::string rep = std::regex_replace(line.c_str(), re_check_quotates, "$1\"$2\"");
 
-    line.clear();
-    line.append(rep.c_str());
+  line.clear();
+  line.append(rep.c_str());
 }
 
 static void check_ats(qstring& line) {
-    std::regex re("^((?:\\w*@+\\w*)+):");
-    std::cmatch match;
+  std::cmatch match;
 
-    if (std::regex_match(line.c_str(), match, re) != true) {
-        return;
-    }
+  if (std::regex_match(line.c_str(), match, re_check_ats) != true) {
+    return;
+  }
 
-    line.replace("@", "_");
+  line.replace("@", "_");
+}
+
+static asm_out_state check_rom_end(ea_t addr) {
+  return (addr == 0xA00000) ? asm_out_rom_end : asm_o_state;
 }
 
 static void print_line(FILE* fp, const qstring& line) {
-    qfwrite(fp, line.c_str(), line.length());
-    qfwrite(fp, "\n", 1);
+  qfwrite(fp, line.c_str(), line.length());
+  qfwrite(fp, "\n", 1);
 }
 
 static int idaapi line_output(FILE* fp, const qstring& line, bgcolor_t prefix_color, bgcolor_t bg_color) {
-    qstring qbuf;
-    tag_remove(&qbuf, line);
+  qstring qbuf;
+  tag_remove(&qbuf, line);
 
-    size_t len = qbuf.length();
+  fix_arrows(qbuf);
 
-    fix_arrows(qbuf);
+  ea_t addr = remove_offset(qbuf);
 
-    ea_t addr = remove_offset(qbuf);
-
-    if (addr == BADADDR) {
-        return 1;
-    }
-
-    check_org(qbuf);
-    check_align(qbuf);
-    check_quotates(qbuf);
-    check_ats(qbuf);
-
-    asm_o_state = check_delete(qbuf);
-    asm_o_state = check_binclude(qbuf, addr);
-    asm_o_state = check_include(qbuf, addr);
-
-    switch (asm_o_state) {
-    case asm_out_inc_start: {
-        return 1;
-    } break;
-    case asm_out_del_start: {
-        return 1;
-    } break;
-    case asm_out_bin_start: {
-        return 1;
-    } break;
-    case asm_out_del_end:
-    case asm_out_bin_end:
-    case asm_out_inc_end: {
-        asm_o_state = asm_out_none;
-    } break;
-    }
-
-    print_line(fp, qbuf);
-
+  if (addr == BADADDR) {
     return 1;
+  }
+
+  if (!check_subroutine(qbuf)) {
+    print_line(fp, "\n");
+  }
+
+  if (!check_licensed_to(qbuf)) {
+    return 1;
+  }
+
+  check_org(qbuf);
+  check_align(qbuf);
+  check_quotates(qbuf);
+  check_ats(qbuf);
+
+  asm_o_state = check_delete(qbuf);
+  asm_o_state = check_binclude(qbuf, addr);
+  asm_o_state = check_include(qbuf, addr);
+  asm_o_state = check_rom_end(addr);
+
+  switch (asm_o_state) {
+  case asm_out_inc_start: {
+    return 1;
+  } break;
+  case asm_out_del_start: {
+    return 1;
+  } break;
+  case asm_out_bin_start: {
+    return 1;
+  } break;
+  case asm_out_del_end:
+  case asm_out_bin_end:
+  case asm_out_inc_end: {
+    asm_o_state = asm_out_none;
+  } break;
+  case asm_out_struct_start: {
+    gen_file(ofile_type_t::OFILE_ASM, fp, BADADDR, BADADDR, GENFLG_ASMTYPE | GENFLG_ASMINC);
+    asm_o_state = asm_out_none;
+  } break;
+  case asm_out_rom_end: {
+    return 1;
+  } break;
+  }
+
+  print_line(fp, qbuf);
+
+  return 1;
+}
+
+typedef struct {
+  qstring name;
+  qstrvec_t fields;
+  qstrvec_t types;
+} struct_prep_t;
+
+typedef struct {
+  qstring name;
+  qstring val;
+} equ_t;
+
+static struct_prep_t curr_struct;
+static qvector<struct_prep_t> structs;
+static qvector<equ_t> equs;
+
+static enum struct_parse_t {
+  struct_parse_name,
+  struct_parse_fields,
+  struct_parse_none,
+} s_parse_state;
+
+static struct_parse_t s_parse_name(const qstring& line) {
+  std::cmatch match;
+
+  if (std::regex_match(line.c_str(), match, re_s_parse_name) != true) {
+    return s_parse_state;
+  }
+
+  curr_struct.name.clear();
+  curr_struct.name.append(match.str(1).c_str());
+
+  return struct_parse_fields;
+}
+
+static struct_parse_t s_parse_end(const qstring& line) {
+  std::cmatch match;
+
+  if (std::regex_match(line.c_str(), match, re_s_parse_end) != true) {
+    return s_parse_state;
+  }
+
+  return struct_parse_none;
+}
+
+static struct_parse_t s_parse_field(const qstring& line) {
+  std::cmatch match;
+
+  if (std::regex_match(line.c_str(), match, re_s_parse_field) != true) {
+    return s_parse_end(line);
+  }
+
+  curr_struct.fields.add(match.str(1).c_str());
+  curr_struct.types.add(match.str(2).c_str());
+
+  return s_parse_state;
+}
+
+static void equ_parse(const qstring& line) {
+  std::cmatch match;
+
+  if (std::regex_match(line.c_str(), match, re_equ_parse) != true) {
+    return;
+  }
+
+  equ_t equ;
+  equ.name = match.str(1).c_str();
+  equ.val = match.str(2).c_str();
+  equs.add(equ);
+}
+
+static int idaapi struct_equ_output(FILE* fp, const qstring& line, bgcolor_t prefix_color, bgcolor_t bg_color) {
+  qstring qbuf;
+  tag_remove(&qbuf, line);
+
+  fix_arrows(qbuf);
+
+  equ_parse(qbuf);
+
+  switch (s_parse_state) {
+  case struct_parse_name: {
+    s_parse_state = s_parse_name(qbuf);
+  } break;
+  case struct_parse_fields: {
+    s_parse_state = s_parse_field(qbuf);
+  } break;
+  case struct_parse_none: {
+    structs.add(curr_struct);
+
+    curr_struct.name.clear();
+    curr_struct.fields.clear();
+    curr_struct.types.clear();
+
+    s_parse_state = struct_parse_name;
+  } break;
+  }
+
+  return 1;
 }
 
 static void asm_add_header(FILE* fp) {
-    print_line(fp, "cpu 68000");
-    print_line(fp, "supmode on");
-    print_line(fp, "padding off\n\n");
+  print_line(fp, "cpu 68000");
+  print_line(fp, "supmode on");
+  print_line(fp, "padding off\n\n");
 }
 
-static void print_struct(FILE* fp, tid_t id, uval_t index) {
-    struc_t* st = get_struc(id);
+static void dump_structures(FILE* fp) {
+  if (structs.size() > 0) {
+    print_line(fp, "------------- structures -------------");
+  }
 
-    print_line(fp, get_struc_name(id));
-    print_line(fp, " ");
-    print_line(fp, "struct\n");
-}
+  for each (const auto s in structs) {
+    qstring tmp;
+    tmp.cat_sprnt("%s struct\n", s.name.c_str());
 
-static void asm_add_structures(FILE* fp) {
-    for (auto i = get_first_struc_idx(); i != BADNODE; i = get_next_struc_idx(i)) {
-        tid_t id = get_struc_by_idx(i);
-
-        print_struct(fp, id, get_struc(id)->id);
+    for (auto i = 0; i < s.fields.size(); ++i) {
+      tmp.cat_sprnt("%s %s\n", s.fields[i].c_str(), s.types[i].c_str());
     }
+
+    tmp.cat_sprnt("%s endstruct\n", s.name.c_str());
+
+    print_line(fp, tmp);
+  }
+
+  if (structs.size() > 0) {
+    print_line(fp, "--------------------------------------\n\n\n");
+  }
+}
+
+static void dump_equals(FILE* fp) {
+  if (equs.size() > 0) {
+    print_line(fp, "------------- equals -------------");
+  }
+
+  for each (const auto e in equs) {
+    qstring tmp;
+    tmp.cat_sprnt("%s equ %s", e.name.c_str(), e.val.c_str());
+
+    print_line(fp, tmp.c_str());
+  }
+
+  if (equs.size() > 0) {
+    print_line(fp, "----------------------------------\n\n\n");
+  }
 }
 
 static ssize_t idaapi process_asm_output(void* user_data, int notification_code, va_list va) {
-    switch (notification_code) {
-    case processor_t::ev_gen_asm_or_lst: {
-        bool starting = va_arg(va, bool);
-        FILE* fp = va_arg(va, FILE*);
-        bool is_asm = va_arg(va, bool);
-        int flags = va_arg(va, int);
-        html_line_cb_t** outline = va_arg(va, html_line_cb_t**);
+  switch (notification_code) {
+  case processor_t::ev_gen_asm_or_lst: {
+    bool starting = va_arg(va, bool);
+    FILE* fp = va_arg(va, FILE*);
+    bool is_asm = va_arg(va, bool);
+    int flags = va_arg(va, int);
+    html_line_cb_t** outline = va_arg(va, html_line_cb_t**);
 
-        if (flags & GENFLG_ASMINC) {
-            break;
-        }
-
-        if (is_asm && (flags & GENFLG_ASMTYPE)) {
-            break;
-        }
-
-        if (!is_asm || flags != 0) {
-            break;
-        }
-
-        if (starting) {
-            patch_offset = dirty_win_hack();
-            *outline = line_output;
-
-            asm_add_header(fp);
-           // asm_add_structures(fp);
-            asm_o_state = asm_out_none;
-        }
-        else {
-            undo_dirty_win_hack(patch_offset);
-            patch_offset = NULL;
-        }
-    } break;
+    if (is_asm) {
+      if (starting) {
+        *outline = struct_equ_output;
+        s_parse_state = struct_parse_name;
+      }
+      else {
+        dump_structures(fp);
+        dump_equals(fp);
+      }
+      break;
     }
 
-    return 0;
+    if (starting) {
+      patch_offset = dirty_win_hack();
+      *outline = line_output;
+
+      asm_add_header(fp);
+      asm_o_state = asm_out_struct_start;
+    }
+    else {
+      undo_dirty_win_hack(patch_offset);
+      patch_offset = NULL;
+    }
+  } break;
+  }
+
+  return 0;
 }
 
 static ssize_t idaapi hook_linea_linef(void* user_data, int notification_code, va_list va)
@@ -634,7 +827,7 @@ static ssize_t idaapi hook_linea_linef(void* user_data, int notification_code, v
     }
   } break;
   default:
-      notification_code = notification_code;
+    notification_code = notification_code;
   }
 
   return 0;
@@ -754,7 +947,7 @@ struct m68k_events_visitor_t : public post_event_visitor_t
       ea_t ea = va_arg(va, ea_t);
       int n = va_arg(va, int);
       int thread_id = va_arg(va, int);
-      processor_t::regval_getter_t* getreg = va_arg(va, processor_t::regval_getter_t *);
+      processor_t::regval_getter_t* getreg = va_arg(va, processor_t::regval_getter_t*);
       const regval_t* regvalues = va_arg(va, const regval_t*);
 
       opinf->ea = BADADDR;
@@ -937,79 +1130,79 @@ struct m68k_events_visitor_t : public post_event_visitor_t
 //--------------------------------------------------------------------------
 static unsigned int mask(unsigned char bit_idx, unsigned char bits_cnt = 1)
 {
-    return (((1 << bits_cnt) - 1) << bit_idx);
+  return (((1 << bits_cnt) - 1) << bit_idx);
 }
 
 //--------------------------------------------------------------------------
 static bool is_vdp_send_cmd(uint32 val)
 {
-    if (val & 0xFFFF0000)
-    {
-        return ((val & 0x9F000000) >= 0x80000000) && ((val & 0x9F000000) <= 0x97000000);
-    }
-    else
-    {
-        return ((val & 0x9F00) >= 0x8000) && ((val & 0x9F00) <= 0x9700);
-    }
+  if (val & 0xFFFF0000)
+  {
+    return ((val & 0x9F000000) >= 0x80000000) && ((val & 0x9F000000) <= 0x97000000);
+  }
+  else
+  {
+    return ((val & 0x9F00) >= 0x8000) && ((val & 0x9F00) <= 0x9700);
+  }
 }
 
 //-------------------------------------------------------------------------
 static bool is_call16_const_cmd(uint32 val)
 {
-    return (val & 0xFFFF0000) == 0x4EB80000;
+  return (val & 0xFFFF0000) == 0x4EB80000;
 }
 
 //--------------------------------------------
 static void do_call16_const(ea_t ea, uint32 val)
 {
-    insn_t insn;
-    decode_insn(&insn, ea);
+  insn_t insn;
+  decode_insn(&insn, ea);
 
-    insn_add_dref(insn, val, 2, dr_O);
+  insn_add_dref(insn, val, 2, dr_O);
 
-    char buf[MAXSTR];
-    ::qsnprintf(buf, MAXSTR, "jsr 0x%.4X", val);
-    append_cmt(ea, buf, false);
+  char buf[MAXSTR];
+  ::qsnprintf(buf, MAXSTR, "jsr 0x%.4X", val);
+  append_cmt(ea, buf, false);
 }
 
 //--------------------------------------------------------------------------
 static bool is_vdp_rw_cmd(uint32 val)
 {
-    if (val & 0xFFFF0000) // command was sended by one dword
+  if (val & 0xFFFF0000) // command was sended by one dword
+  {
+    switch ((val >> 24) & mask(6, 2))
     {
-        switch ((val >> 24) & mask(6, 2))
-        {
-        case 0 /*00*/ << 6:
-        case 1 /*01*/ << 6:
-        case 3 /*11*/ << 6:
-        {
-            switch ((val & 0xFF) & mask(4, 2))
-            {
-            case 0 /*00*/ << 4:
-            case 1 /*01*/ << 4:
-            case 2 /*10*/ << 4:
-            {
-                return true;
-            }
-            }
-            return false;
-        }
-        }
-        return false;
-    }
-    else // command was sended by halfs (this is high word of it)
+    case 0 /*00*/ << 6:
+    case 1 /*01*/ << 6:
+    case 3 /*11*/ << 6:
     {
-        switch ((val >> 8) & mask(6, 2))
-        {
-        case 0 /*00*/ << 6:
-        case 1 /*01*/ << 6:
-        case 3 /*11*/ << 6:
-        {
-            return true;
-        }
-        }
-        return false;
+      switch ((val & 0xFF) & mask(4, 2))
+      {
+      case 0 /*00*/ << 4:
+      case 1 /*01*/ << 4:
+      case 2 /*10*/ << 4:
+      {
+        return true;
+      }
+      }
+      return false;
     }
+    }
+    return false;
+  }
+  else // command was sended by halfs (this is high word of it)
+  {
+    switch ((val >> 8) & mask(6, 2))
+    {
+    case 0 /*00*/ << 6:
+    case 1 /*01*/ << 6:
+    case 3 /*11*/ << 6:
+    {
+      return true;
+    }
+    }
+    return false;
+  }
 }
 
 static const char wrong_vdp_cmd[] = "Wrong command to send to VDP_CTRL!\n";
@@ -1017,421 +1210,421 @@ static const char wrong_vdp_cmd[] = "Wrong command to send to VDP_CTRL!\n";
 //--------------------------------------------------------------------------
 static bool do_cmt_vdp_reg_const(ea_t ea, uint32 val)
 {
-    if (!val) return false;
+  if (!val) return false;
 
-    char name[250];
-    unsigned int addr = 0;
-    switch (val & 0x9F00)
+  char name[250];
+  unsigned int addr = 0;
+  switch (val & 0x9F00)
+  {
+  case 0x8000:
+  {
+    if (val & mask(0))  append_cmt(ea, "DISPLAY_OFF", false);
+    else append_cmt(ea, "DISPLAY_ON", false);
+
+    if (val & mask(1))  append_cmt(ea, "PAUSE_HV_WHEN_EXT_INT", false);
+    else append_cmt(ea, "NORMAL_HV_COUNTER", false);
+
+    if (val & mask(2))  append_cmt(ea, "EIGHT_COLORS_MODE", false);
+    else append_cmt(ea, "FULL_COLORS_MODE", false);
+
+    if (val & mask(4))  append_cmt(ea, "ENABLE_HBLANK", false);
+    else append_cmt(ea, "DISABLE_HBLANK", false);
+
+    return true;
+  }
+  case 0x8100:
+  {
+    if (val & mask(2))  append_cmt(ea, "GENESIS_DISPLAY_MODE_BIT2", false);
+    else append_cmt(ea, "SMS_DISPLAY_MODE_BIT2", false);
+
+    if (val & mask(3))  append_cmt(ea, "SET_PAL_MODE", false);
+    else append_cmt(ea, "SET_NTSC_MODE", false);
+
+    if (val & mask(4))  append_cmt(ea, "ENABLE_DMA", false);
+    else append_cmt(ea, "DISABLE_DMA", false);
+
+    if (val & mask(5))  append_cmt(ea, "ENABLE_VBLANK", false);
+    else append_cmt(ea, "DISABLE_VBLANK", false);
+
+    if (val & mask(6))  append_cmt(ea, "ENABLE_DISPLAY", false);
+    else append_cmt(ea, "DISABLE_DISPLAY", false);
+
+    if (val & mask(7))  append_cmt(ea, "TMS9918_DISPLAY_MODE_BIT7", false);
+    else append_cmt(ea, "GENESIS_DISPLAY_MODE_BIT7", false);
+
+    return true;
+  }
+  case 0x8200:
+  {
+    addr = (val & mask(3, 3));
+    ::qsnprintf(name, sizeof(name), "SET_PLANE_A_ADDR_$%.4X", addr * 0x400);
+    append_cmt(ea, name, false);
+    return true;
+  }
+  case 0x8300:
+  {
+    addr = (val & mask(1, 5));
+    ::qsnprintf(name, sizeof(name), "SET_WINDOW_PLANE_ADDR_$%.4X", addr * 0x400);
+    append_cmt(ea, name, false);
+    return true;
+  }
+  case 0x8400:
+  {
+    addr = (val & mask(0, 3));
+    ::qsnprintf(name, sizeof(name), "SET_PLANE_B_ADDR_$%.4X", addr * 0x2000);
+    append_cmt(ea, name, false);
+    return true;
+  }
+  case 0x8500:
+  {
+    addr = (val & mask(0, 7));
+    ::qsnprintf(name, sizeof(name), "SET_SPRITE_TBL_ADDR_$%.4X", addr * 0x200);
+    append_cmt(ea, name, false);
+    return true;
+  }
+  case 0x8600:
+  {
+    if (val & mask(5))  append_cmt(ea, "ENABLE_SPRITES_REBASE", false);
+    else append_cmt(ea, "DISABLE_SPRITES_REBASE", false);
+
+    return true;
+  }
+  case 0x8700:
+  {
+    unsigned int xx = (val & mask(4, 2));
+    unsigned int yyyy = (val & mask(0, 4));
+
+    ::qsnprintf(name, sizeof(name), "SET_BG_AS_%dPAL_%dTH_COLOR", xx + 1, yyyy + 1);
+    append_cmt(ea, name, false);
+
+    return true;
+  }
+  case 0x8A00:
+  {
+    addr = (val & mask(0, 8));
+    ::qsnprintf(name, sizeof(name), "SET_HBLANK_COUNTER_VALUE_$%.4X", addr);
+    append_cmt(ea, name, false);
+    return true;
+  } break;
+  case 0x8B00:
+  {
+    switch (val & mask(0, 2))
     {
-    case 0x8000:
-    {
-        if (val & mask(0))  append_cmt(ea, "DISPLAY_OFF", false);
-        else append_cmt(ea, "DISPLAY_ON", false);
-
-        if (val & mask(1))  append_cmt(ea, "PAUSE_HV_WHEN_EXT_INT", false);
-        else append_cmt(ea, "NORMAL_HV_COUNTER", false);
-
-        if (val & mask(2))  append_cmt(ea, "EIGHT_COLORS_MODE", false);
-        else append_cmt(ea, "FULL_COLORS_MODE", false);
-
-        if (val & mask(4))  append_cmt(ea, "ENABLE_HBLANK", false);
-        else append_cmt(ea, "DISABLE_HBLANK", false);
-
-        return true;
+    case 0 /*00*/: append_cmt(ea, "SET_HSCROLL_TYPE_AS_FULLSCREEN", false); break;
+    case 1 /*01*/: append_cmt(ea, "SET_HSCROLL_TYPE_AS_LINE_SCROLL", false); break;
+    case 2 /*10*/: append_cmt(ea, "SET_HSCROLL_TYPE_AS_CELL_SCROLL", false); break;
+    case 3 /*11*/: append_cmt(ea, "SET_HSCROLL_TYPE_AS_LINE__SCROLL", false); break;
     }
-    case 0x8100:
+
+    if (val & mask(2))  append_cmt(ea, "_2CELLS_COLUMN_VSCROLL_MODE", false);
+    else append_cmt(ea, "FULLSCREEN_VSCROLL_MODE", false);
+
+    if (val & mask(3))  append_cmt(ea, "ENABLE_EXT_INTERRUPT", false);
+    else append_cmt(ea, "DISABLE_EXT_INTERRUPT", false);
+
+    return true;
+  }
+  case 0x8C00:
+  {
+    switch (val & 0x81)
     {
-        if (val & mask(2))  append_cmt(ea, "GENESIS_DISPLAY_MODE_BIT2", false);
-        else append_cmt(ea, "SMS_DISPLAY_MODE_BIT2", false);
-
-        if (val & mask(3))  append_cmt(ea, "SET_PAL_MODE", false);
-        else append_cmt(ea, "SET_NTSC_MODE", false);
-
-        if (val & mask(4))  append_cmt(ea, "ENABLE_DMA", false);
-        else append_cmt(ea, "DISABLE_DMA", false);
-
-        if (val & mask(5))  append_cmt(ea, "ENABLE_VBLANK", false);
-        else append_cmt(ea, "DISABLE_VBLANK", false);
-
-        if (val & mask(6))  append_cmt(ea, "ENABLE_DISPLAY", false);
-        else append_cmt(ea, "DISABLE_DISPLAY", false);
-
-        if (val & mask(7))  append_cmt(ea, "TMS9918_DISPLAY_MODE_BIT7", false);
-        else append_cmt(ea, "GENESIS_DISPLAY_MODE_BIT7", false);
-
-        return true;
+    case 0 /*0XXXXXX0*/: append_cmt(ea, "SET_40_TILES_WIDTH_MODE", false); break;
+    case 0x81 /*1XXXXXX1*/: append_cmt(ea, "SET_32_TILES_WIDTH_MODE", false); break;
     }
-    case 0x8200:
+
+    if (val & mask(3)) append_cmt(ea, "ENABLE_SHADOW_HIGHLIGHT_MODE", false);
+    else append_cmt(ea, "DISABLE_SHADOW_HIGHLIGHT_MODE", false);
+
+    switch (val & mask(1, 2))
     {
-        addr = (val & mask(3, 3));
-        ::qsnprintf(name, sizeof(name), "SET_PLANE_A_ADDR_$%.4X", addr * 0x400);
-        append_cmt(ea, name, false);
-        return true;
+    case 0 /*00*/ << 1: append_cmt(ea, "NO_INTERLACE_MODE", false); break;
+    case 1 /*01*/ << 1: append_cmt(ea, "ENABLE_SIMPLE_INTERLACE_MODE", false); break;
+    case 3 /*11*/ << 1: append_cmt(ea, "ENABLE_DOUBLE_INTERLACE_MODE", false); break;
     }
-    case 0x8300:
-    {
-        addr = (val & mask(1, 5));
-        ::qsnprintf(name, sizeof(name), "SET_WINDOW_PLANE_ADDR_$%.4X", addr * 0x400);
-        append_cmt(ea, name, false);
-        return true;
-    }
-    case 0x8400:
-    {
-        addr = (val & mask(0, 3));
-        ::qsnprintf(name, sizeof(name), "SET_PLANE_B_ADDR_$%.4X", addr * 0x2000);
-        append_cmt(ea, name, false);
-        return true;
-    }
-    case 0x8500:
-    {
-        addr = (val & mask(0, 7));
-        ::qsnprintf(name, sizeof(name), "SET_SPRITE_TBL_ADDR_$%.4X", addr * 0x200);
-        append_cmt(ea, name, false);
-        return true;
-    }
-    case 0x8600:
-    {
-        if (val & mask(5))  append_cmt(ea, "ENABLE_SPRITES_REBASE", false);
-        else append_cmt(ea, "DISABLE_SPRITES_REBASE", false);
 
-        return true;
-    }
-    case 0x8700:
+    if (val & mask(4)) append_cmt(ea, "ENABLE_EXTERNAL_PIXEL_BUS", false);
+    else append_cmt(ea, "DISABLE_EXTERNAL_PIXEL_BUS", false);
+
+    if (val & mask(6)) append_cmt(ea, "DO_PIXEL_CLOCK_INSTEAD_OF_VSYNC", false);
+    else append_cmt(ea, "DO_VSYNC_INSTEAD_OF_PIXEL_CLOCK", false);
+
+    return true;
+  }
+  case 0x8D00:
+  {
+    addr = (val & mask(0, 6));
+    ::qsnprintf(name, sizeof(name), "SET_HSCROLL_DATA_ADDR_$%.4X", addr * 0x400);
+    append_cmt(ea, name, false);
+    return true;
+  }
+  case 0x8E00:
+  {
+    if (val & mask(0))  append_cmt(ea, "ENABLE_PLANE_A_REBASE", false);
+    else append_cmt(ea, "DISABLE_PLANE_A_REBASE", false);
+
+    if (val & mask(4))  append_cmt(ea, "ENABLE_PLANE_B_REBASE", false);
+    else append_cmt(ea, "DISABLE_PLANE_B_REBASE", false);
+
+    return true;
+  }
+  case 0x8F00:
+  {
+    addr = (val & mask(0, 8));
+    ::qsnprintf(name, sizeof(name), "SET_VDP_AUTO_INC_VALUE_$%.4X", addr);
+    append_cmt(ea, name, false);
+    return true;
+  }
+  case 0x9000:
+  {
+    switch (val & mask(0, 2))
     {
-        unsigned int xx = (val & mask(4, 2));
-        unsigned int yyyy = (val & mask(0, 4));
-
-        ::qsnprintf(name, sizeof(name), "SET_BG_AS_%dPAL_%dTH_COLOR", xx + 1, yyyy + 1);
-        append_cmt(ea, name, false);
-
-        return true;
+    case 0 /*00*/: append_cmt(ea, "SET_PLANEA_PLANEB_WIDTH_TO_32_TILES", false); break;
+    case 1 /*01*/: append_cmt(ea, "SET_PLANEA_PLANEB_WIDTH_TO_64_TILES", false); break;
+    case 3 /*11*/: append_cmt(ea, "SET_PLANEA_PLANEB_WIDTH_TO_128_TILES", false); break;
     }
-    case 0x8A00:
+
+    switch (val & mask(4, 2))
     {
-        addr = (val & mask(0, 8));
-        ::qsnprintf(name, sizeof(name), "SET_HBLANK_COUNTER_VALUE_$%.4X", addr);
-        append_cmt(ea, name, false);
-        return true;
-    } break;
-    case 0x8B00:
+    case 0 /*00*/ << 4: append_cmt(ea, "SET_PLANEA_PLANEB_HEIGHT_TO_32_TILES", false); break;
+    case 1 /*01*/ << 4: append_cmt(ea, "SET_PLANEA_PLANEB_HEIGHT_TO_64_TILES", false); break;
+    case 3 /*11*/ << 4: append_cmt(ea, "SET_PLANEA_PLANEB_HEIGHT_TO_128_TILES", false); break;
+    }
+
+    return true;
+  }
+  case 0x9100:
+  {
+    if (val & mask(7)) append_cmt(ea, "MOVE_WINDOW_HORZ_RIGHT", false);
+    else append_cmt(ea, "MOVE_WINDOW_HORZ_LEFT", false);
+
+    addr = (val & mask(0, 5));
+    ::qsnprintf(name, sizeof(name), "MOVE_BY_%d_CELLS", addr);
+    append_cmt(ea, name, false);
+    return true;
+  }
+  case 0x9200:
+  {
+    if (val & mask(7)) append_cmt(ea, "MOVE_WINDOW_VERT_RIGHT", false);
+    else append_cmt(ea, "MOVE_WINDOW_VERT_LEFT", false);
+
+    addr = (val & mask(0, 5));
+    ::qsnprintf(name, sizeof(name), "MOVE_BY_%d_CELLS", addr);
+    append_cmt(ea, name, false);
+    return true;
+  }
+  case 0x9300:
+  {
+    addr = (val & mask(0, 8));
+    ::qsnprintf(name, sizeof(name), "SET_LOWER_BYTE_OF_DMA_LEN_TO_$%.2X", addr);
+    append_cmt(ea, name, false);
+    return true;
+  }
+  case 0x9400:
+  {
+    addr = (val & mask(0, 8));
+    ::qsnprintf(name, sizeof(name), "SET_HIGHER_BYTE_OF_DMA_LEN_TO_$%.2X", addr);
+    append_cmt(ea, name, false);
+    return true;
+  }
+  case 0x9500:
+  {
+    addr = (val & mask(0, 8));
+    ::qsnprintf(name, sizeof(name), "SET_LOWER_BYTE_OF_DMA_SRC_TO_$%.2X", addr);
+    append_cmt(ea, name, false);
+    return true;
+  }
+  case 0x9600:
+  {
+    addr = (val & mask(0, 8));
+    ::qsnprintf(name, sizeof(name), "SET_MIDDLE_BYTE_OF_DMA_SRC_TO_$%.2X", addr);
+    append_cmt(ea, name, false);
+    return true;
+  }
+  case 0x9700:
+  {
+    addr = (val & mask(0, 6));
+    ::qsnprintf(name, sizeof(name), "SET_HIGH_BYTE_OF_DMA_SRC_TO_$%.2X", addr);
+    append_cmt(ea, name, false);
+
+    if (val & mask(7)) append_cmt(ea, "ADD_$800000_TO_DMA_SRC_ADDR", false);
+    else append_cmt(ea, "SET_COPY_M68K_TO_VRAM_DMA_MODE", false);
+
+    switch (val & mask(6, 2))
     {
-        switch (val & mask(0, 2))
-        {
-        case 0 /*00*/: append_cmt(ea, "SET_HSCROLL_TYPE_AS_FULLSCREEN", false); break;
-        case 1 /*01*/: append_cmt(ea, "SET_HSCROLL_TYPE_AS_LINE_SCROLL", false); break;
-        case 2 /*10*/: append_cmt(ea, "SET_HSCROLL_TYPE_AS_CELL_SCROLL", false); break;
-        case 3 /*11*/: append_cmt(ea, "SET_HSCROLL_TYPE_AS_LINE__SCROLL", false); break;
-        }
-
-        if (val & mask(2))  append_cmt(ea, "_2CELLS_COLUMN_VSCROLL_MODE", false);
-        else append_cmt(ea, "FULLSCREEN_VSCROLL_MODE", false);
-
-        if (val & mask(3))  append_cmt(ea, "ENABLE_EXT_INTERRUPT", false);
-        else append_cmt(ea, "DISABLE_EXT_INTERRUPT", false);
-
-        return true;
+    case 2 /*10*/ << 6: append_cmt(ea, "SET_VRAM_FILL_DMA_MODE", false); break;
+    case 3 /*11*/ << 6: append_cmt(ea, "SET_VRAM_COPY_DMA_MODE", false); break;
     }
-    case 0x8C00:
-    {
-        switch (val & 0x81)
-        {
-        case 0 /*0XXXXXX0*/: append_cmt(ea, "SET_40_TILES_WIDTH_MODE", false); break;
-        case 0x81 /*1XXXXXX1*/: append_cmt(ea, "SET_32_TILES_WIDTH_MODE", false); break;
-        }
 
-        if (val & mask(3)) append_cmt(ea, "ENABLE_SHADOW_HIGHLIGHT_MODE", false);
-        else append_cmt(ea, "DISABLE_SHADOW_HIGHLIGHT_MODE", false);
-
-        switch (val & mask(1, 2))
-        {
-        case 0 /*00*/ << 1: append_cmt(ea, "NO_INTERLACE_MODE", false); break;
-        case 1 /*01*/ << 1: append_cmt(ea, "ENABLE_SIMPLE_INTERLACE_MODE", false); break;
-        case 3 /*11*/ << 1: append_cmt(ea, "ENABLE_DOUBLE_INTERLACE_MODE", false); break;
-        }
-
-        if (val & mask(4)) append_cmt(ea, "ENABLE_EXTERNAL_PIXEL_BUS", false);
-        else append_cmt(ea, "DISABLE_EXTERNAL_PIXEL_BUS", false);
-
-        if (val & mask(6)) append_cmt(ea, "DO_PIXEL_CLOCK_INSTEAD_OF_VSYNC", false);
-        else append_cmt(ea, "DO_VSYNC_INSTEAD_OF_PIXEL_CLOCK", false);
-
-        return true;
-    }
-    case 0x8D00:
-    {
-        addr = (val & mask(0, 6));
-        ::qsnprintf(name, sizeof(name), "SET_HSCROLL_DATA_ADDR_$%.4X", addr * 0x400);
-        append_cmt(ea, name, false);
-        return true;
-    }
-    case 0x8E00:
-    {
-        if (val & mask(0))  append_cmt(ea, "ENABLE_PLANE_A_REBASE", false);
-        else append_cmt(ea, "DISABLE_PLANE_A_REBASE", false);
-
-        if (val & mask(4))  append_cmt(ea, "ENABLE_PLANE_B_REBASE", false);
-        else append_cmt(ea, "DISABLE_PLANE_B_REBASE", false);
-
-        return true;
-    }
-    case 0x8F00:
-    {
-        addr = (val & mask(0, 8));
-        ::qsnprintf(name, sizeof(name), "SET_VDP_AUTO_INC_VALUE_$%.4X", addr);
-        append_cmt(ea, name, false);
-        return true;
-    }
-    case 0x9000:
-    {
-        switch (val & mask(0, 2))
-        {
-        case 0 /*00*/: append_cmt(ea, "SET_PLANEA_PLANEB_WIDTH_TO_32_TILES", false); break;
-        case 1 /*01*/: append_cmt(ea, "SET_PLANEA_PLANEB_WIDTH_TO_64_TILES", false); break;
-        case 3 /*11*/: append_cmt(ea, "SET_PLANEA_PLANEB_WIDTH_TO_128_TILES", false); break;
-        }
-
-        switch (val & mask(4, 2))
-        {
-        case 0 /*00*/ << 4: append_cmt(ea, "SET_PLANEA_PLANEB_HEIGHT_TO_32_TILES", false); break;
-        case 1 /*01*/ << 4: append_cmt(ea, "SET_PLANEA_PLANEB_HEIGHT_TO_64_TILES", false); break;
-        case 3 /*11*/ << 4: append_cmt(ea, "SET_PLANEA_PLANEB_HEIGHT_TO_128_TILES", false); break;
-        }
-
-        return true;
-    }
-    case 0x9100:
-    {
-        if (val & mask(7)) append_cmt(ea, "MOVE_WINDOW_HORZ_RIGHT", false);
-        else append_cmt(ea, "MOVE_WINDOW_HORZ_LEFT", false);
-
-        addr = (val & mask(0, 5));
-        ::qsnprintf(name, sizeof(name), "MOVE_BY_%d_CELLS", addr);
-        append_cmt(ea, name, false);
-        return true;
-    }
-    case 0x9200:
-    {
-        if (val & mask(7)) append_cmt(ea, "MOVE_WINDOW_VERT_RIGHT", false);
-        else append_cmt(ea, "MOVE_WINDOW_VERT_LEFT", false);
-
-        addr = (val & mask(0, 5));
-        ::qsnprintf(name, sizeof(name), "MOVE_BY_%d_CELLS", addr);
-        append_cmt(ea, name, false);
-        return true;
-    }
-    case 0x9300:
-    {
-        addr = (val & mask(0, 8));
-        ::qsnprintf(name, sizeof(name), "SET_LOWER_BYTE_OF_DMA_LEN_TO_$%.2X", addr);
-        append_cmt(ea, name, false);
-        return true;
-    }
-    case 0x9400:
-    {
-        addr = (val & mask(0, 8));
-        ::qsnprintf(name, sizeof(name), "SET_HIGHER_BYTE_OF_DMA_LEN_TO_$%.2X", addr);
-        append_cmt(ea, name, false);
-        return true;
-    }
-    case 0x9500:
-    {
-        addr = (val & mask(0, 8));
-        ::qsnprintf(name, sizeof(name), "SET_LOWER_BYTE_OF_DMA_SRC_TO_$%.2X", addr);
-        append_cmt(ea, name, false);
-        return true;
-    }
-    case 0x9600:
-    {
-        addr = (val & mask(0, 8));
-        ::qsnprintf(name, sizeof(name), "SET_MIDDLE_BYTE_OF_DMA_SRC_TO_$%.2X", addr);
-        append_cmt(ea, name, false);
-        return true;
-    }
-    case 0x9700:
-    {
-        addr = (val & mask(0, 6));
-        ::qsnprintf(name, sizeof(name), "SET_HIGH_BYTE_OF_DMA_SRC_TO_$%.2X", addr);
-        append_cmt(ea, name, false);
-
-        if (val & mask(7)) append_cmt(ea, "ADD_$800000_TO_DMA_SRC_ADDR", false);
-        else append_cmt(ea, "SET_COPY_M68K_TO_VRAM_DMA_MODE", false);
-
-        switch (val & mask(6, 2))
-        {
-        case 2 /*10*/ << 6: append_cmt(ea, "SET_VRAM_FILL_DMA_MODE", false); break;
-        case 3 /*11*/ << 6: append_cmt(ea, "SET_VRAM_COPY_DMA_MODE", false); break;
-        }
-
-        return true;
-    }
-    default:
-    {
-        msg(wrong_vdp_cmd);
-        return false;
-    }
-    }
+    return true;
+  }
+  default:
+  {
+    msg(wrong_vdp_cmd);
+    return false;
+  }
+  }
 }
 
 //--------------------------------------------------------------------------
 static void do_cmt_sr_ccr_reg_const(ea_t ea, uint32 val)
 {
-    if (val & mask(4)) append_cmt(ea, "SET_X", false);
-    else append_cmt(ea, "CLR_X", false);
+  if (val & mask(4)) append_cmt(ea, "SET_X", false);
+  else append_cmt(ea, "CLR_X", false);
 
-    if (val & mask(3)) append_cmt(ea, "SET_N", false);
-    else append_cmt(ea, "CLR_N", false);
+  if (val & mask(3)) append_cmt(ea, "SET_N", false);
+  else append_cmt(ea, "CLR_N", false);
 
-    if (val & mask(2)) append_cmt(ea, "SET_Z", false);
-    else append_cmt(ea, "CLR_Z", false);
+  if (val & mask(2)) append_cmt(ea, "SET_Z", false);
+  else append_cmt(ea, "CLR_Z", false);
 
-    if (val & mask(1)) append_cmt(ea, "SET_V", false);
-    else append_cmt(ea, "CLR_V", false);
+  if (val & mask(1)) append_cmt(ea, "SET_V", false);
+  else append_cmt(ea, "CLR_V", false);
 
-    if (val & mask(0)) append_cmt(ea, "SET_C", false);
-    else append_cmt(ea, "CLR_C", false);
+  if (val & mask(0)) append_cmt(ea, "SET_C", false);
+  else append_cmt(ea, "CLR_C", false);
 
-    if (val & mask(15)) append_cmt(ea, "SET_T1", false);
-    else append_cmt(ea, "CLR_T1", false);
+  if (val & mask(15)) append_cmt(ea, "SET_T1", false);
+  else append_cmt(ea, "CLR_T1", false);
 
-    if (val & mask(14)) append_cmt(ea, "SET_T0", false);
-    else append_cmt(ea, "CLR_T0", false);
+  if (val & mask(14)) append_cmt(ea, "SET_T0", false);
+  else append_cmt(ea, "CLR_T0", false);
 
-    if (val & mask(13)) append_cmt(ea, "SET_SF", false);
-    else append_cmt(ea, "CLR_SF", false);
+  if (val & mask(13)) append_cmt(ea, "SET_SF", false);
+  else append_cmt(ea, "CLR_SF", false);
 
-    if (val & mask(12)) append_cmt(ea, "SET_MF", false);
-    else append_cmt(ea, "CLR_MF", false);
+  if (val & mask(12)) append_cmt(ea, "SET_MF", false);
+  else append_cmt(ea, "CLR_MF", false);
 
-    switch ((val & mask(8, 3)))
-    {
-    case 0x7 /*111*/ << 8: append_cmt(ea, "DISABLE_ALL_INTERRUPTS", false); break;
-    case 0x6 /*110*/ << 8: append_cmt(ea, "ENABLE_NO_INTERRUPTS", false); break;
+  switch ((val & mask(8, 3)))
+  {
+  case 0x7 /*111*/ << 8: append_cmt(ea, "DISABLE_ALL_INTERRUPTS", false); break;
+  case 0x6 /*110*/ << 8: append_cmt(ea, "ENABLE_NO_INTERRUPTS", false); break;
 
-    case 0x5 /*101*/ << 8: append_cmt(ea, "DISABLE_ALL_INTERRUPTS_EXCEPT_VBLANK", false); break;
-    case 0x4 /*100*/ << 8: append_cmt(ea, "ENABLE_ONLY_VBLANK_INTERRUPT", false); break;
+  case 0x5 /*101*/ << 8: append_cmt(ea, "DISABLE_ALL_INTERRUPTS_EXCEPT_VBLANK", false); break;
+  case 0x4 /*100*/ << 8: append_cmt(ea, "ENABLE_ONLY_VBLANK_INTERRUPT", false); break;
 
-    case 0x3 /*011*/ << 8: append_cmt(ea, "DISABLE_ALL_INTERRUPTS_EXCEPT_VBLANK_HBLANK", false); break;
-    case 0x2 /*010*/ << 8: append_cmt(ea, "ENABLE_ONLY_VBLANK_HBLANK_INTERRUPTS", false); break;
+  case 0x3 /*011*/ << 8: append_cmt(ea, "DISABLE_ALL_INTERRUPTS_EXCEPT_VBLANK_HBLANK", false); break;
+  case 0x2 /*010*/ << 8: append_cmt(ea, "ENABLE_ONLY_VBLANK_HBLANK_INTERRUPTS", false); break;
 
-    case 0x1 /*001*/ << 8: append_cmt(ea, "DISABLE_NO_INTERRUPTS", false); break;
-    case 0x0 /*000*/ << 8: append_cmt(ea, "ENABLE_ALL_INTERRUPTS", false); break;
-    }
+  case 0x1 /*001*/ << 8: append_cmt(ea, "DISABLE_NO_INTERRUPTS", false); break;
+  case 0x0 /*000*/ << 8: append_cmt(ea, "ENABLE_ALL_INTERRUPTS", false); break;
+  }
 }
 
 //--------------------------------------------------------------------------
 static void do_cmt_vdp_rw_command(ea_t ea, uint32 val)
 {
-    char name[250];
+  char name[250];
 
-    if (val & 0xFFFF0000) // command was sended by one dword
+  if (val & 0xFFFF0000) // command was sended by one dword
+  {
+    unsigned int addr = ((val & mask(0, 2)) << 14) | ((val & mask(16, 14)) >> 16);
+
+    switch ((val >> 24) & mask(6))
     {
-        unsigned int addr = ((val & mask(0, 2)) << 14) | ((val & mask(16, 14)) >> 16);
-
-        switch ((val >> 24) & mask(6))
-        {
-        case 0 << 6: // read operation
-        {
-            switch (val & ((1 << 31) | (1 << 5) | (1 << 4)))
-            {
-            case ((0 << 31) | (0 << 5) | (0 << 4)) /*000*/: // VRAM
-            {
-                ::qsnprintf(name, sizeof(name), "DO_READ_VRAM_FROM_$%.4X", addr);
-                append_cmt(ea, name, false);
-            } break;
-            case ((0 << 31) | (0 << 5) | (1 << 4)) /*001*/: // VSRAM
-            {
-                ::qsnprintf(name, sizeof(name), "DO_READ_VSRAM_FROM_$%.4X", addr);
-                append_cmt(ea, name, false);
-            } break;
-            case ((0 << 31) | (1 << 5) | (0 << 4)) /*010*/: // CRAM
-            {
-                ::qsnprintf(name, sizeof(name), "DO_READ_CRAM_FROM_$%.4X", addr);
-                append_cmt(ea, name, false);
-            } break;
-            default:
-            {
-                msg(wrong_vdp_cmd);
-            } break;
-            }
-        } break;
-        case 1 << 6: // write operation
-        {
-            switch (val & ((1 << 31) | (1 << 5) | (1 << 4)))
-            {
-            case ((0 << 31) | (0 << 5) | (0 << 4)) /*000*/: // VRAM
-            {
-                ::qsnprintf(name, sizeof(name), "DO_WRITE_TO_VRAM_AT_$%.4X_ADDR", addr);
-                append_cmt(ea, name, false);
-            } break;
-            case ((0 << 31) | (0 << 5) | (1 << 4)) /*001*/: // VSRAM
-            {
-                ::qsnprintf(name, sizeof(name), "DO_WRITE_TO_VSRAM_AT_$%.4X_ADDR", addr);
-                append_cmt(ea, name, false);
-            } break;
-            case ((1 << 31) | (0 << 5) | (0 << 4)) /*100*/: // CRAM
-            {
-                ::qsnprintf(name, sizeof(name), "DO_WRITE_TO_CRAM_AT_$%.4X_ADDR", addr);
-                append_cmt(ea, name, false);
-            } break;
-            default:
-            {
-                msg(wrong_vdp_cmd);
-            } break;
-            }
-        } break;
-        default:
-        {
-            msg(wrong_vdp_cmd);
-        } break;
-        }
-    }
-    else // command was sended by halfs (this is high word of it)
+    case 0 << 6: // read operation
     {
-        switch ((val >> 8) & mask(6, 2))
-        {
-        case 0 /*00*/ << 6: append_cmt(ea, "VRAM_OR_VSRAM_OR_CRAM_READ_MODE", false); break;
-        case 1 /*01*/ << 6: append_cmt(ea, "VRAM_OR_VSRAM_WRITE_MODE", false); break;
-        case 3 /*11*/ << 6: append_cmt(ea, "CRAM_WRITE_MODE", false); break;
-        }
+      switch (val & ((1 << 31) | (1 << 5) | (1 << 4)))
+      {
+      case ((0 << 31) | (0 << 5) | (0 << 4)) /*000*/: // VRAM
+      {
+        ::qsnprintf(name, sizeof(name), "DO_READ_VRAM_FROM_$%.4X", addr);
+        append_cmt(ea, name, false);
+      } break;
+      case ((0 << 31) | (0 << 5) | (1 << 4)) /*001*/: // VSRAM
+      {
+        ::qsnprintf(name, sizeof(name), "DO_READ_VSRAM_FROM_$%.4X", addr);
+        append_cmt(ea, name, false);
+      } break;
+      case ((0 << 31) | (1 << 5) | (0 << 4)) /*010*/: // CRAM
+      {
+        ::qsnprintf(name, sizeof(name), "DO_READ_CRAM_FROM_$%.4X", addr);
+        append_cmt(ea, name, false);
+      } break;
+      default:
+      {
+        msg(wrong_vdp_cmd);
+      } break;
+      }
+    } break;
+    case 1 << 6: // write operation
+    {
+      switch (val & ((1 << 31) | (1 << 5) | (1 << 4)))
+      {
+      case ((0 << 31) | (0 << 5) | (0 << 4)) /*000*/: // VRAM
+      {
+        ::qsnprintf(name, sizeof(name), "DO_WRITE_TO_VRAM_AT_$%.4X_ADDR", addr);
+        append_cmt(ea, name, false);
+      } break;
+      case ((0 << 31) | (0 << 5) | (1 << 4)) /*001*/: // VSRAM
+      {
+        ::qsnprintf(name, sizeof(name), "DO_WRITE_TO_VSRAM_AT_$%.4X_ADDR", addr);
+        append_cmt(ea, name, false);
+      } break;
+      case ((1 << 31) | (0 << 5) | (0 << 4)) /*100*/: // CRAM
+      {
+        ::qsnprintf(name, sizeof(name), "DO_WRITE_TO_CRAM_AT_$%.4X_ADDR", addr);
+        append_cmt(ea, name, false);
+      } break;
+      default:
+      {
+        msg(wrong_vdp_cmd);
+      } break;
+      }
+    } break;
+    default:
+    {
+      msg(wrong_vdp_cmd);
+    } break;
     }
+  }
+  else // command was sended by halfs (this is high word of it)
+  {
+    switch ((val >> 8) & mask(6, 2))
+    {
+    case 0 /*00*/ << 6: append_cmt(ea, "VRAM_OR_VSRAM_OR_CRAM_READ_MODE", false); break;
+    case 1 /*01*/ << 6: append_cmt(ea, "VRAM_OR_VSRAM_WRITE_MODE", false); break;
+    case 3 /*11*/ << 6: append_cmt(ea, "CRAM_WRITE_MODE", false); break;
+    }
+  }
 
-    if (val & mask(6)) append_cmt(ea, "VRAM_COPY_DMA_MODE", false);
+  if (val & mask(6)) append_cmt(ea, "VRAM_COPY_DMA_MODE", false);
 
-    if (val & mask(7)) append_cmt(ea, "DO_OPERATION_USING_DMA", false);
-    else append_cmt(ea, "DO_OPERATION_WITHOUT_DMA", false);
+  if (val & mask(7)) append_cmt(ea, "DO_OPERATION_USING_DMA", false);
+  else append_cmt(ea, "DO_OPERATION_WITHOUT_DMA", false);
 }
 
 //--------------------------------------------------------------------------
 static void do_cmt_z80_bus_command(ea_t ea, ea_t addr, uint32 val)
 {
-    switch (addr)
+  switch (addr)
+  {
+  case 0xA11100: // IO_Z80BUS
+  {
+    switch (val)
     {
-    case 0xA11100: // IO_Z80BUS
-    {
-        switch (val)
-        {
-        case 0x0: append_cmt(ea, "Give the Z80 the bus back", false); break;
-        case 0x100: append_cmt(ea, "Send the Z80 a bus request", false); break;
-        }
-    } break;
-    case 0xA11200: // IO_Z80RES
-    {
-        switch (val)
-        {
-        case 0x0: append_cmt(ea, "Disable the Z80 reset", false); break;
-        case 0x100: append_cmt(ea, "Reset the Z80", false); break;
-        }
-    } break;
+    case 0x0: append_cmt(ea, "Give the Z80 the bus back", false); break;
+    case 0x100: append_cmt(ea, "Send the Z80 a bus request", false); break;
     }
+  } break;
+  case 0xA11200: // IO_Z80RES
+  {
+    switch (val)
+    {
+    case 0x0: append_cmt(ea, "Disable the Z80 reset", false); break;
+    case 0x100: append_cmt(ea, "Reset the Z80", false); break;
+    }
+  } break;
+  }
 }
 #endif
 
 //--------------------------------------------------------------------------
 static void print_version()
 {
-    static const char format[] = NAME " debugger plugin v%s;\nAuthor: DrMefistO [Lab 313] <newinferno@gmail.com>.";
-    info(format, VERSION);
-    msg(format, VERSION);
+  static const char format[] = NAME " debugger plugin v%s;\nAuthor: DrMefistO [Lab 313] <newinferno@gmail.com>.";
+  info(format, VERSION);
+  msg(format, VERSION);
 }
 
 //--------------------------------------------------------------------------
@@ -1439,13 +1632,13 @@ static void print_version()
 static bool init_plugin(void)
 {
 #ifdef DEBUG_68K
-    if (ph.id != PLFM_68K)
+  if (ph.id != PLFM_68K)
 #else
-    if (ph.id != PLFM_Z80)
+  if (ph.id != PLFM_Z80)
 #endif
-        return false;
+    return false;
 
-    return true;
+  return true;
 }
 
 #ifdef DEBUG_68K
@@ -1508,20 +1701,20 @@ static smd_constant_action_t smd_constant;
 static action_desc_t smd_constant_action = ACTION_DESC_LITERAL(smd_constant_name, "Identify SMD constant", &smd_constant, "J", NULL, -1);
 
 //--------------------------------------------------------------------------
-static ssize_t idaapi hook_ui(void *user_data, int notification_code, va_list va)
+static ssize_t idaapi hook_ui(void* user_data, int notification_code, va_list va)
 {
-    if (notification_code == ui_populating_widget_popup)
+  if (notification_code == ui_populating_widget_popup)
+  {
+    TWidget* widget = va_arg(va, TWidget*);
+
+    if (get_widget_type(widget) == BWN_DISASM)
     {
-        TWidget* widget = va_arg(va, TWidget*);
-
-        if (get_widget_type(widget) == BWN_DISASM)
-        {
-          TPopupMenu* p = va_arg(va, TPopupMenu*);
-          attach_action_to_popup(widget, p, smd_constant_name);
-        }
+      TPopupMenu* p = va_arg(va, TPopupMenu*);
+      attach_action_to_popup(widget, p, smd_constant_name);
     }
+  }
 
-    return 0;
+  return 0;
 }
 #endif
 
@@ -1529,58 +1722,58 @@ static ssize_t idaapi hook_ui(void *user_data, int notification_code, va_list va
 // Initialize debugger plugin
 static plugmod_t* idaapi init(void)
 {
-    if (init_plugin())
-    {
-        plugin_inited = true;
-        dbg_started = false;
-        my_dbg = false;
+  if (init_plugin())
+  {
+    plugin_inited = true;
+    dbg_started = false;
+    my_dbg = false;
 
 #ifdef DEBUG_68K
-        bool res = register_action(smd_constant_action);
+    bool res = register_action(smd_constant_action);
 
-        hook_to_notification_point(HT_UI, hook_ui, NULL);
-        hook_to_notification_point(HT_IDP, hook_linea_linef, nullptr);
-        hook_to_notification_point(HT_IDP, process_asm_output, nullptr);
-        register_post_event_visitor(HT_IDP, &ctx, nullptr);
-        hook_to_notification_point(HT_DBG, hook_dbg, NULL);
+    hook_to_notification_point(HT_UI, hook_ui, NULL);
+    hook_to_notification_point(HT_IDP, hook_linea_linef, nullptr);
+    hook_to_notification_point(HT_IDP, process_asm_output, nullptr);
+    register_post_event_visitor(HT_IDP, &ctx, nullptr);
+    hook_to_notification_point(HT_DBG, hook_dbg, NULL);
 #endif
 
-        print_version();
+    print_version();
 
-        dbg = &debugger; // temporary workaround for a dbg pointer absence
-        return PLUGIN_KEEP;
-    }
-    return PLUGIN_SKIP;
+    dbg = &debugger; // temporary workaround for a dbg pointer absence
+    return PLUGIN_KEEP;
+  }
+  return PLUGIN_SKIP;
 }
 
 //--------------------------------------------------------------------------
 // Terminate debugger plugin
 static void idaapi term(void)
 {
-    if (plugin_inited)
-    {
+  if (plugin_inited)
+  {
 #ifdef DEBUG_68K
-        unhook_from_notification_point(HT_UI, hook_ui);
-        unregister_post_event_visitor(HT_IDP, &ctx);
-        unhook_from_notification_point(HT_IDP, process_asm_output);
-        unhook_from_notification_point(HT_IDP, hook_linea_linef);
-        unhook_from_notification_point(HT_DBG, hook_dbg);
+    unhook_from_notification_point(HT_UI, hook_ui);
+    unregister_post_event_visitor(HT_IDP, &ctx);
+    unhook_from_notification_point(HT_IDP, process_asm_output);
+    unhook_from_notification_point(HT_IDP, hook_linea_linef);
+    unhook_from_notification_point(HT_DBG, hook_dbg);
 
-        unregister_action(smd_constant_name);
+    unregister_action(smd_constant_name);
 #endif
 
-        plugin_inited = false;
-        dbg_started = false;
+    plugin_inited = false;
+    dbg_started = false;
 
-        if (dbg == &debugger) {
-            dbg = nullptr;
-        }
+    if (dbg == &debugger) {
+      dbg = nullptr;
     }
+  }
 }
 
 //--------------------------------------------------------------------------
 // The plugin method - usually is not used for debugger plugins
-static bool idaapi run(size_t arg){ return false; }
+static bool idaapi run(size_t arg) { return false; }
 
 //--------------------------------------------------------------------------
 char comment[] = NAME " debugger plugin by DrMefistO.";
@@ -1612,12 +1805,12 @@ plugin_t PLUGIN =
     run, // invoke plugin
 
     comment, // long comment about the plugin
-             // it could appear in the status line
-             // or as a hint
+    // it could appear in the status line
+    // or as a hint
 
-    help, // multiline help about the plugin
+help, // multiline help about the plugin
 
-    NAME " debugger plugin", // the preferred short name of the plugin
+NAME " debugger plugin", // the preferred short name of the plugin
 
-    "" // the preferred hotkey to run the plugin
+"" // the preferred hotkey to run the plugin
 };

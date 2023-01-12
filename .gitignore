@@ -22,6 +22,7 @@
 *.lib
 *.vsidx
 read.lock
+fileList.bin
 _IsIncrementalBuild
 *.vcxproj.FileListAbsolute.txt
 DbgClient_server.skeleton.cpp
