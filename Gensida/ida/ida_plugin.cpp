@@ -15,17 +15,22 @@
 //#include <Windows.h>
 
 #include <Windows.h>
+#include <Psapi.h>
 #include <ida.hpp>
 #include <dbg.hpp>
 #include <idd.hpp>
 #include <loader.hpp>
 #include <idp.hpp>
 #include <offset.hpp>
+#include <struct.hpp>
+#include <enum.hpp>
+#include <regex>
 
 #include "ida_plugin.h"
 
 #include "ida_debmod.h"
 #include "ida_registers.h"
+#include <mutex>
 
 extern debugger_t debugger;
 
@@ -211,6 +216,363 @@ static void print_op(ea_t ea, op_t* op)
 #endif
 
 #ifdef DEBUG_68K
+/// <summary>
+/// this thing patches IDA to output structures in a full form, not like s1 <0>, but s1 <0, 0, 0>
+/// </summary>
+static uint8_t* dirty_win_hack() {
+    // if not found, look for seq "01 1F 30 02 1F 00 00 00" in ida.dll
+    static const uint8_t find_pat[] = { 0x48, 0x89, 0x5C, 0x24, 0x08, 0x48, 0x89, 0x74, 0x24, 0x10, 0x57, 0x48, 0x83, 0xEC, 0x20, 0x8B, 0xFA, 0x8B, 0xD9, 0x8B, 0xF1 };
+
+    MODULEINFO modinfo = { 0 };
+    HMODULE hModule = GetModuleHandle(TEXT("ida.dll"));
+
+    if (hModule == 0) {
+        return NULL;
+    }
+
+    GetModuleInformation(GetCurrentProcess(), hModule, &modinfo, sizeof(MODULEINFO));
+
+    uint8_t* p = (uint8_t*)modinfo.lpBaseOfDll;
+    auto base = 0;
+
+    for (; base < modinfo.SizeOfImage; ++base) {
+        if (!memcmp(&p[base], find_pat, sizeof(find_pat))) {
+            break;
+        }
+    }
+
+    if (base == modinfo.SizeOfImage) {
+        return NULL;
+    }
+
+    p = &p[base + 0x3E]; // lea rax, empty_struc
+
+    DWORD oldProtection;
+    VirtualProtect(p, 7, PAGE_EXECUTE_READWRITE, &oldProtection);
+    p[0] = 0x33; // xor eax, eax
+    p[1] = 0xC0;
+    p[2] = 0x90; // nop
+    p[3] = 0x90;
+    p[4] = 0x90;
+    p[5] = 0x90;
+    p[6] = 0x90;
+
+    VirtualProtect(p, 7, oldProtection, NULL);
+
+    return p;
+}
+
+static void undo_dirty_win_hack(uint8_t* p) {
+    if (p == NULL) {
+        return;
+    }
+
+    DWORD oldProtection;
+    VirtualProtect(p, 7, PAGE_EXECUTE_READWRITE, &oldProtection);
+    p[0] = 0x48;
+    p[1] = 0x8D;
+    p[2] = 0x05;
+    p[3] = 0x17;
+    p[4] = 0xD4;
+    p[5] = 0x2E;
+    p[6] = 0x00;
+
+    VirtualProtect(p, 7, oldProtection, NULL);
+}
+
+static enum asm_out_state {
+    asm_out_none,
+    asm_out_del_start,
+    asm_out_del_end,
+    asm_out_bin_start,
+    asm_out_bin_end,
+    asm_out_inc_start,
+    asm_out_inc_end,
+};
+
+static uint8_t* patch_offset = NULL;
+
+static asm_out_state asm_o_state = asm_out_none;
+static ea_t bin_inc_start = BADADDR;
+static qstring bin_inc_path;
+static qstrvec_t inc_listing;
+
+static void fix_arrows(qstring &line) {
+    line.replace("\xe2\x86\x93", "   "); // arrow down
+    line.replace("\xe2\x86\x91", "   "); // arrow up
+}
+
+static ea_t remove_offset(qstring &line) {
+    ea_t addr = BADADDR;
+
+    size_t p1 = line.find(':');
+    size_t p2 = line.find(' ', p1+1);
+
+    if (p2 == qstring::npos) {
+        line.clear();
+        return addr;
+    }
+
+    qstring addr_str = line.substr(p1 + 1, p2);
+
+    addr = strtoul(addr_str.c_str(), nullptr, 16);
+
+    line = line.substr(p2 + 1);
+
+    return addr;
+}
+
+static asm_out_state check_delete(qstring& line) {
+    if (line.find("DEL_START") != qstring::npos) {
+        return asm_out_del_start;
+    }
+    else if ((line.find("DEL_END") != qstring::npos) && (asm_o_state == asm_out_del_start)) {
+        line.clear();
+        return asm_out_del_end;
+    }
+
+    return asm_o_state;
+}
+
+static asm_out_state check_binclude(qstring& line, ea_t addr) {
+    std::regex re("BIN_START \"(.+)\"");
+    std::cmatch match;
+
+    if (std::regex_match(line.c_str(), match, re) == true) {
+        bin_inc_start = addr;
+
+        bin_inc_path.clear();
+        bin_inc_path.append(match.str(1).c_str());
+
+        return asm_out_bin_start;
+    }
+    else if ((line.find("BIN_END") != qstring::npos) && (asm_o_state == asm_out_bin_start)) {
+        addr = next_head(addr, BADADDR);
+        size_t size = addr - bin_inc_start;
+        uint8_t* tmp = (uint8_t*)malloc(size);
+        get_bytes(tmp, size, bin_inc_start, 0);
+
+        FILE* f = qfopen(bin_inc_path.c_str(), "wb");
+
+        if (f == nullptr) {
+            free(tmp);
+            return asm_o_state;
+        }
+
+        qfwrite(f, tmp, size);
+        qfclose(f);
+
+        free(tmp);
+
+        qstring name = get_name(bin_inc_start);
+        line.clear();
+
+        if (!name.empty()) {
+            line.append(name);
+            line.append(":\n");
+        }
+
+        line.cat_sprnt("    binclude \"%s\"\n    align 2, 0", bin_inc_path.c_str());
+
+        return asm_out_bin_end;
+    }
+    
+    return asm_o_state;
+}
+
+static asm_out_state check_include(qstring& line, ea_t addr) {
+    std::regex re("INC_START \"(.+)\"");
+    std::cmatch match;
+
+    if (std::regex_match(line.c_str(), match, re) == true) {
+        bin_inc_start = addr;
+
+        bin_inc_path.clear();
+        bin_inc_path.append(match.str(1).c_str());
+
+        inc_listing.clear();
+
+        return asm_out_inc_start;
+    } else if ((line.find("INC_END") != qstring::npos) && (asm_o_state == asm_out_inc_start)) {
+        FILE* f = qfopen(bin_inc_path.c_str(), "wb");
+
+        if (f == nullptr) {
+            return asm_o_state;
+        }
+
+        for each (const auto var in inc_listing) {
+            qfwrite(f, var.c_str(), var.length());
+            qfwrite(f, "\n", 1);
+        }
+
+        qfclose(f);
+
+        qstring name = get_name(bin_inc_start);
+        line.clear();
+
+        if (!name.empty()) {
+            line.append(name);
+            line.append(":\n");
+        }
+
+        line.cat_sprnt("    include \"%s\"\n    align 2, 0", bin_inc_path.c_str());
+
+        return asm_out_inc_end;
+    }
+    else if (asm_o_state == asm_out_inc_start) {
+        inc_listing.add(line);
+    }
+    
+    return asm_o_state;
+}
+
+static void check_org(qstring& line) {
+    std::regex re("^ORG[ \\t]+(\\$[0-9a-fA-F]+)$");
+
+    std::string rep = std::regex_replace(line.c_str(), re, "    org $1");
+
+    line.clear();
+    line.append(rep.c_str());
+}
+
+static void check_align(qstring& line) {
+    std::regex re("align[ \\t]+(\\d+)");
+    std::string rep = std::regex_replace(line.c_str(), re, "align $1, 0");
+
+    line.clear();
+    line.append(rep.c_str());
+}
+
+static void check_quotates(qstring& line) {
+    std::regex re("([^#'])'(.+?)'");
+    std::string rep = std::regex_replace(line.c_str(), re, "$1\"$2\"");
+
+    line.clear();
+    line.append(rep.c_str());
+}
+
+static void check_ats(qstring& line) {
+    std::regex re("^((?:\\w*@+\\w*)+):");
+    std::cmatch match;
+
+    if (std::regex_match(line.c_str(), match, re) != true) {
+        return;
+    }
+
+    line.replace("@", "_");
+}
+
+static void print_line(FILE* fp, const qstring& line) {
+    qfwrite(fp, line.c_str(), line.length());
+    qfwrite(fp, "\n", 1);
+}
+
+static int idaapi line_output(FILE* fp, const qstring& line, bgcolor_t prefix_color, bgcolor_t bg_color) {
+    qstring qbuf;
+    tag_remove(&qbuf, line);
+
+    size_t len = qbuf.length();
+
+    fix_arrows(qbuf);
+
+    ea_t addr = remove_offset(qbuf);
+
+    if (addr == BADADDR) {
+        return 1;
+    }
+
+    check_org(qbuf);
+    check_align(qbuf);
+    check_quotates(qbuf);
+    check_ats(qbuf);
+
+    asm_o_state = check_delete(qbuf);
+    asm_o_state = check_binclude(qbuf, addr);
+    asm_o_state = check_include(qbuf, addr);
+
+    switch (asm_o_state) {
+    case asm_out_inc_start: {
+        return 1;
+    } break;
+    case asm_out_del_start: {
+        return 1;
+    } break;
+    case asm_out_bin_start: {
+        return 1;
+    } break;
+    case asm_out_del_end:
+    case asm_out_bin_end:
+    case asm_out_inc_end: {
+        asm_o_state = asm_out_none;
+    } break;
+    }
+
+    print_line(fp, qbuf);
+
+    return 1;
+}
+
+static void asm_add_header(FILE* fp) {
+    print_line(fp, "cpu 68000");
+    print_line(fp, "supmode on");
+    print_line(fp, "padding off\n\n");
+}
+
+static void print_struct(FILE* fp, tid_t id, uval_t index) {
+    struc_t* st = get_struc(id);
+
+    print_line(fp, get_struc_name(id));
+    print_line(fp, " ");
+    print_line(fp, "struct\n");
+}
+
+static void asm_add_structures(FILE* fp) {
+    for (auto i = get_first_struc_idx(); i != BADNODE; i = get_next_struc_idx(i)) {
+        tid_t id = get_struc_by_idx(i);
+
+        print_struct(fp, id, get_struc(id)->id);
+    }
+}
+
+static ssize_t idaapi process_asm_output(void* user_data, int notification_code, va_list va) {
+    switch (notification_code) {
+    case processor_t::ev_gen_asm_or_lst: {
+        bool starting = va_arg(va, bool);
+        FILE* fp = va_arg(va, FILE*);
+        bool is_asm = va_arg(va, bool);
+        int flags = va_arg(va, int);
+        html_line_cb_t** outline = va_arg(va, html_line_cb_t**);
+
+        if (flags & GENFLG_ASMINC) {
+            break;
+        }
+
+        if (is_asm && (flags & GENFLG_ASMTYPE)) {
+            break;
+        }
+
+        if (!is_asm || flags != 0) {
+            break;
+        }
+
+        if (starting) {
+            patch_offset = dirty_win_hack();
+            *outline = line_output;
+
+            asm_add_header(fp);
+           // asm_add_structures(fp);
+            asm_o_state = asm_out_none;
+        }
+        else {
+            undo_dirty_win_hack(patch_offset);
+            patch_offset = NULL;
+        }
+    } break;
+    }
+
+    return 0;
+}
+
 static ssize_t idaapi hook_linea_linef(void* user_data, int notification_code, va_list va)
 {
   switch (notification_code)
@@ -271,6 +633,8 @@ static ssize_t idaapi hook_linea_linef(void* user_data, int notification_code, v
       return 1;
     }
   } break;
+  default:
+      notification_code = notification_code;
   }
 
   return 0;
@@ -1176,6 +1540,7 @@ static plugmod_t* idaapi init(void)
 
         hook_to_notification_point(HT_UI, hook_ui, NULL);
         hook_to_notification_point(HT_IDP, hook_linea_linef, nullptr);
+        hook_to_notification_point(HT_IDP, process_asm_output, nullptr);
         register_post_event_visitor(HT_IDP, &ctx, nullptr);
         hook_to_notification_point(HT_DBG, hook_dbg, NULL);
 #endif
@@ -1197,7 +1562,8 @@ static void idaapi term(void)
 #ifdef DEBUG_68K
         unhook_from_notification_point(HT_UI, hook_ui);
         unregister_post_event_visitor(HT_IDP, &ctx);
-        unhook_from_notification_point(HT_DBG, hook_linea_linef);
+        unhook_from_notification_point(HT_IDP, process_asm_output);
+        unhook_from_notification_point(HT_IDP, hook_linea_linef);
         unhook_from_notification_point(HT_DBG, hook_dbg);
 
         unregister_action(smd_constant_name);
