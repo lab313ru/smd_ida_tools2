@@ -20,6 +20,9 @@
 *.cfg
 *.exp
 *.lib
+*.vsidx
+read.lock
+_IsIncrementalBuild
 *.vcxproj.FileListAbsolute.txt
 DbgClient_server.skeleton.cpp
 DbgServer_server.skeleton.cpp
