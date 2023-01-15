@@ -22,6 +22,7 @@
 #include <offset.hpp>
 #include <struct.hpp>
 #include <enum.hpp>
+#include <expr.hpp>
 #include <regex>
 
 #include "ida_plugin.h"
@@ -294,6 +295,26 @@ static uint8_t* patch_offset = NULL;
 static ea_t bin_inc_start = BADADDR;
 static qstring bin_inc_path;
 static qstrvec_t inc_listing;
+static bool warn_shown = false;
+
+static const std::regex re_check_code_repl("^CODE_REPL$");
+static const std::regex re_check_code_repl_final("^CODE_END$");
+static const std::regex re_check_ats("^((?:\\w*@+\\w*)+):");
+static const std::regex re_check_global("^[ \\t]+global[ \\t]+\\w+$");
+static const std::regex re_check_binclude("^BIN_START \"(.+)\"");
+static const std::regex re_check_include("^INC_START \"(.+)\"");
+static const std::regex re_check_subroutine("^; =+ S U B R O U T I N E =+$");
+static const std::regex re_check_licensed_to("^; \\|[ \\t]+Licensed to:.+$");
+static const std::regex re_check_org("^ORG[ \\t]+(\\$[0-9a-fA-F]+)$");
+static const std::regex re_check_align("^[ \\t]+align[ \\t]+(\\d+)");
+static const std::regex re_check_dcb_0("^[ \\t]+dcb\\.b[ \\t]+(\\$?\\w+),(?:[ \\t]+)?0");
+static const std::regex re_check_dcb_xx("^[ \\t]+dcb\\.b[ \\t]+(\\$?\\w+),(?:[ \\t]+)?(\\$?\\w+)");
+//static const std::regex re_check_quotates("([^#'])'(.+?)'");
+static const std::regex re_s_parse_name("^(\\w+)[ \\t]+struc .+$");
+static const std::regex re_s_parse_field("^(\\w+):[ \\t]+(.+)$");
+static const std::regex re_s_parse_end("^\\w+[ \\t]+ends(?:.+)?$");
+static const std::regex re_equ_parse("^(\\w+):[ \\t]+equ (.+)$");
+static const std::regex re_remove_offset("^\\w+:([0-9A-F]+) (.+)$");
 
 static void fix_arrows(qstring& line) {
   line.replace("\xe2\x86\x93", "   "); // arrow down
@@ -303,19 +324,15 @@ static void fix_arrows(qstring& line) {
 static ea_t remove_offset(qstring& line) {
   ea_t addr = BADADDR;
 
-  size_t p1 = line.find(':');
-  size_t p2 = line.find(' ', p1 + 1);
+  std::cmatch match;
 
-  if (p2 == qstring::npos) {
+  if (std::regex_match(line.c_str(), match, re_remove_offset) != true) {
     line.clear();
     return addr;
   }
 
-  qstring addr_str = line.substr(p1 + 1, p2);
-
-  addr = strtoul(addr_str.c_str(), nullptr, 16);
-
-  line = line.substr(p2 + 1);
+  addr = strtoul(match.str(1).c_str(), nullptr, 16);
+  line = match.str(2).c_str();
 
   return addr;
 }
@@ -331,19 +348,6 @@ static asm_out_state check_delete(qstring& line) {
 
   return asm_o_state;
 }
-
-static const std::regex re_check_ats("^((?:\\w*@+\\w*)+):");
-static const std::regex re_check_binclude("^BIN_START \"(.+)\"");
-static const std::regex re_check_include("^INC_START \"(.+)\"");
-static const std::regex re_check_subroutine("^; =+ S U B R O U T I N E =+$");
-static const std::regex re_check_licensed_to("^; \\|[ \\t]+Licensed to:.+$");
-static const std::regex re_check_org("^ORG[ \\t]+(\\$[0-9a-fA-F]+)$");
-static const std::regex re_check_align("^[ \\t]+align[ \\t]+(\\d+)");
-static const std::regex re_check_quotates("([^#'])'(.+?)'");
-static const std::regex re_s_parse_name("^(\\w+)[ \\t]+struc .+$");
-static const std::regex re_s_parse_field("^(\\w+):[ \\t]+(.+)$");
-static const std::regex re_s_parse_end("^\\w+[ \\t]+ends(?:.+)?$");
-static const std::regex re_equ_parse("^(\\w+):[ \\t]+equ (.+)$");
 
 static int path_create_dir(const qstring& path) {
   size_t start = 0;
@@ -453,7 +457,7 @@ static asm_out_state check_include(qstring& line, ea_t addr) {
       line.append(":\n");
     }
 
-    line.cat_sprnt("    include \"%s\"\n    align 2, 0", bin_inc_path.c_str());
+    line.cat_sprnt("    include \"%s\"", bin_inc_path.c_str());
 
     return asm_out_inc_end;
   }
@@ -484,26 +488,40 @@ static int check_licensed_to(const qstring& line) {
   return 0;
 }
 
+static int check_global(const qstring& line) {
+  std::cmatch match;
+
+  if (std::regex_match(line.c_str(), match, re_check_global) != true) {
+    return 1;
+  }
+
+  return 0;
+}
+
 static void check_org(qstring& line) {
   std::string rep = std::regex_replace(line.c_str(), re_check_org, "    org $1");
 
-  line.clear();
-  line.append(rep.c_str());
+  line = rep.c_str();
 }
 
 static void check_align(qstring& line) {
-  std::string rep = std::regex_replace(line.c_str(), re_check_align, "align $1, 0");
+  std::string rep = std::regex_replace(line.c_str(), re_check_align, "    align $1, 0");
 
-  line.clear();
-  line.append(rep.c_str());
+  line = rep.c_str();
 }
 
-static void check_quotates(qstring& line) {
-  std::string rep = std::regex_replace(line.c_str(), re_check_quotates, "$1\"$2\"");
+static void check_dcb(qstring& line) {
+  std::string rep = std::regex_replace(line.c_str(), re_check_dcb_0, "    rorg $1");
+  rep = std::regex_replace(rep.c_str(), re_check_dcb_xx, "    dc.b [$1]$2");
 
-  line.clear();
-  line.append(rep.c_str());
+  line = rep.c_str();
 }
+
+//static void check_quotates(qstring& line) {
+//  std::string rep = std::regex_replace(line.c_str(), re_check_quotates, "$1\"$2\"");
+//
+//  line = rep.c_str();
+//}
 
 static void check_ats(qstring& line) {
   std::cmatch match;
@@ -544,9 +562,14 @@ static int idaapi line_output(FILE* fp, const qstring& line, bgcolor_t prefix_co
     return 1;
   }
 
+  if (!check_global(qbuf)) {
+    return 1;
+  }
+
   check_org(qbuf);
   check_align(qbuf);
-  check_quotates(qbuf);
+  check_dcb(qbuf);
+  //check_quotates(qbuf);
   check_ats(qbuf);
 
   asm_o_state = check_delete(qbuf);
@@ -611,8 +634,7 @@ static struct_parse_t s_parse_name(const qstring& line) {
     return s_parse_state;
   }
 
-  curr_struct.name.clear();
-  curr_struct.name.append(match.str(1).c_str());
+  curr_struct.name = match.str(1).c_str();
 
   return struct_parse_fields;
 }
@@ -683,37 +705,75 @@ static int idaapi struct_equ_output(FILE* fp, const qstring& line, bgcolor_t pre
 }
 
 static void asm_add_header(FILE* fp) {
-  print_line(fp, "cpu 68000");
-  print_line(fp, "supmode on");
-  print_line(fp, "padding off\n\n");
+  print_line(fp, "    cpu 68000");
+  print_line(fp, "    supmode on");
+  print_line(fp, "    padding off\n\n");
+}
+
+static void asm_add_externs(FILE* fp) {
+  print_line(fp, "; ports");
+  print_line(fp, "IO_CT1_CTRL equ $A10008");
+  print_line(fp, "IO_CT1_DATA equ $A10002");
+  print_line(fp, "IO_CT1_RX equ $A1000E");
+  print_line(fp, "IO_CT1_SMODE equ $A10012");
+  print_line(fp, "IO_CT1_TX equ $A10010");
+  print_line(fp, "IO_CT2_CTRL equ $A1000A");
+  print_line(fp, "IO_CT2_DATA equ $A10004");
+  print_line(fp, "IO_CT2_RX equ $A10014");
+  print_line(fp, "IO_CT2_SMODE equ $A10018");
+  print_line(fp, "IO_CT2_TX equ $A10016");
+  print_line(fp, "IO_EXT_CTRL equ $A1000C");
+  print_line(fp, "IO_EXT_DATA equ $A10006");
+  print_line(fp, "IO_EXT_RX equ $A1001A");
+  print_line(fp, "IO_EXT_SMODE equ $A1001E");
+  print_line(fp, "IO_EXT_TX equ $A1001C");
+  print_line(fp, "IO_FDC equ $A12000");
+  print_line(fp, "IO_PCBVER equ $A10000");
+  print_line(fp, "IO_RAMMODE equ $A11000");
+  print_line(fp, "IO_TIME equ $A13000");
+  print_line(fp, "IO_TMSS equ $A14000");
+  print_line(fp, "IO_Z80BUS equ $A11100");
+  print_line(fp, "IO_Z80RES equ $A11200");
+  print_line(fp, "VDP_CNTR equ $C00008");
+  print_line(fp, "VDP_CTRL equ $C00004");
+  print_line(fp, "VDP_DATA equ $C00000");
+  print_line(fp, "VDP_PSG equ $C00011");
+  print_line(fp, "VDP__CNTR equ $C0000A");
+  print_line(fp, "VDP__CTRL equ $C00006");
+  print_line(fp, "VDP__DATA equ $C00002");
+  print_line(fp, "VDP___CNTR equ $C0000C");
+  print_line(fp, "VDP____CNTR equ $C0000E");
+  print_line(fp, "; ports\n\n\n");
 }
 
 static void dump_structures(FILE* fp) {
   if (structs.size() > 0) {
-    print_line(fp, "------------- structures -------------");
+    print_line(fp, "; ------------- structures -------------");
   }
 
   for each (const auto s in structs) {
     qstring tmp;
-    tmp.cat_sprnt("%s struct\n", s.name.c_str());
+    tmp.cat_sprnt("%s struc\n", s.name.c_str());
 
     for (auto i = 0; i < s.fields.size(); ++i) {
       tmp.cat_sprnt("%s %s\n", s.fields[i].c_str(), s.types[i].c_str());
     }
 
-    tmp.cat_sprnt("%s endstruct\n", s.name.c_str());
+    tmp.cat_sprnt("%s ends\n", s.name.c_str());
 
     print_line(fp, tmp);
   }
 
   if (structs.size() > 0) {
-    print_line(fp, "--------------------------------------\n\n\n");
+    print_line(fp, "; --------------------------------------\n\n\n");
   }
+
+  structs.clear();
 }
 
 static void dump_equals(FILE* fp) {
   if (equs.size() > 0) {
-    print_line(fp, "------------- equals -------------");
+    print_line(fp, "; ------------- equals -------------");
   }
 
   for each (const auto e in equs) {
@@ -724,8 +784,39 @@ static void dump_equals(FILE* fp) {
   }
 
   if (equs.size() > 0) {
-    print_line(fp, "----------------------------------\n\n\n");
+    print_line(fp, "; ----------------------------------\n\n\n");
   }
+
+  equs.clear();
+}
+
+static void dump_name(FILE* fp, ea_t addr) {
+  qstring name = get_name(addr);
+
+  if (!name.empty()) {
+    name.cat_sprnt(" equ $%a", addr);
+    print_line(fp, name);
+  }
+}
+
+static void dump_ram_names(FILE* fp) {
+  print_line(fp, "; ---------- ram names -------------");
+
+  ea_t ea = 0xFF0000;
+
+  while (ea != BADADDR && ea < 0x1000000) {
+    dump_name(fp, ea);
+    ea = next_not_tail(ea);
+  }
+
+  ea = 0xA00000;
+
+  while (ea != BADADDR && ea < 0xA10000) {
+    dump_name(fp, ea);
+    ea = next_not_tail(ea);
+  }
+
+  print_line(fp, "; ----------------------------------\n\n\n");
 }
 
 static ssize_t idaapi process_asm_output(void* user_data, int notification_code, va_list va) {
@@ -745,6 +836,7 @@ static ssize_t idaapi process_asm_output(void* user_data, int notification_code,
       else {
         dump_structures(fp);
         dump_equals(fp);
+        dump_ram_names(fp);
       }
       break;
     }
@@ -753,7 +845,13 @@ static ssize_t idaapi process_asm_output(void* user_data, int notification_code,
       patch_offset = dirty_win_hack();
       *outline = line_output;
 
+      qstring tmp;
+      idc_value_t rv;
+      tmp.sprnt("process_config_line(\"%s\")", "OPCODE_BYTES=0");
+      eval_idc_expr(&rv, BADADDR, tmp.c_str());
+
       asm_add_header(fp);
+      asm_add_externs(fp);
       asm_o_state = asm_out_struct_start;
     }
     else {
@@ -766,7 +864,7 @@ static ssize_t idaapi process_asm_output(void* user_data, int notification_code,
   return 0;
 }
 
-static ssize_t idaapi hook_linea_linef(void* user_data, int notification_code, va_list va)
+static ssize_t idaapi hook_disasm(void* user_data, int notification_code, va_list va)
 {
   switch (notification_code)
   {
@@ -833,6 +931,9 @@ static ssize_t idaapi hook_linea_linef(void* user_data, int notification_code, v
   return 0;
 }
 
+static int test1 = 0;
+static int test2 = 0;
+
 struct m68k_events_visitor_t : public post_event_visitor_t
 {
   ssize_t idaapi handle_post_event(ssize_t code, int notification_code, va_list va) override
@@ -873,14 +974,13 @@ struct m68k_events_visitor_t : public post_event_visitor_t
             op.addr &= 0xC000FF;
           }
 
-          if (out->itype == 0x75 && op.n == 0 && op.phrase == 9 && (op.addr & 0xFFFF0000) == 0xFF0000) {
+          if (out->itype == 0x75 && op.n == 0 && op.phrase == 9 && out->size == 6) { // jsr (label).l
             op.type = o_mem;
-            //op.specflag1 = 1;
           }
           else if ((out->itype == 0x76 || out->itype == 0x75 || out->itype == 0x74) && op.n == 0 &&
             (op.phrase == 0x09 || op.phrase == 0x0A) &&
             (op.addr != 0 && op.addr <= 0xA00000) &&
-            op.specflag1 == 2) { // lea table(pc),Ax; jsr func(pc); jmp label(pc)
+            (op.specflag1 == 2 || op.specflag1 == 3)) { // lea table(pc),Ax; jsr func(pc); jmp label(pc)
             short diff = op.addr - out->ea;
             if (diff >= SHRT_MIN && diff <= SHRT_MAX)
             {
@@ -1111,6 +1211,28 @@ struct m68k_events_visitor_t : public post_event_visitor_t
         return 1;
       }
     } break;
+      case processor_t::ev_out_operand: {
+        outctx_t* outctx = va_arg(va, outctx_t*);
+        const op_t* op = va_arg(va, const op_t*);
+
+        if (
+          op->type == o_displ &&
+          (((op->phrase == 0x0A) || (op->phrase == 0x0B) || (op->phrase == 0x08) || (op->phrase == 0x09)) && op->addr == 0)
+          ) {
+          qstring tmp;
+
+          tmp.append(COLSTR("0", SCOLOR_NUMBER));
+          tmp.append(COLSTR("(", SCOLOR_SYMBOL) SCOLOR_ON SCOLOR_REG "a");
+          tmp.append(0x28 + op->reg);
+          tmp.append(SCOLOR_OFF SCOLOR_REG);
+
+          size_t pos = outctx->outbuf.find(tmp.c_str());
+
+          if (pos != qstring::npos) {
+            outctx->outbuf.insert(pos + 5, COLSTR(".w", SCOLOR_SYMBOL));
+          }
+        }
+      } break;
     default:
     {
 #ifdef _DEBUG
@@ -1732,7 +1854,7 @@ static plugmod_t* idaapi init(void)
     bool res = register_action(smd_constant_action);
 
     hook_to_notification_point(HT_UI, hook_ui, NULL);
-    hook_to_notification_point(HT_IDP, hook_linea_linef, nullptr);
+    hook_to_notification_point(HT_IDP, hook_disasm, nullptr);
     hook_to_notification_point(HT_IDP, process_asm_output, nullptr);
     register_post_event_visitor(HT_IDP, &ctx, nullptr);
     hook_to_notification_point(HT_DBG, hook_dbg, NULL);
@@ -1756,7 +1878,7 @@ static void idaapi term(void)
     unhook_from_notification_point(HT_UI, hook_ui);
     unregister_post_event_visitor(HT_IDP, &ctx);
     unhook_from_notification_point(HT_IDP, process_asm_output);
-    unhook_from_notification_point(HT_IDP, hook_linea_linef);
+    unhook_from_notification_point(HT_IDP, hook_disasm);
     unhook_from_notification_point(HT_DBG, hook_dbg);
 
     unregister_action(smd_constant_name);
