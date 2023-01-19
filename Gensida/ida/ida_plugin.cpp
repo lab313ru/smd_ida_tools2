@@ -545,7 +545,7 @@ static int idaapi line_output(FILE* fp, const qstring& line, bgcolor_t prefix_co
 
   ea_t addr = remove_offset(qbuf);
 
-  if (addr == BADADDR) {
+  if (addr == BADADDR || is_unknown(get_flags(addr))) {
     return 1;
   }
 
