@@ -288,14 +288,16 @@ static enum asm_out_state {
   asm_out_inc_start,
   asm_out_inc_end,
   asm_out_struct_start,
-  asm_out_rom_end,
 } asm_o_state;
 
 static uint8_t* patch_offset = NULL;
 static ea_t bin_inc_start = BADADDR;
 static qstring bin_inc_path;
 static qstrvec_t inc_listing;
-static bool warn_shown = false;
+static ea_t last_not_unkn = BADADDR;
+static bool skip_unused = false;
+
+static const ea_t ROM_END = 0xA00000;
 
 static const std::regex re_check_code_repl("^CODE_REPL$");
 static const std::regex re_check_code_repl_final("^CODE_END$");
@@ -449,10 +451,7 @@ static asm_out_state check_include(qstring& line, ea_t addr) {
 
     qfclose(f);
 
-    qstring name = get_name(bin_inc_start);
-    line.clear();
-
-    line.cat_sprnt("    include \"%s\"", bin_inc_path.c_str());
+    line.sprnt("    include \"%s\"", bin_inc_path.c_str());
 
     return asm_out_inc_end;
   }
@@ -528,8 +527,8 @@ static void check_ats(qstring& line) {
   line.replace("@", "_");
 }
 
-static asm_out_state check_rom_end(ea_t addr) {
-  return (addr == 0xA00000) ? asm_out_rom_end : asm_o_state;
+static bool check_rom_end(ea_t addr) {
+  return (addr >= ROM_END);
 }
 
 static void print_line(FILE* fp, const qstring& line) {
@@ -545,8 +544,21 @@ static int idaapi line_output(FILE* fp, const qstring& line, bgcolor_t prefix_co
 
   ea_t addr = remove_offset(qbuf);
 
-  if (addr == BADADDR || is_unknown(get_flags(addr))) {
+  if (addr == BADADDR || check_rom_end(addr)) {
     return 1;
+  }
+
+  if (is_unknown(get_flags(addr))) {
+    ea_t last_head = next_head(addr, ROM_END);
+
+    if (last_not_unkn != last_head) {
+      last_not_unkn = last_head;
+      msg("Undefined data: %a\n", addr);
+    }
+
+    if (skip_unused) {
+      return 1;
+    }
   }
 
   if (!check_subroutine(qbuf)) {
@@ -570,7 +582,6 @@ static int idaapi line_output(FILE* fp, const qstring& line, bgcolor_t prefix_co
   asm_o_state = check_delete(qbuf);
   asm_o_state = check_binclude(qbuf, addr);
   asm_o_state = check_include(qbuf, addr);
-  asm_o_state = check_rom_end(addr);
 
   switch (asm_o_state) {
   case asm_out_inc_start: {
@@ -590,9 +601,6 @@ static int idaapi line_output(FILE* fp, const qstring& line, bgcolor_t prefix_co
   case asm_out_struct_start: {
     gen_file(ofile_type_t::OFILE_ASM, fp, BADADDR, BADADDR, GENFLG_ASMTYPE | GENFLG_ASMINC);
     asm_o_state = asm_out_none;
-  } break;
-  case asm_out_rom_end: {
-    return 1;
   } break;
   }
 
@@ -705,7 +713,7 @@ static void asm_add_header(FILE* fp) {
   print_line(fp, "    padding off\n\n");
 }
 
-static void asm_add_externs(FILE* fp) {
+static void dump_ports(FILE* fp) {
   print_line(fp, "; ports");
   print_line(fp, "IO_CT1_CTRL equ $A10008");
   print_line(fp, "IO_CT1_DATA equ $A10002");
@@ -804,9 +812,9 @@ static void dump_ram_names(FILE* fp) {
     ea = next_not_tail(ea);
   }
 
-  ea = 0xA00000;
+  ea = ROM_END;
 
-  while (ea != BADADDR && ea < 0xA10000) {
+  while (ea != BADADDR && ea < (ROM_END + 0x10000)) {
     dump_name(fp, ea);
     ea = next_not_tail(ea);
   }
@@ -829,9 +837,42 @@ static ssize_t idaapi process_asm_output(void* user_data, int notification_code,
         s_parse_state = struct_parse_name;
       }
       else {
-        dump_structures(fp);
-        dump_equals(fp);
-        dump_ram_names(fp);
+        path_create_dir("./src");
+
+        const char* ports_path = "src/ports.inc";
+        const char* structs_path = "src/structs.inc";
+        const char* equals_path = "src/equals.inc";
+        const char* rams_path = "src/ram_addrs.inc";
+
+        FILE* tmp = qfopen(ports_path, "wb");
+        dump_ports(tmp);
+        qfclose(tmp);
+
+        tmp = qfopen(structs_path, "wb");
+        dump_structures(tmp);
+        qfclose(tmp);
+
+        tmp = qfopen(equals_path, "wb");
+        dump_equals(tmp);
+        qfclose(tmp);
+
+        tmp = qfopen(rams_path, "wb");
+        dump_ram_names(tmp);
+        qfclose(tmp);
+
+        qstring tmp_line;
+
+        tmp_line.sprnt("    include \"%s\"", ports_path);
+        print_line(fp, tmp_line);
+
+        tmp_line.sprnt("    include \"%s\"", structs_path);
+        print_line(fp, tmp_line);
+
+        tmp_line.sprnt("    include \"%s\"", equals_path);
+        print_line(fp, tmp_line);
+
+        tmp_line.sprnt("    include \"%s\"", rams_path);
+        print_line(fp, tmp_line);
       }
       break;
     }
@@ -840,13 +881,14 @@ static ssize_t idaapi process_asm_output(void* user_data, int notification_code,
       patch_offset = dirty_win_hack();
       *outline = line_output;
 
+      skip_unused = ask_yn(ASKBTN_YES, "Do you want to skip unused code/data output?") == ASKBTN_YES;
+
       qstring tmp;
       idc_value_t rv;
       tmp.sprnt("process_config_line(\"%s\")", "OPCODE_BYTES=0");
       eval_idc_expr(&rv, BADADDR, tmp.c_str());
 
       asm_add_header(fp);
-      asm_add_externs(fp);
       asm_o_state = asm_out_struct_start;
     }
     else {
@@ -1810,9 +1852,118 @@ struct smd_constant_action_t : public action_handler_t
   }
 };
 
+struct smd_output_mark_action_t : public action_handler_t
+{
+  static void get_addr_name(ushort mode, ea_t ea, qstring& dest)
+  {
+    if (mode == 2) {
+      return;
+    }
+
+    qstring name = get_name(ea);
+
+    if (!name.empty()) {
+      dest.append(name);
+    }
+    else {
+      switch (mode) {
+      case 0: {
+        dest.cat_sprnt("bin_%a", ea);
+      } break;
+      case 1: {
+        dest.cat_sprnt("inc_%a", ea);
+      } break;
+      }
+    }
+    
+    switch (mode) {
+    case 0: {
+      dest.cat_sprnt(".bin", ea);
+    } break;
+    case 1: {
+      dest.cat_sprnt(".inc", ea);
+    } break;
+    }
+  }
+
+  static int idaapi change_output_path(int field_id, form_actions_t& fa)
+  {
+    ushort mode = 0;
+    fa.get_rbgroup_value(2, &mode);
+
+    fa.enable_field(1, mode != 2); // delete
+
+    ea_t ea1 = BADADDR, ea2 = BADADDR;
+    bool good = read_range_selection(nullptr, &ea1, &ea2);
+
+    if (!good) {
+      ea1 = get_screen_ea();
+    }
+
+    qstring path;
+    fa.get_string_value(1, &path);
+
+    size_t dir_pos = path.rfind('/');
+
+    if (dir_pos == qstring::npos) {
+      dir_pos = 0;
+    }
+    else {
+      path = path.substr(0, dir_pos + 1);
+    }
+
+    get_addr_name(mode, ea1, path);
+
+    fa.set_string_value(1, &path);
+    return 1;
+  }
+
+  virtual int idaapi activate(action_activation_ctx_t* ctx)
+  {
+    qstring path = "src/";
+    ushort bin_inc_del = 0;
+
+    if (ask_form("Choose output method\n\n%/<##~O~utput path:q1:1000:50::>\n<#binclude#Mode#~B~inary include block:R><|><#include#ASM ~I~nclude block:R><|><#delete#~D~on't output block:R>2>\n", &change_output_path, &path, &bin_inc_del) == 1) {
+      ea_t ea1 = BADADDR, ea2 = BADADDR;
+      bool good = read_range_selection(nullptr, &ea1, &ea2);
+
+      if (!good) {
+        ea1 = ea2 = get_screen_ea();
+      }
+      else {
+        ea2 -= 1;
+      }
+
+      switch (bin_inc_del) {
+      case 0: {
+        add_extra_line(ea1, true, "BIN_START \"%s\"", path.c_str());
+        add_extra_line(ea2, false, "BIN_END");
+      } break;
+      case 1: {
+        add_extra_line(ea1, true, "INC_START \"%s\"", path.c_str());
+        add_extra_line(ea2, false, "INC_END");
+      } break;
+      case 2: {
+        add_extra_line(ea1, true, "DEL_START");
+        add_extra_line(ea2, false, "DEL_END");
+      } break;
+      }
+    }
+    return 1;
+  }
+
+  virtual action_state_t idaapi update(action_update_ctx_t* ctx)
+  {
+    return AST_ENABLE_ALWAYS;
+  }
+};
+
 static const char smd_constant_name[] = "gensida:smd_constant";
+static const char smd_output_mark_name[] = "gensida:output_mark";
 static smd_constant_action_t smd_constant;
+static smd_output_mark_action_t smd_output_mark;
 static action_desc_t smd_constant_action = ACTION_DESC_LITERAL(smd_constant_name, "Identify SMD constant", &smd_constant, "J", NULL, -1);
+static action_desc_t smd_output_mark_action = ACTION_DESC_LITERAL(smd_output_mark_name, "Mark ASM output", &smd_output_mark, "Shift+J", NULL, -1);
 
 //--------------------------------------------------------------------------
 static ssize_t idaapi hook_ui(void* user_data, int notification_code, va_list va)
@@ -1825,6 +1976,8 @@ static ssize_t idaapi hook_ui(void* user_data, int notification_code, va_list va
     {
       TPopupMenu* p = va_arg(va, TPopupMenu*);
       attach_action_to_popup(widget, p, smd_constant_name);
+
+      attach_action_to_popup(widget, p, smd_output_mark_name);
     }
   }
 
@@ -1844,6 +1997,7 @@ static plugmod_t* idaapi init(void)
 
 #ifdef DEBUG_68K
     bool res = register_action(smd_constant_action);
+    res = register_action(smd_output_mark_action);
 
     hook_to_notification_point(HT_UI, hook_ui, NULL);
     hook_to_notification_point(HT_IDP, hook_disasm, nullptr);
@@ -1873,6 +2027,7 @@ static void idaapi term(void)
     unhook_from_notification_point(HT_IDP, hook_disasm);
     unhook_from_notification_point(HT_DBG, hook_dbg);
 
+    unregister_action(smd_output_mark_name);
     unregister_action(smd_constant_name);
 #endif
 
