@@ -452,11 +452,6 @@ static asm_out_state check_include(qstring& line, ea_t addr) {
     qstring name = get_name(bin_inc_start);
     line.clear();
 
-    if (!name.empty()) {
-      line.append(name);
-      line.append(":\n");
-    }
-
     line.cat_sprnt("    include \"%s\"", bin_inc_path.c_str());
 
     return asm_out_inc_end;
@@ -930,9 +925,6 @@ static ssize_t idaapi hook_disasm(void* user_data, int notification_code, va_lis
 
   return 0;
 }
-
-static int test1 = 0;
-static int test2 = 0;
 
 struct m68k_events_visitor_t : public post_event_visitor_t
 {
