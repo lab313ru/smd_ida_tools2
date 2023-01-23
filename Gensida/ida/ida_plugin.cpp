@@ -59,7 +59,7 @@ static int idaapi idp_to_dbg_reg(int idp_reg)
   if (idp_reg >= 0 && idp_reg <= 7)
     reg_idx = R_D0 + idp_reg;
   else if (idp_reg >= 8 && idp_reg <= 39)
-    reg_idx = R_A0 + (idp_reg % 8);
+    reg_idx = R_A0 + (idp_reg % 8) * 2;
   else if (idp_reg == 91)
     reg_idx = R_PC;
   else if (idp_reg == 92 || idp_reg == 93)
@@ -444,8 +444,8 @@ static asm_out_state check_include(qstring& line, ea_t addr) {
       return asm_o_state;
     }
 
-    for each (const auto var in inc_listing) {
-      qfwrite(f, var.c_str(), var.length());
+    for (const auto vvar : inc_listing) {
+      qfwrite(f, vvar.c_str(), vvar.length());
       qfwrite(f, "\n", 1);
     }
 
@@ -754,7 +754,7 @@ static void dump_structures(FILE* fp) {
     print_line(fp, "; ------------- structures -------------");
   }
 
-  for each (const auto s in structs) {
+  for (const auto s : structs) {
     qstring tmp;
     tmp.cat_sprnt("%s struc\n", s.name.c_str());
 
@@ -779,7 +779,7 @@ static void dump_equals(FILE* fp) {
     print_line(fp, "; ------------- equals -------------");
   }
 
-  for each (const auto e in equs) {
+  for (const auto e : equs) {
     qstring tmp;
     tmp.cat_sprnt("%s equ %s", e.name.c_str(), e.val.c_str());
 
@@ -1205,7 +1205,7 @@ struct m68k_events_visitor_t : public post_event_visitor_t
             }
           }
 
-          if (main_reg_idx != 16)
+          if (main_reg_idx != R_PC)
             main_reg = getreg(dbg->regs(main_reg_idx).name, regvalues);
 
           ea_t addr = (ea_t)main_reg.ival + op.addr + (ea_t)add_reg.ival;
@@ -1238,7 +1238,7 @@ struct m68k_events_visitor_t : public post_event_visitor_t
         } break;
         }
 
-        if (opinf->ea >= 0xFFFF0000 && opinf->ea <= 0xFFFFFFFF) {
+        if (opinf->ea != BADADDR && opinf->ea >= 0xFFFF0000 && opinf->ea < 0xFFFFFFFF) {
           opinf->ea &= 0xFFFFFF;
         }
 
@@ -1717,7 +1717,7 @@ static void do_cmt_vdp_rw_command(ea_t ea, uint32 val)
         ::qsnprintf(name, sizeof(name), "DO_WRITE_TO_VSRAM_AT_$%.4X_ADDR", addr);
         append_cmt(ea, name, false);
       } break;
-      case ((1 << 31) | (0 << 5) | (0 << 4)) /*100*/: // CRAM
+      case (unsigned int)((1 << 31) | (0 << 5) | (0 << 4)) /*100*/: // CRAM
       {
         ::qsnprintf(name, sizeof(name), "DO_WRITE_TO_CRAM_AT_$%.4X_ADDR", addr);
         append_cmt(ea, name, false);

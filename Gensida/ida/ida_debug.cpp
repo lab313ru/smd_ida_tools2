@@ -1143,7 +1143,7 @@ static drc_t idaapi update_bpts(int* nbpts, update_bpt_info_t *bpts, int nadd, i
     ea_t start = bpts[i].ea;
     ea_t end = bpts[i].ea + bpts[i].size - 1;
 
-    BpType type1;
+    BpType type1 = BpType::BP_PC;
     int type2 = 0;
 #ifdef DEBUG_68K
     bool is_vdp = false;
@@ -1202,7 +1202,7 @@ static drc_t idaapi update_bpts(int* nbpts, update_bpt_info_t *bpts, int nadd, i
   for (int i = 0; i < ndel; ++i) {
     ea_t start = bpts[nadd + i].ea;
     ea_t end = bpts[nadd + i].ea + bpts[nadd + i].size - 1;
-    BpType type1;
+    BpType type1 = BpType::BP_PC;
     int type2 = 0;
 #ifdef DEBUG_68K
     bool is_vdp = false;
@@ -1269,7 +1269,7 @@ static drc_t idaapi update_lowcnds(int* nupdated, const lowcnd_t *lowcnds, int n
   for (int i = 0; i < nlowcnds; ++i) {
     ea_t start = lowcnds[i].ea;
     ea_t end = lowcnds[i].ea + lowcnds[i].size - 1;
-    BpType type1;
+    BpType type1 = BpType::BP_PC;
     int type2 = 0;
 #ifdef DEBUG_68K
     bool is_vdp = false;
