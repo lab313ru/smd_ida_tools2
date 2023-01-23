@@ -10,4 +10,9 @@
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerWorkingDirectory>c:\Program Files\IDA Pro 8.0\</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug80|x64'">
+    <LocalDebuggerCommand>$(IDA_DIR)\ida.exe</LocalDebuggerCommand>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerWorkingDirectory>$(IDA_DIR)\</LocalDebuggerWorkingDirectory>
+  </PropertyGroup>
 </Project>
