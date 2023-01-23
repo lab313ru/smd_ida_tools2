@@ -1316,10 +1316,10 @@ void Export_Genesis(unsigned char * Data)
         Data[i + 0x12478 + 1] = VRam[i + 0];
         Data[i + 0x12478 + 0] = VRam[i + 1];
     }
-    Data[0x22478] = unsigned char(FrameCount & 0xFF);   //Modif
-    Data[0x22479] = unsigned char((FrameCount >> 8) & 0xFF);   //Modif
-    Data[0x2247A] = unsigned char((FrameCount >> 16) & 0xFF);   //Modif
-    Data[0x2247B] = unsigned char((FrameCount >> 24) & 0xFF);   //Modif
+    Data[0x22478] = (unsigned char)(FrameCount & 0xFF);   //Modif
+    Data[0x22479] = (unsigned char)((FrameCount >> 8) & 0xFF);   //Modif
+    Data[0x2247A] = (unsigned char)((FrameCount >> 16) & 0xFF);   //Modif
+    Data[0x2247B] = (unsigned char)((FrameCount >> 24) & 0xFF);   //Modif
 
     // everything after this should use this offset variable for ease of extensibility
     // Modif U. - got rid of about 12 KB of 00 bytes.

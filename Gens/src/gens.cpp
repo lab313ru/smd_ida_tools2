@@ -339,9 +339,9 @@ void Recalculate_Palettes(void)
             g = (Palette32[i] >> 8) & 0xFF;
             b = Palette32[i] & 0xFF;
 
-            r = (r * unsigned int(0.30 * 65536.0)) >> 16;
-            g = (g * unsigned int(0.59 * 65536.0)) >> 16;
-            b = (b * unsigned int(0.11 * 65536.0)) >> 16;
+            r = (r * (unsigned int)(0.30 * 65536.0)) >> 16;
+            g = (g * (unsigned int)(0.59 * 65536.0)) >> 16;
+            b = (b * (unsigned int)(0.11 * 65536.0)) >> 16;
 
             r = g = b = r + g + b;
 
@@ -363,9 +363,9 @@ void Recalculate_Palettes(void)
 
             b = ((Palette[i] >> 0) & 0x1F) << 1;
 
-            r = (r * unsigned int(0.30 * 65536.0)) >> 16;
-            g = (g * unsigned int(0.59 * 65536.0)) >> 16;
-            b = (b * unsigned int(0.11 * 65536.0)) >> 16;
+            r = (r * (unsigned int)(0.30 * 65536.0)) >> 16;
+            g = (g * (unsigned int)(0.59 * 65536.0)) >> 16;
+            b = (b * (unsigned int)(0.11 * 65536.0)) >> 16;
 
             r = g = b = r + g + b;
 

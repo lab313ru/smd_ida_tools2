@@ -589,7 +589,7 @@ LRESULT CALLBACK HexEditorProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
         // Automatic adjust to account for menu and OS style, manual for scrollbar
         int ScrollbarWidth = GetSystemMetrics(SM_CXVSCROLL);
         AdjustWindowRectEx(&r, GetWindowLong(hDlg, GWL_STYLE),
-            (GetMenu(hDlg) > 0), GetWindowLong(hDlg, GWL_EXSTYLE));
+            (GetMenu(hDlg) > (HMENU)0), GetWindowLong(hDlg, GWL_EXSTYLE));
         if (HexEditors.size() > 1) {
             for (UINT i = 0; i < HexEditors.size(); i++) {
                 if (HexEditors[i] == HexOrder[1]) {
