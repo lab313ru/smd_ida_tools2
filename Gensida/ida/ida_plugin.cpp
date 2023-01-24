@@ -1918,22 +1918,59 @@ struct smd_output_mark_action_t : public action_handler_t
     return 1;
   }
 
+  static int idaapi clear_current(int button_code, form_actions_t& fa)
+  {
+    ea_t ea1 = BADADDR, ea2 = BADADDR;
+    bool good = read_range_selection(nullptr, &ea1, &ea2);
+
+    if (!good) {
+      ea1 = ea2 = get_screen_ea();
+    }
+    else {
+      ea2 -= 1;
+    }
+
+    del_extra_cmt(ea1, E_PREV);
+    del_extra_cmt(ea1, E_NEXT);
+    return 1;
+  }
+
   virtual int idaapi activate(action_activation_ctx_t* ctx)
   {
+    ea_t ea1 = BADADDR, ea2 = BADADDR;
+    bool good = read_range_selection(nullptr, &ea1, &ea2);
+
+    if (!good) {
+      ea1 = ea2 = get_screen_ea();
+    }
+    else {
+      ea2 -= 1;
+    }
+
+    qstring prev_path;
+    get_extra_cmt(&prev_path, ea1, E_PREV);
+
     qstring path = "src/";
     ushort bin_inc_del = 0;
 
-    if (ask_form("Choose output method\n\n%/<##~O~utput path:q1:1000:50::>\n<#binclude#Mode#~B~inary include block:R><|><#include#ASM ~I~nclude block:R><|><#delete#~D~on't output block:R>2>\n", &change_output_path, &path, &bin_inc_del) == 1) {
-      ea_t ea1 = BADADDR, ea2 = BADADDR;
-      bool good = read_range_selection(nullptr, &ea1, &ea2);
+    if (!prev_path.empty()) {
+      path = prev_path;
 
-      if (!good) {
-        ea1 = ea2 = get_screen_ea();
+      if (!strncmp(path.begin(), "BIN_", 4)) {
+        path = path.substr(11, path.size() - 2);
+        bin_inc_del = 0;
       }
-      else {
-        ea2 -= 1;
+      else if (!strncmp(path.begin(), "INC_", 4)) {
+        path = path.substr(11, path.size() - 2);
+        bin_inc_del = 1;
       }
+      else if (!strncmp(path.begin(), "DEL_", 4)) {
+        path.clear();
+        bin_inc_del = 2;
+      }
+    }
 
+    if (ask_form("Choose output method\n\n%/<##~O~utput path:q1:1000:50::><|><#Clear existing tag#~C~lear:B:0:::>\n<#binclude#Mode#~B~inary include block:R><|><#include#ASM ~I~nclude block:R><|><#delete#~D~on't output block:R>2>\n", &change_output_path, &path, &clear_current, &bin_inc_del) == 1) {
       switch (bin_inc_del) {
       case 0: {
         add_extra_line(ea1, true, "BIN_START \"%s\"", path.c_str());
