@@ -215,70 +215,6 @@ static void print_op(ea_t ea, op_t* op)
 #endif
 
 #ifdef DEBUG_68K
-/// <summary>
-/// this thing patches IDA to output structures in a full form, not like s1 <0>, but s1 <0, 0, 0>
-/// </summary>
-static uint8_t* dirty_win_hack() {
-  // if not found, look for seq "01 1F 30 02 1F 00 00 00" in ida.dll
-  static const uint8_t find_pat[] = { 0x48, 0x89, 0x5C, 0x24, 0x08, 0x48, 0x89, 0x74, 0x24, 0x10, 0x57, 0x48, 0x83, 0xEC, 0x20, 0x8B, 0xFA, 0x8B, 0xD9, 0x8B, 0xF1 };
-
-  MODULEINFO modinfo = { 0 };
-  HMODULE hModule = GetModuleHandle(TEXT("ida.dll"));
-
-  if (hModule == 0) {
-    return NULL;
-  }
-
-  GetModuleInformation(GetCurrentProcess(), hModule, &modinfo, sizeof(MODULEINFO));
-
-  uint8_t* p = (uint8_t*)modinfo.lpBaseOfDll;
-  auto base = 0;
-
-  for (; base < modinfo.SizeOfImage; ++base) {
-    if (!memcmp(&p[base], find_pat, sizeof(find_pat))) {
-      break;
-    }
-  }
-
-  if (base == modinfo.SizeOfImage) {
-    return NULL;
-  }
-
-  p = &p[base + 0x3E]; // lea rax, empty_struc
-
-  DWORD oldProtection;
-  VirtualProtect(p, 7, PAGE_EXECUTE_READWRITE, &oldProtection);
-  p[0] = 0x33; // xor eax, eax
-  p[1] = 0xC0;
-  p[2] = 0x90; // nop
-  p[3] = 0x90;
-  p[4] = 0x90;
-  p[5] = 0x90;
-  p[6] = 0x90;
-
-  VirtualProtect(p, 7, oldProtection, NULL);
-
-  return p;
-}
-
-static void undo_dirty_win_hack(uint8_t* p) {
-  if (p == NULL) {
-    return;
-  }
-
-  DWORD oldProtection;
-  VirtualProtect(p, 7, PAGE_EXECUTE_READWRITE, &oldProtection);
-  p[0] = 0x48;
-  p[1] = 0x8D;
-  p[2] = 0x05;
-  p[3] = 0x17;
-  p[4] = 0xD4;
-  p[5] = 0x2E;
-  p[6] = 0x00;
-
-  VirtualProtect(p, 7, oldProtection, NULL);
-}
-
 static enum asm_out_state {
   asm_out_none,
   asm_out_del_start,
@@ -290,7 +226,25 @@ static enum asm_out_state {
   asm_out_struct_start,
 } asm_o_state;
 
-static uint8_t* patch_offset = NULL;
+static enum out_asm_t {
+  asm_as,
+  asm_vasm,
+  asm_asm68k,
+} assembler;
+
+#define ASM_SPACE "    "
+#define ASM_AS_BIN "binclude"
+#define ASM_VASM_BIN "incbin"
+#define ASM_ASM68K_BIN ASM_VASM_BIN
+#define ASM_AS_ALIGN2 "align 2,0"
+#define ASM_VASM_ALIGN2 "align 1"
+#define ASM_ASM68K_ALIGN2 "even"
+
+#define ASM_AS_LINK "http://john.ccac.rwth-aachen.de:8000/as/index.html"
+#define ASM_VASM_LINK "http://sun.hasenbraten.de/vasm/index.php?view=main"
+#define ASM_ASM68K_LINK "https://info.sonicretro.org/File:ASM68k.7z"
+
+
 static ea_t bin_inc_start = BADADDR;
 static qstring bin_inc_path;
 static qstrvec_t inc_listing;
@@ -308,13 +262,9 @@ static const std::regex re_check_include("^INC_START \"(.+)\"");
 static const std::regex re_check_subroutine("^; =+ S U B R O U T I N E =+$");
 static const std::regex re_check_licensed_to("^; \\|[ \\t]+Licensed to:.+$");
 static const std::regex re_check_org("^ORG[ \\t]+(\\$[0-9a-fA-F]+)$");
-static const std::regex re_check_align("^[ \\t]+align[ \\t]+(\\d+)");
-static const std::regex re_check_dcb_0("^[ \\t]+dcb\\.b[ \\t]+(\\$?\\w+),(?:[ \\t]+)?0");
+static const std::regex re_check_align("^[ \\t]+align[ \\t]+2$");
 static const std::regex re_check_dcb_xx("^[ \\t]+dcb\\.b[ \\t]+(\\$?\\w+),(?:[ \\t]+)?(\\$?\\w+)");
 //static const std::regex re_check_quotates("([^#'])'(.+?)'");
-static const std::regex re_s_parse_name("^(\\w+)[ \\t]+struc .+$");
-static const std::regex re_s_parse_field("^(\\w+):[ \\t]+(.+)$");
-static const std::regex re_s_parse_end("^\\w+[ \\t]+ends(?:.+)?$");
 static const std::regex re_equ_parse("^(\\w+):[ \\t]+equ (.+)$");
 static const std::regex re_remove_offset("^\\w+:([0-9A-F]+) (.+)$");
 
@@ -412,7 +362,31 @@ static asm_out_state check_binclude(qstring& line, ea_t addr) {
       line.append(":\n");
     }
 
-    line.cat_sprnt("    binclude \"%s\"\n    align 2, 0", bin_inc_path.c_str());
+    switch (assembler) {
+    case asm_as: {
+      line.cat_sprnt(ASM_SPACE ASM_AS_BIN);
+    } break;
+    case asm_vasm: {
+      line.cat_sprnt(ASM_SPACE ASM_VASM_BIN);
+    } break;
+    case asm_asm68k: {
+      line.cat_sprnt(ASM_SPACE ASM_ASM68K_BIN);
+    } break;
+    }
+
+    line.cat_sprnt(" \"%s\"\n", bin_inc_path.c_str());
+
+    switch (assembler) {
+    case asm_as: {
+      line.cat_sprnt(ASM_SPACE ASM_AS_ALIGN2);
+    } break;
+    case asm_vasm: {
+      line.cat_sprnt(ASM_SPACE ASM_VASM_ALIGN2);
+    } break;
+    case asm_asm68k: {
+      line.cat_sprnt(ASM_SPACE ASM_ASM68K_ALIGN2);
+    } break;
+    }
 
     return asm_out_bin_end;
   }
@@ -451,7 +425,7 @@ static asm_out_state check_include(qstring& line, ea_t addr) {
 
     qfclose(f);
 
-    line.sprnt("    include \"%s\"", bin_inc_path.c_str());
+    line.sprnt(ASM_SPACE "include \"%s\"", bin_inc_path.c_str());
 
     return asm_out_inc_end;
   }
@@ -493,20 +467,47 @@ static int check_global(const qstring& line) {
 }
 
 static void check_org(qstring& line) {
-  std::string rep = std::regex_replace(line.c_str(), re_check_org, "    org $1");
+  std::string rep = std::regex_replace(line.c_str(), re_check_org, ASM_SPACE "org $1");
 
   line = rep.c_str();
 }
 
 static void check_align(qstring& line) {
-  std::string rep = std::regex_replace(line.c_str(), re_check_align, "    align $1, 0");
-
+  std::string rep;
+  
+  switch (assembler) {
+  case asm_as: {
+    rep = std::regex_replace(line.c_str(), re_check_align, ASM_SPACE ASM_AS_ALIGN2);
+  } break;
+  case asm_vasm: {
+    rep = std::regex_replace(line.c_str(), re_check_align, ASM_SPACE ASM_VASM_ALIGN2);
+  } break;
+  case asm_asm68k: {
+    rep = std::regex_replace(line.c_str(), re_check_align, ASM_SPACE ASM_ASM68K_ALIGN2);
+  } break;
+  default:
+    return;
+  }
+  
   line = rep.c_str();
 }
 
 static void check_dcb(qstring& line) {
-  std::string rep = std::regex_replace(line.c_str(), re_check_dcb_0, "    rorg $1");
-  rep = std::regex_replace(rep.c_str(), re_check_dcb_xx, "    dc.b [$1]$2");
+  std::string rep;
+
+  switch (assembler) {
+  case asm_as: {
+    rep = std::regex_replace(line.c_str(), re_check_dcb_xx, ASM_SPACE "dc.b [$1]$2");
+  } break;
+  case asm_vasm: {
+    rep = std::regex_replace(line.c_str(), re_check_dcb_xx, ASM_SPACE "dcb.b $1,$2");
+  } break;
+  case asm_asm68k: {
+    rep = std::regex_replace(line.c_str(), re_check_dcb_xx, ASM_SPACE "dcb.b $1,$2");
+  } break;
+  default:
+    return;
+  }
 
   line = rep.c_str();
 }
@@ -563,6 +564,7 @@ static int idaapi line_output(FILE* fp, const qstring& line, bgcolor_t prefix_co
 
   if (!check_subroutine(qbuf)) {
     print_line(fp, "\n");
+    return 1;
   }
 
   if (!check_licensed_to(qbuf)) {
@@ -611,59 +613,11 @@ static int idaapi line_output(FILE* fp, const qstring& line, bgcolor_t prefix_co
 
 typedef struct {
   qstring name;
-  qstrvec_t fields;
-  qstrvec_t types;
-} struct_prep_t;
-
-typedef struct {
-  qstring name;
   qstring val;
 } equ_t;
 
-static struct_prep_t curr_struct;
-static qvector<struct_prep_t> structs;
 static qvector<equ_t> equs;
-
-static enum struct_parse_t {
-  struct_parse_name,
-  struct_parse_fields,
-  struct_parse_none,
-} s_parse_state;
-
-static struct_parse_t s_parse_name(const qstring& line) {
-  std::cmatch match;
-
-  if (std::regex_match(line.c_str(), match, re_s_parse_name) != true) {
-    return s_parse_state;
-  }
-
-  curr_struct.name = match.str(1).c_str();
-
-  return struct_parse_fields;
-}
-
-static struct_parse_t s_parse_end(const qstring& line) {
-  std::cmatch match;
-
-  if (std::regex_match(line.c_str(), match, re_s_parse_end) != true) {
-    return s_parse_state;
-  }
-
-  return struct_parse_none;
-}
-
-static struct_parse_t s_parse_field(const qstring& line) {
-  std::cmatch match;
-
-  if (std::regex_match(line.c_str(), match, re_s_parse_field) != true) {
-    return s_parse_end(line);
-  }
-
-  curr_struct.fields.add(match.str(1).c_str());
-  curr_struct.types.add(match.str(2).c_str());
-
-  return s_parse_state;
-}
+static qvector<ea_t> unhidden_structs;
 
 static void equ_parse(const qstring& line) {
   std::cmatch match;
@@ -678,39 +632,31 @@ static void equ_parse(const qstring& line) {
   equs.add(equ);
 }
 
-static int idaapi struct_equ_output(FILE* fp, const qstring& line, bgcolor_t prefix_color, bgcolor_t bg_color) {
+static int idaapi equ_output(FILE* fp, const qstring& line, bgcolor_t prefix_color, bgcolor_t bg_color) {
   qstring qbuf;
   tag_remove(&qbuf, line);
 
   fix_arrows(qbuf);
-
   equ_parse(qbuf);
-
-  switch (s_parse_state) {
-  case struct_parse_name: {
-    s_parse_state = s_parse_name(qbuf);
-  } break;
-  case struct_parse_fields: {
-    s_parse_state = s_parse_field(qbuf);
-  } break;
-  case struct_parse_none: {
-    structs.add(curr_struct);
-
-    curr_struct.name.clear();
-    curr_struct.fields.clear();
-    curr_struct.types.clear();
-
-    s_parse_state = struct_parse_name;
-  } break;
-  }
-
+  
   return 1;
 }
 
 static void asm_add_header(FILE* fp) {
-  print_line(fp, "    cpu 68000");
-  print_line(fp, "    supmode on");
-  print_line(fp, "    padding off\n\n");
+  switch (assembler) {
+  case asm_as: {
+    print_line(fp, ASM_SPACE "cpu 68000");
+    print_line(fp, ASM_SPACE "page 0");
+    print_line(fp, ASM_SPACE "supmode on");
+    print_line(fp, ASM_SPACE "padding off\n\n");
+  } break;
+  case asm_vasm: {
+    print_line(fp, ASM_SPACE "org 0\n\n");
+  } break;
+  case asm_asm68k: {
+    print_line(fp, ASM_SPACE "org 0\n\n");
+  } break;
+  }
 }
 
 static void dump_ports(FILE* fp) {
@@ -749,31 +695,6 @@ static void dump_ports(FILE* fp) {
   print_line(fp, "; ports\n\n\n");
 }
 
-static void dump_structures(FILE* fp) {
-  if (structs.size() > 0) {
-    print_line(fp, "; ------------- structures -------------");
-  }
-
-  for (const auto s : structs) {
-    qstring tmp;
-    tmp.cat_sprnt("%s struc\n", s.name.c_str());
-
-    for (auto i = 0; i < s.fields.size(); ++i) {
-      tmp.cat_sprnt("%s %s\n", s.fields[i].c_str(), s.types[i].c_str());
-    }
-
-    tmp.cat_sprnt("%s ends\n", s.name.c_str());
-
-    print_line(fp, tmp);
-  }
-
-  if (structs.size() > 0) {
-    print_line(fp, "; --------------------------------------\n\n\n");
-  }
-
-  structs.clear();
-}
-
 static void dump_equals(FILE* fp) {
   if (equs.size() > 0) {
     print_line(fp, "; ------------- equals -------------");
@@ -793,11 +714,18 @@ static void dump_equals(FILE* fp) {
   equs.clear();
 }
 
-static void dump_name(FILE* fp, ea_t addr) {
+static void dump_name(FILE* fp, ea_t addr, bool extend) {
   qstring name = get_name(addr);
 
   if (!name.empty()) {
-    name.cat_sprnt(" equ $%a", addr);
+    name.cat_sprnt(" equ $");
+
+    if (extend) {
+      name.append("FF");
+    }
+
+    name.cat_sprnt("%a", addr);
+
     print_line(fp, name);
   }
 }
@@ -808,19 +736,108 @@ static void dump_ram_names(FILE* fp) {
   ea_t ea = 0xFF0000;
 
   while (ea != BADADDR && ea < 0x1000000) {
-    dump_name(fp, ea);
+    dump_name(fp, ea, true);
     ea = next_not_tail(ea);
   }
 
   ea = ROM_END;
 
   while (ea != BADADDR && ea < (ROM_END + 0x10000)) {
-    dump_name(fp, ea);
+    dump_name(fp, ea, false);
     ea = next_not_tail(ea);
   }
 
   print_line(fp, "; ----------------------------------\n\n\n");
 }
+
+static void unhide_structures() {
+  unhidden_structs.clear();
+
+  auto* s = get_first_seg();
+
+  for (auto i = s->start_ea; i < s->end_ea; ++i) {
+    if (is_terse_struc(i)) {
+      unhidden_structs.add(i);
+      clr_terse_struc(i);
+    }
+  }
+}
+
+static void hide_structures() {
+  for (const auto i : unhidden_structs) {
+    set_terse_struc(i);
+  }
+
+  unhidden_structs.clear();
+}
+
+static void disable_hex_view() {
+  qstring tmp;
+  idc_value_t rv;
+  tmp.sprnt("process_config_line(\"%s\")", "OPCODE_BYTES=0");
+  eval_idc_expr(&rv, BADADDR, tmp.c_str());
+}
+
+static void create_base_includes(FILE* fp) {
+  path_create_dir("./src");
+
+  const char* ports_path = "src/ports.inc";
+  const char* equals_path = "src/equals.inc";
+  const char* rams_path = "src/ram_addrs.inc";
+
+  FILE* tmp = qfopen(ports_path, "wb");
+  dump_ports(tmp);
+  qfclose(tmp);
+
+  tmp = qfopen(equals_path, "wb");
+  dump_equals(tmp);
+  qfclose(tmp);
+
+  tmp = qfopen(rams_path, "wb");
+  dump_ram_names(tmp);
+  qfclose(tmp);
+
+  qstring tmp_line;
+
+  tmp_line.sprnt(ASM_SPACE "include \"%s\"", ports_path);
+  print_line(fp, tmp_line);
+
+  tmp_line.sprnt(ASM_SPACE "include \"%s\"", equals_path);
+  print_line(fp, tmp_line);
+
+  tmp_line.sprnt(ASM_SPACE "include \"%s\"", rams_path);
+  print_line(fp, tmp_line);
+}
+
+static void ask_skip_unused() {
+  skip_unused = ask_yn(ASKBTN_NO, "Do you want to skip unused code/data output?") == ASKBTN_YES;
+}
+
+static int idaapi disable_links(int field_id, form_actions_t& fa) {
+  fa.enable_field(2, false);
+  fa.enable_field(3, false);
+  fa.enable_field(4, false);
+  return 1;
+}
+
+static bool ask_assembler() {
+  ushort chosen_asm = 0;
+
+  const qstring link1 = ASM_AS_LINK;
+  const qstring link2 = ASM_VASM_LINK;
+  const qstring link3 = ASM_ASM68K_LINK;
+  auto res = ask_form("Choose output assembler\n\n%/"
+           "<~A~S assembler:R><|><~V~ASM assembler:R><|><ASM68~K~ assembler:R>1>\n\n"
+           "<AS Website     :q2:0:::>\n"
+           "<VASM Website   :q3:0:::>\n"
+           "<ASM68K Website :q4:0:::>",
+           &disable_links,
+           &chosen_asm, &link1, &link2, &link3);
+  assembler = (out_asm_t)chosen_asm;
+
+  return res == 1;
+}
+
 
 static ssize_t idaapi process_asm_output(void* user_data, int notification_code, va_list va) {
   switch (notification_code) {
@@ -833,67 +850,28 @@ static ssize_t idaapi process_asm_output(void* user_data, int notification_code,
 
     if (is_asm) {
       if (starting) {
-        *outline = struct_equ_output;
-        s_parse_state = struct_parse_name;
+        *outline = equ_output;
       }
       else {
-        path_create_dir("./src");
-
-        const char* ports_path = "src/ports.inc";
-        const char* structs_path = "src/structs.inc";
-        const char* equals_path = "src/equals.inc";
-        const char* rams_path = "src/ram_addrs.inc";
-
-        FILE* tmp = qfopen(ports_path, "wb");
-        dump_ports(tmp);
-        qfclose(tmp);
-
-        tmp = qfopen(structs_path, "wb");
-        dump_structures(tmp);
-        qfclose(tmp);
-
-        tmp = qfopen(equals_path, "wb");
-        dump_equals(tmp);
-        qfclose(tmp);
-
-        tmp = qfopen(rams_path, "wb");
-        dump_ram_names(tmp);
-        qfclose(tmp);
-
-        qstring tmp_line;
-
-        tmp_line.sprnt("    include \"%s\"", ports_path);
-        print_line(fp, tmp_line);
-
-        tmp_line.sprnt("    include \"%s\"", structs_path);
-        print_line(fp, tmp_line);
-
-        tmp_line.sprnt("    include \"%s\"", equals_path);
-        print_line(fp, tmp_line);
-
-        tmp_line.sprnt("    include \"%s\"", rams_path);
-        print_line(fp, tmp_line);
+        create_base_includes(fp);
       }
       break;
     }
 
     if (starting) {
-      patch_offset = dirty_win_hack();
-      *outline = line_output;
+      ask_skip_unused();
+      disable_hex_view();
+      unhide_structures();
 
-      skip_unused = ask_yn(ASKBTN_YES, "Do you want to skip unused code/data output?") == ASKBTN_YES;
-
-      qstring tmp;
-      idc_value_t rv;
-      tmp.sprnt("process_config_line(\"%s\")", "OPCODE_BYTES=0");
-      eval_idc_expr(&rv, BADADDR, tmp.c_str());
+      if (ask_assembler()) {
+        *outline = line_output;
+      }
 
       asm_add_header(fp);
       asm_o_state = asm_out_struct_start;
     }
     else {
-      undo_dirty_win_hack(patch_offset);
-      patch_offset = NULL;
+      hide_structures();
     }
   } break;
   }
@@ -990,6 +968,14 @@ struct m68k_events_visitor_t : public post_event_visitor_t
         print_op(out->ea, &op);
 #endif
 
+        switch (out->itype) {
+        case 0x7d: { // move
+          if (out->Op2.type == o_reg && out->Op2.reg == 0x5e) { // move to usp
+            out->segpref = 0x3; // move.l to usp
+          }
+        } break;
+        }
+
         switch (op.type)
         {
         case o_near:
@@ -1009,6 +995,9 @@ struct m68k_events_visitor_t : public post_event_visitor_t
           }
 
           if (out->itype == 0x75 && op.n == 0 && op.phrase == 9 && out->size == 6) { // jsr (label).l
+            op.type = o_mem;
+          }
+          else if (out->itype == 0x74 && op.n == 0 && op.phrase == 8 && out->size == 4) { // jmp (label).w
             op.type = o_mem;
           }
           else if ((out->itype == 0x76 || out->itype == 0x75 || out->itype == 0x74) && op.n == 0 &&
@@ -1250,7 +1239,7 @@ struct m68k_events_visitor_t : public post_event_visitor_t
         const op_t* op = va_arg(va, const op_t*);
 
         if (
-          op->type == o_displ &&
+          op->type == o_displ && assembler != out_asm_t::asm_asm68k &&
           (((op->phrase == 0x0A) || (op->phrase == 0x0B) || (op->phrase == 0x08) || (op->phrase == 0x09)) && op->addr == 0)
           ) {
           qstring tmp;
