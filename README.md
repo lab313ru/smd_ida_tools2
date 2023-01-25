@@ -29,7 +29,7 @@ The IDA Pro tools for the Sega Genesis/MegaDrive romhackers
 3. Use [AS assembler](http://john.ccac.rwth-aachen.de:8000/as/index.html) to compile your `.lst` file.
 4. To compile listing that contains IDA structures (`struc_1 <val1, val2, ...>`) use an [attached asw.exe binary](/bin/asw.exe)
 
-![image](https://user-images.githubusercontent.com/7189309/214719872-3c1382cb-425c-4bd8-9d72-c3144d2d321c.png)
+![image](https://user-images.githubusercontent.com/7189309/214720698-ba674d23-487e-4307-8594-d4b7b2618143.png)
 
 ## Data marking methods
 All methods are specified like `START_TAG` - `END_TAG` (except `ORG` tag), where `START_TAG` must be specified using **Anterior comment** (`Ins`) at the first line of your data, and `END_TAG` must be inserted using **Posterior comment** (`Shift+Ins`).
