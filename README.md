@@ -20,11 +20,16 @@ The IDA Pro tools for the Sega Genesis/MegaDrive romhackers
 6. Run `gens_68k.exe` or `gens_z80.exe` from `gens` folder, choose a ROM
 7. Debug!
 
+## Available assemblers
+![image](https://user-images.githubusercontent.com/7189309/214719964-66c90f66-fedc-4705-94af-d0fce28270b4.png)
+
 ## How to produce a compilable asm listing
 1. Press `Shift+J` to choose how to mark your data range. Or mark it by yourself using available methods (listed below)
 2. Press `File->Produce file->Create LST file...`. Save `.lst` listing file
 3. Use [AS assembler](http://john.ccac.rwth-aachen.de:8000/as/index.html) to compile your `.lst` file.
 4. To compile listing that contains IDA structures (`struc_1 <val1, val2, ...>`) use an [attached asw.exe binary](/bin/asw.exe)
+
+![image](https://user-images.githubusercontent.com/7189309/214719872-3c1382cb-425c-4bd8-9d72-c3144d2d321c.png)
 
 ## Data marking methods
 All methods are specified like `START_TAG` - `END_TAG` (except `ORG` tag), where `START_TAG` must be specified using **Anterior comment** (`Ins`) at the first line of your data, and `END_TAG` must be inserted using **Posterior comment** (`Shift+Ins`).
