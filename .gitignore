@@ -21,6 +21,7 @@
 *.exp
 *.lib
 *.vsidx
+*.enc
 read.lock
 fileList.bin
 _IsIncrementalBuild
