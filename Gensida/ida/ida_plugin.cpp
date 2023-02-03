@@ -1843,70 +1843,6 @@ struct smd_constant_action_t : public action_handler_t
 
 struct smd_output_mark_action_t : public action_handler_t
 {
-  static void get_addr_name(ushort mode, ea_t ea, qstring& dest)
-  {
-    if (mode == 2) {
-      return;
-    }
-
-    qstring name = get_name(ea);
-
-    if (!name.empty()) {
-      dest.append(name);
-    }
-    else {
-      switch (mode) {
-      case 0: {
-        dest.cat_sprnt("bin_%a", ea);
-      } break;
-      case 1: {
-        dest.cat_sprnt("inc_%a", ea);
-      } break;
-      }
-    }
-    
-    switch (mode) {
-    case 0: {
-      dest.cat_sprnt(".bin", ea);
-    } break;
-    case 1: {
-      dest.cat_sprnt(".inc", ea);
-    } break;
-    }
-  }
-
-  static int idaapi change_output_path(int field_id, form_actions_t& fa)
-  {
-    ushort mode = 0;
-    fa.get_rbgroup_value(2, &mode);
-
-    fa.enable_field(1, mode != 2); // delete
-
-    ea_t ea1 = BADADDR, ea2 = BADADDR;
-    bool good = read_range_selection(nullptr, &ea1, &ea2);
-
-    if (!good) {
-      ea1 = get_screen_ea();
-    }
-
-    qstring path;
-    fa.get_string_value(1, &path);
-
-    size_t dir_pos = path.rfind('/');
-
-    if (dir_pos == qstring::npos) {
-      dir_pos = 0;
-    }
-    else {
-      path = path.substr(0, dir_pos + 1);
-    }
-
-    get_addr_name(mode, ea1, path);
-
-    fa.set_string_value(1, &path);
-    return 1;
-  }
-
   static int idaapi clear_current(int button_code, form_actions_t& fa)
   {
     ea_t ea1 = BADADDR, ea2 = BADADDR;
@@ -1939,34 +1875,30 @@ struct smd_output_mark_action_t : public action_handler_t
     qstring prev_path;
     get_extra_cmt(&prev_path, ea1, E_PREV);
 
-    qstring path = "src/";
     ushort bin_inc_del = 0;
 
     if (!prev_path.empty()) {
-      path = prev_path;
-
-      if (!strncmp(path.begin(), "BIN_", 4)) {
-        path = path.substr(11, path.size() - 2);
+      if (!strncmp(prev_path.begin(), "BIN_", 4)) {
         bin_inc_del = 0;
       }
-      else if (!strncmp(path.begin(), "INC_", 4)) {
-        path = path.substr(11, path.size() - 2);
+      else if (!strncmp(prev_path.begin(), "INC_", 4)) {
         bin_inc_del = 1;
       }
-      else if (!strncmp(path.begin(), "DEL_", 4)) {
-        path.clear();
+      else if (!strncmp(prev_path.begin(), "DEL_", 4)) {
         bin_inc_del = 2;
       }
     }
 
-    if (ask_form("Choose output method\n\n%/<##~O~utput path:q1:1000:50::><|><#Clear existing tag#~C~lear:B:0:::>\n<#binclude#Mode#~B~inary include block:R><|><#include#ASM ~I~nclude block:R><|><#delete#~D~on't output block:R>2>\n", &change_output_path, &path, &clear_current, &bin_inc_del) == 1) {
+    if (ask_form("Choose output method\n\n<#Clear existing tag#~C~lear:B:0:::>\n<#binclude#Mode#~B~inary include block:R><|><#include#ASM ~I~nclude block:R><|><#delete#~D~on't output block:R>2>\n", &clear_current, &bin_inc_del) == 1) {
+      delete_extra_cmts(ea1, E_PREV);
+      delete_extra_cmts(ea2, E_NEXT);
       switch (bin_inc_del) {
       case 0: {
-        add_extra_line(ea1, true, "BIN_START \"%s\"", path.c_str());
+        add_extra_line(ea1, true, "BIN_START \"rel/path/file.bin\"");
         add_extra_line(ea2, false, "BIN_END");
       } break;
       case 1: {
-        add_extra_line(ea1, true, "INC_START \"%s\"", path.c_str());
+        add_extra_line(ea1, true, "INC_START \"rel/path/file.inc\"");
         add_extra_line(ea2, false, "INC_END");
       } break;
       case 2: {
