@@ -219,11 +219,10 @@ static enum asm_out_state {
   asm_out_none,
   asm_out_del_start,
   asm_out_del_end,
-  asm_out_bin_start,
-  asm_out_bin_end,
+  asm_out_bin,
   asm_out_inc_start,
   asm_out_inc_end,
-  asm_out_struct_start,
+  asm_out_structs,
 } asm_o_state;
 
 static enum out_asm_t {
@@ -244,23 +243,22 @@ static enum out_asm_t {
 #define ASM_VASM_LINK "http://sun.hasenbraten.de/vasm/index.php?view=main"
 #define ASM_ASM68K_LINK "https://info.sonicretro.org/File:ASM68k.7z"
 
-
-static ea_t bin_inc_start = BADADDR;
-static qstring bin_inc_path;
+static ea_t bin_end = BADADDR;
+static ea_t inc_start = BADADDR;
+static qstring inc_path;
 static qstrvec_t inc_listing;
 static ea_t last_not_unkn = BADADDR;
 static bool skip_unused = false;
+static bool dont_delete = false;
 
 static const ea_t ROM_END = 0xA00000;
 
-static const std::regex re_check_code_repl("^CODE_REPL$");
-static const std::regex re_check_code_repl_final("^CODE_END$");
 static const std::regex re_check_ats("^((?:\\w*@+\\w*)+):");
 static const std::regex re_check_global("^[ \\t]+global[ \\t]+\\w+$");
-static const std::regex re_check_binclude("^BIN_START \"(.+)\"");
+static const std::regex re_check_binclude("^BIN \"(.+)\"");
 static const std::regex re_check_include("^INC_START \"(.+)\"");
 static const std::regex re_check_subroutine("^; =+ S U B R O U T I N E =+$");
-static const std::regex re_check_licensed_to("^; \\|[ \\t]+Licensed to:.+$");
+static const std::regex re_check_licensed_to("^; \\|[ \\t]+License.+$");
 static const std::regex re_check_org("^ORG[ \\t]+(\\$[0-9a-fA-F]+)$");
 static const std::regex re_check_align("^[ \\t]+align[ \\t]+2$");
 static const std::regex re_check_dcb_xx("^[ \\t]+dcb\\.b[ \\t]+(\\$?\\w+),(?:[ \\t]+)?(\\$?\\w+)");
@@ -289,13 +287,20 @@ static ea_t remove_offset(qstring& line) {
   return addr;
 }
 
-static asm_out_state check_delete(qstring& line) {
-  if (line.find("DEL_START") != qstring::npos) {
-    return asm_out_del_start;
+static asm_out_state check_delete(qstring& line, bool& skip) {
+  if (asm_o_state != asm_out_inc_start && asm_o_state != asm_out_none && asm_o_state != asm_out_del_start) {
+    return asm_o_state;
   }
-  else if ((line.find("DEL_END") != qstring::npos) && (asm_o_state == asm_out_del_start)) {
+
+  if (line.find("DEL_START") != qstring::npos) {
     line.clear();
-    return asm_out_del_end;
+    skip = dont_delete;
+    return dont_delete ? asm_o_state : asm_out_del_start;
+  }
+  else if (line.find("DEL_END") != qstring::npos) {
+    line.clear();
+    skip = dont_delete;
+    return dont_delete ? asm_o_state : asm_out_del_end;
   }
 
   return asm_o_state;
@@ -323,26 +328,26 @@ static int path_create_dir(const qstring& path) {
 static asm_out_state check_binclude(qstring& line, ea_t addr) {
   std::cmatch match;
 
-  if (std::regex_match(line.c_str(), match, re_check_binclude) == true) {
-    bin_inc_start = addr;
-
-    bin_inc_path.clear();
-    bin_inc_path.append(match.str(1).c_str());
-
-    return asm_out_bin_start;
+  if (asm_o_state != asm_out_inc_start && asm_o_state != asm_out_none) {
+    return asm_o_state;
   }
-  else if ((line.find("BIN_END") != qstring::npos) && (asm_o_state == asm_out_bin_start)) {
-    addr = next_head(addr, BADADDR);
-    size_t size = addr - bin_inc_start;
-    uint8_t* tmp = (uint8_t*)malloc(size);
-    get_bytes(tmp, size, bin_inc_start, 0);
 
-    if (!path_create_dir(bin_inc_path)) {
+  if (std::regex_match(line.c_str(), match, re_check_binclude) == true) {
+    asize_t size = get_item_size(addr);
+
+    bin_end = addr + size;
+
+    uint8_t* tmp = (uint8_t*)malloc(size);
+    get_bytes(tmp, size, addr, 0);
+
+    qstring path = match.str(1).c_str();
+
+    if (!path_create_dir(path)) {
       free(tmp);
       return asm_o_state;
     }
 
-    FILE* f = qfopen(bin_inc_path.c_str(), "wb");
+    FILE* f = qfopen(path.c_str(), "wb");
 
     if (f == nullptr) {
       free(tmp);
@@ -354,7 +359,7 @@ static asm_out_state check_binclude(qstring& line, ea_t addr) {
 
     free(tmp);
 
-    qstring name = get_name(bin_inc_start);
+    qstring name = get_name(addr);
     line.clear();
 
     if (!name.empty()) {
@@ -374,7 +379,7 @@ static asm_out_state check_binclude(qstring& line, ea_t addr) {
     } break;
     }
 
-    line.cat_sprnt(" \"%s\"\n", bin_inc_path.c_str());
+    line.cat_sprnt(" \"%s\"\n", path.c_str());
 
     switch (assembler) {
     case asm_as: {
@@ -388,7 +393,7 @@ static asm_out_state check_binclude(qstring& line, ea_t addr) {
     } break;
     }
 
-    return asm_out_bin_end;
+    return asm_out_bin;
   }
 
   return asm_o_state;
@@ -397,22 +402,25 @@ static asm_out_state check_binclude(qstring& line, ea_t addr) {
 static asm_out_state check_include(qstring& line, ea_t addr) {
   std::cmatch match;
 
-  if (std::regex_match(line.c_str(), match, re_check_include) == true) {
-    bin_inc_start = addr;
+  if (asm_o_state != asm_out_inc_start && asm_o_state != asm_out_none) {
+    return asm_o_state;
+  }
 
-    bin_inc_path.clear();
-    bin_inc_path.append(match.str(1).c_str());
+  if (std::regex_match(line.c_str(), match, re_check_include) == true) {
+    inc_start = addr;
+
+    inc_path = match.str(1).c_str();
 
     inc_listing.clear();
 
     return asm_out_inc_start;
   }
-  else if ((line.find("INC_END") != qstring::npos) && (asm_o_state == asm_out_inc_start)) {
-    if (!path_create_dir(bin_inc_path)) {
+  else if (line.find("INC_END") != qstring::npos) {
+    if (!path_create_dir(inc_path)) {
       return asm_o_state;
     }
 
-    FILE* f = qfopen(bin_inc_path.c_str(), "wb");
+    FILE* f = qfopen(inc_path.c_str(), "wb");
 
     if (f == nullptr) {
       return asm_o_state;
@@ -425,7 +433,7 @@ static asm_out_state check_include(qstring& line, ea_t addr) {
 
     qfclose(f);
 
-    line.sprnt(ASM_SPACE "include \"%s\"", bin_inc_path.c_str());
+    line.sprnt(ASM_SPACE "include \"%s\"", inc_path.c_str());
 
     return asm_out_inc_end;
   }
@@ -439,6 +447,10 @@ static asm_out_state check_include(qstring& line, ea_t addr) {
 static int check_subroutine(const qstring& line) {
   std::cmatch match;
 
+  if (asm_o_state != asm_out_inc_start && asm_o_state != asm_out_none) {
+    return 1;
+  }
+
   if (std::regex_match(line.c_str(), match, re_check_subroutine) != true) {
     return 1;
   }
@@ -448,6 +460,10 @@ static int check_subroutine(const qstring& line) {
 
 static int check_licensed_to(const qstring& line) {
   std::cmatch match;
+
+  if (asm_o_state != asm_out_inc_start && asm_o_state != asm_out_none) {
+    return 1;
+  }
 
   if (std::regex_match(line.c_str(), match, re_check_licensed_to) != true) {
     return 1;
@@ -459,6 +475,10 @@ static int check_licensed_to(const qstring& line) {
 static int check_global(const qstring& line) {
   std::cmatch match;
 
+  if (asm_o_state != asm_out_inc_start && asm_o_state != asm_out_none) {
+    return 1;
+  }
+
   if (std::regex_match(line.c_str(), match, re_check_global) != true) {
     return 1;
   }
@@ -467,6 +487,10 @@ static int check_global(const qstring& line) {
 }
 
 static void check_org(qstring& line) {
+  if (asm_o_state != asm_out_inc_start && asm_o_state != asm_out_none) {
+    return;
+  }
+
   std::string rep = std::regex_replace(line.c_str(), re_check_org, ASM_SPACE "org $1");
 
   line = rep.c_str();
@@ -474,6 +498,10 @@ static void check_org(qstring& line) {
 
 static void check_align(qstring& line) {
   std::string rep;
+
+  if (asm_o_state != asm_out_inc_start && asm_o_state != asm_out_none) {
+    return;
+  }
   
   switch (assembler) {
   case asm_as: {
@@ -494,6 +522,10 @@ static void check_align(qstring& line) {
 
 static void check_dcb(qstring& line) {
   std::string rep;
+
+  if (asm_o_state != asm_out_inc_start && asm_o_state != asm_out_none) {
+    return;
+  }
 
   switch (assembler) {
   case asm_as: {
@@ -521,6 +553,10 @@ static void check_dcb(qstring& line) {
 static void check_ats(qstring& line) {
   std::cmatch match;
 
+  if (asm_o_state != asm_out_inc_start && asm_o_state != asm_out_none) {
+    return;
+  }
+
   if (std::regex_match(line.c_str(), match, re_check_ats) != true) {
     return;
   }
@@ -545,7 +581,7 @@ static int idaapi line_output(FILE* fp, const qstring& line, bgcolor_t prefix_co
 
   ea_t addr = remove_offset(qbuf);
 
-  if (addr == BADADDR || check_rom_end(addr)) {
+  if (addr == BADADDR || (bin_end != BADADDR && addr < bin_end) || check_rom_end(addr)) {
     return 1;
   }
 
@@ -581,7 +617,13 @@ static int idaapi line_output(FILE* fp, const qstring& line, bgcolor_t prefix_co
   //check_quotates(qbuf);
   check_ats(qbuf);
 
-  asm_o_state = check_delete(qbuf);
+  bool skip = false;
+  asm_o_state = check_delete(qbuf, skip);
+
+  if (skip) {
+    return 1;
+  }
+
   asm_o_state = check_binclude(qbuf, addr);
   asm_o_state = check_include(qbuf, addr);
 
@@ -592,15 +634,12 @@ static int idaapi line_output(FILE* fp, const qstring& line, bgcolor_t prefix_co
   case asm_out_del_start: {
     return 1;
   } break;
-  case asm_out_bin_start: {
-    return 1;
-  } break;
+  case asm_out_bin:
   case asm_out_del_end:
-  case asm_out_bin_end:
   case asm_out_inc_end: {
     asm_o_state = asm_out_none;
   } break;
-  case asm_out_struct_start: {
+  case asm_out_structs: {
     gen_file(ofile_type_t::OFILE_ASM, fp, BADADDR, BADADDR, GENFLG_ASMTYPE | GENFLG_ASMINC);
     asm_o_state = asm_out_none;
   } break;
@@ -809,10 +848,6 @@ static void create_base_includes(FILE* fp) {
   print_line(fp, tmp_line);
 }
 
-static void ask_skip_unused() {
-  skip_unused = ask_yn(ASKBTN_NO, "Do you want to skip unused code/data output?") == ASKBTN_YES;
-}
-
 static int idaapi disable_links(int field_id, form_actions_t& fa) {
   fa.enable_field(2, false);
   fa.enable_field(3, false);
@@ -821,19 +856,29 @@ static int idaapi disable_links(int field_id, form_actions_t& fa) {
 }
 
 static bool ask_assembler() {
-  ushort chosen_asm = 0;
+  ushort chosen_asm = 0, skip_delete = 0;
 
   const qstring link1 = ASM_AS_LINK;
   const qstring link2 = ASM_VASM_LINK;
   const qstring link3 = ASM_ASM68K_LINK;
   auto res = ask_form("Choose output assembler\n\n%/"
-           "<~A~S assembler:R><|><~V~ASM assembler:R><|><ASM68~K~ assembler:R>1>\n\n"
+           "<~A~S assembler:R><|><~V~ASM assembler:R><|><ASM68~K~ assembler:R>1>\n"
+           "<~S~kip unused code/data output:C><|><~Ignore ~D~EL_START/_END tag:C>5>\n\n"
            "<AS Website     :q2:0:::>\n"
            "<VASM Website   :q3:0:::>\n"
            "<ASM68K Website :q4:0:::>",
            &disable_links,
-           &chosen_asm, &link1, &link2, &link3);
-  assembler = (out_asm_t)chosen_asm;
+           &chosen_asm, &skip_delete, &link1, &link2, &link3);
+  
+  if (res) {
+    skip_unused = skip_delete & 1;
+    dont_delete = skip_delete & 2;
+    assembler = (out_asm_t)chosen_asm;
+  }
+  else {
+    skip_unused = false;
+    dont_delete = false;
+  }
 
   return res == 1;
 }
@@ -859,7 +904,14 @@ static ssize_t idaapi process_asm_output(void* user_data, int notification_code,
     }
 
     if (starting) {
-      ask_skip_unused();
+      bin_end = BADADDR;
+      inc_start = BADADDR;
+      inc_path.clear();
+      inc_listing.clear();
+      last_not_unkn = BADADDR;
+      skip_unused = false;
+      dont_delete = false;
+
       disable_hex_view();
       unhide_structures();
 
@@ -868,7 +920,7 @@ static ssize_t idaapi process_asm_output(void* user_data, int notification_code,
       }
 
       asm_add_header(fp);
-      asm_o_state = asm_out_struct_start;
+      asm_o_state = asm_out_structs;
     }
     else {
       hide_structures();
@@ -1856,7 +1908,9 @@ struct smd_output_mark_action_t : public action_handler_t
     }
 
     del_extra_cmt(ea1, E_PREV);
-    del_extra_cmt(ea1, E_NEXT);
+    del_extra_cmt(ea2, E_NEXT);
+
+    fa.close(0);
     return 1;
   }
 
@@ -1878,7 +1932,7 @@ struct smd_output_mark_action_t : public action_handler_t
     ushort bin_inc_del = 0;
 
     if (!prev_path.empty()) {
-      if (!strncmp(prev_path.begin(), "BIN_", 4)) {
+      if (!strncmp(prev_path.begin(), "BIN", 3)) {
         bin_inc_del = 0;
       }
       else if (!strncmp(prev_path.begin(), "INC_", 4)) {
@@ -1889,13 +1943,16 @@ struct smd_output_mark_action_t : public action_handler_t
       }
     }
 
-    if (ask_form("Choose output method\n\n<#Clear existing tag#~C~lear:B:0:::>\n<#binclude#Mode#~B~inary include block:R><|><#include#ASM ~I~nclude block:R><|><#delete#~D~on't output block:R>2>\n", &clear_current, &bin_inc_del) == 1) {
+    if (ask_form("Choose output method\n\n"
+                 "<#binclude#Mode#~B~inary include block:R><|>"
+                 "<#include#ASM ~I~nclude block:R><|>"
+                 "<#delete#~D~on't output block:R>2>\n"
+                 "<#Clear existing tag#~C~lear:B:0:::>\n", &bin_inc_del, &clear_current) == 1) {
       delete_extra_cmts(ea1, E_PREV);
       delete_extra_cmts(ea2, E_NEXT);
       switch (bin_inc_del) {
       case 0: {
-        add_extra_line(ea1, true, "BIN_START \"rel/path/file.bin\"");
-        add_extra_line(ea2, false, "BIN_END");
+        add_extra_line(ea1, true, "BIN \"rel/path/file.bin\"");
       } break;
       case 1: {
         add_extra_line(ea1, true, "INC_START \"rel/path/file.inc\"");
