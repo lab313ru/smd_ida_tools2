@@ -147,6 +147,7 @@ HWND RamCheatHWnd = NULL; // modeless dialog
 std::vector<HWND> LuaScriptHWnds; // modeless dialogs
 HWND VolControlHWnd = NULL;
 
+int no_debug = 0;
 char Str_Tmp[1024];
 char Comment[256];
 char Gens_Path[1024];
@@ -2654,7 +2655,9 @@ int GensLoadRom(const char* filename)
 
     ReopenRamWindows();
 
-    init_dbg_server();
+    if (!no_debug) {
+      init_dbg_server();
+    }
 
     return loaded; // positive = success
 }
