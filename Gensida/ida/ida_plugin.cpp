@@ -787,7 +787,7 @@ static void dump_ram_names(FILE* fp) {
 
   ea = rom_end;
 
-  while (ea != BADADDR && is_loaded(rom_end + 0x10000) && ea < (rom_end + 0x10000)) {
+  while (ea != BADADDR && is_mapped(rom_end + 0x10000) && ea < (rom_end + 0x10000)) {
     dump_name(fp, ea, false);
     ea = next_not_tail(ea);
   }
@@ -919,6 +919,10 @@ static ssize_t idaapi process_asm_output(void* user_data, int notification_code,
       dont_delete = false;
 
       rom_end = get_first_seg()->end_ea + 1;
+
+      if (is_mapped(0xA00000)) {
+        rom_end = 0xA00000;
+      }
 
       disable_hex_view();
       unhide_structures();
