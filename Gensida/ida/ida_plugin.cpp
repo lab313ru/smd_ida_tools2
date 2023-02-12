@@ -250,8 +250,7 @@ static qstrvec_t inc_listing;
 static ea_t last_not_unkn = BADADDR;
 static bool skip_unused = false;
 static bool dont_delete = false;
-
-static const ea_t ROM_END = 0xA00000;
+static ea_t rom_end = BADADDR;
 
 static const std::regex re_check_ats("^((?:\\w*@+\\w*)+):");
 static const std::regex re_check_global("^[ \\t]+global[ \\t]+\\w+$");
@@ -565,7 +564,7 @@ static void check_ats(qstring& line) {
 }
 
 static bool check_rom_end(ea_t addr) {
-  return (addr >= ROM_END);
+  return (addr >= rom_end);
 }
 
 static void print_line(FILE* fp, const qstring& line) {
@@ -586,7 +585,7 @@ static int idaapi line_output(FILE* fp, const qstring& line, bgcolor_t prefix_co
   }
 
   if (is_unknown(get_flags(addr))) {
-    ea_t last_head = next_head(addr, ROM_END);
+    ea_t last_head = next_head(addr, rom_end);
 
     if (last_not_unkn != last_head) {
       last_not_unkn = last_head;
@@ -773,15 +772,22 @@ static void dump_ram_names(FILE* fp) {
   print_line(fp, "; ---------- ram names -------------");
 
   ea_t ea = 0xFF0000;
+  ea_t start_ea = get_first_seg()->start_ea;
+  ea_t end_ea = get_first_seg()->end_ea;
+
+  range_t rr(start_ea, end_ea);
 
   while (ea != BADADDR && ea < 0x1000000) {
-    dump_name(fp, ea, true);
+    if (!rr.contains(ea)) {
+      dump_name(fp, ea, true);
+    }
+
     ea = next_not_tail(ea);
   }
 
-  ea = ROM_END;
+  ea = rom_end;
 
-  while (ea != BADADDR && ea < (ROM_END + 0x10000)) {
+  while (ea != BADADDR && is_loaded(rom_end + 0x10000) && ea < (rom_end + 0x10000)) {
     dump_name(fp, ea, false);
     ea = next_not_tail(ea);
   }
@@ -818,7 +824,7 @@ static void disable_hex_view() {
 }
 
 static void create_base_includes(FILE* fp) {
-  path_create_dir("./src");
+  path_create_dir("./src/");
 
   const char* ports_path = "src/ports.inc";
   const char* equals_path = "src/equals.inc";
@@ -911,6 +917,8 @@ static ssize_t idaapi process_asm_output(void* user_data, int notification_code,
       last_not_unkn = BADADDR;
       skip_unused = false;
       dont_delete = false;
+
+      rom_end = get_first_seg()->end_ea + 1;
 
       disable_hex_view();
       unhide_structures();
