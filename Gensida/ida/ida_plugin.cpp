@@ -680,19 +680,18 @@ static int idaapi equ_output(FILE* fp, const qstring& line, bgcolor_t prefix_col
   return 1;
 }
 
-static void asm_add_header(FILE* fp) {
+static void asm_add_header(FILE* fp, ea_t first_addr) {
+  qstring org_first;
+  org_first.sprnt(ASM_SPACE "org $%x\n\n", first_addr);
+
+  print_line(fp, org_first);
+
   switch (assembler) {
   case asm_as: {
     print_line(fp, ASM_SPACE "cpu 68000");
     print_line(fp, ASM_SPACE "page 0");
     print_line(fp, ASM_SPACE "supmode on");
     print_line(fp, ASM_SPACE "padding off\n\n");
-  } break;
-  case asm_vasm: {
-    print_line(fp, ASM_SPACE "org 0\n\n");
-  } break;
-  case asm_asm68k: {
-    print_line(fp, ASM_SPACE "org 0\n\n");
   } break;
   }
 }
@@ -918,6 +917,8 @@ static ssize_t idaapi process_asm_output(void* user_data, int notification_code,
       skip_unused = false;
       dont_delete = false;
 
+      ea_t start_ea = get_first_seg()->start_ea;
+
       rom_end = get_first_seg()->end_ea + 1;
 
       if (is_mapped(0xA00000)) {
@@ -931,7 +932,7 @@ static ssize_t idaapi process_asm_output(void* user_data, int notification_code,
         *outline = line_output;
       }
 
-      asm_add_header(fp);
+      asm_add_header(fp, start_ea);
       asm_o_state = asm_out_structs;
     }
     else {
