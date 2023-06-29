@@ -34,7 +34,7 @@ The IDA Pro tools for the Sega Genesis/MegaDrive romhackers
 All methods are specified like `START_TAG` - `END_TAG` (except `ORG` tag), where `START_TAG` must be specified using **Anterior comment** (`Ins`) at the first line of your data, and `END_TAG` must be inserted using **Posterior comment** (`Shift+Ins`).
 
 Available TAGS:
-1. `BIN_START "relative/path.bin"` - `BIN_END`. This tag allows you to save some data array (or even code) to the `"relative/path.bin"` during the extraction. It also inserts `binclude "relative/path.bin"` line to your listing.
+1. `BIN "relative/path.bin"`. This tag allows you to save some data array (or even code) to the `"relative/path.bin"` during the extraction. It also inserts `binclude "relative/path.bin"` line to your listing.
 2. `INC_START "relative/path.inc"` - `INC_END`. The same as the previous item, except it just stores copies all lines between these tags as is and inserts the following line: `include "relative/path.inc"`.
 3. `DEL_START` - `DEL_END`. These tags can be used if you want to cut some lines from the resulting asm listing.
 4. `ORG $SIZE`. This tag inserts `org $size` directive line in the output.
