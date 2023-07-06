@@ -1334,11 +1334,11 @@ static drc_t idaapi update_lowcnds(int* nupdated, const lowcnd_t *lowcnds, int n
 // If this function is missing or returns false, IDA will use the standard
 // mechanism (based on the frame pointer chain) to calculate the stack trace
 // This function is called from the main thread
-static bool idaapi update_call_stack(thid_t tid, call_stack_t *trace) {
+static drc_t idaapi update_call_stack(thid_t tid, call_stack_t *trace) {
   std::vector<uint32_t> cs;
 
   if (client && !client->get_callstack(cs)) {
-    return false;
+    return DRC_FAILED;
   }
 
   trace->resize(cs.size());
@@ -1351,7 +1351,7 @@ static bool idaapi update_call_stack(thid_t tid, call_stack_t *trace) {
     ci.funcok = true;
   }
 
-  return true;
+  return DRC_OK;
 }
 
 static ssize_t idaapi idd_notify(void*, int msgid, va_list va) {
@@ -1576,7 +1576,7 @@ static ssize_t idaapi idd_notify(void*, int msgid, va_list va) {
   case debugger_t::ev_update_call_stack: {
     thid_t tid = va_argi(va, thid_t);
     call_stack_t* trace = va_arg(va, call_stack_t*);
-    retcode = g_dbgmod.dbg_update_call_stack(tid, trace);
+    retcode = update_call_stack(tid, trace);
   }
   break;
 #endif
