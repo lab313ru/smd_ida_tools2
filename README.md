@@ -8,8 +8,7 @@ The IDA Pro tools for the Sega Genesis/MegaDrive romhackers
 
 ## How to compile
 1. Edit paths to your IDA/SDK installation according to your real paths
-2. Use [VCPKG](https://vcpkg.io/) to install `grpc:x64-windows-static` and `grpc:x86-windows-static`. Use `vcpkg integrate install` to integrate it into Visual Studio
-3. Use **Visual Studio 2019** or newer to compile
+2. Use **Visual Studio** with integrated vcpkg (it will download and compile all dependencies) to compile
 
 ## How to use
 1. Put files from the `loaders` dir into the corresponding IDA folder
