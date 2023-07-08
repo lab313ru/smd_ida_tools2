@@ -37,3 +37,16 @@ Available TAGS:
 2. `INC_START "relative/path.inc"` - `INC_END`. The same as the previous item, except it just stores copies all lines between these tags as is and inserts the following line: `include "relative/path.inc"`.
 3. `DEL_START` - `DEL_END`. These tags can be used if you want to cut some lines from the resulting asm listing.
 4. `ORG $SIZE`. This tag inserts `org $size` directive line in the output.
+
+
+## How To Set Read Write Breakpoints On VDP VRAM , VDP CRAM , VDP VSRAM
+Once you are debugging, in the IDA View click 'g' and go to either:
+
+0x00D00000 ( DBG_VDP_VRAM:00D00000 ) - For VRAM ..
+
+0x00D10000 ( DBG_VDP_CRAM:00D10000 ) - for CRAM 
+
+0x00D20000 ( DBG_VDP_VSRAM:00D20000 ) - for VSRAM
+
+Find the address or addresses you want, offsetted from the above. Then select it / them . Right click. a prompt will come up. Click "Add Beakpoint" , or press F2 after selecting. 
+A "Breakpoint Settings" window will come up. Select either read or write or both under Hardware breakpoint mode and set the size. You can enable other settings like actions etc.
