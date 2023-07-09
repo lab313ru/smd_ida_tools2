@@ -40,8 +40,10 @@ Available TAGS:
 
 
 ## How To Set Read Write Breakpoints On VDP VRAM , VDP CRAM , VDP VSRAM
-Once you are debugging, in the IDA View click 'g' and go to either:
 
+NOTE: this works for DMA operations as well.
+
+Once you are debugging, in the IDA View click 'g' and go to either:
 0x00D00000 ( DBG_VDP_VRAM:00D00000 ) - For VRAM ..
 
 0x00D10000 ( DBG_VDP_CRAM:00D10000 ) - for CRAM 
@@ -50,3 +52,10 @@ Once you are debugging, in the IDA View click 'g' and go to either:
 
 Find the address or addresses you want, offsetted from the above. Then select it / them . Right click. a prompt will come up. Click "Add Beakpoint" , or press F2 after selecting. 
 A "Breakpoint Settings" window will come up. Select either read or write or both under Hardware breakpoint mode and set the size. You can enable other settings like actions etc.
+
+## Debugger in IDA PRO
+General Registers can be seen while running the debugger in IDA pro by doign to Debugger -> Debugger Windows -> General Registers. 
+D0-D7, A0-A7 ,PC ,SP ,SR ,DMA_LEN ,DMA_SRC and VDP_DST are all shown here
+
+VDP Registers can be seen while running the debugger in IDA pro by doign to Debugger -> Debugger Windows -> VDP Registers
+
