@@ -59,3 +59,6 @@ D0-D7, A0-A7 ,PC ,SP ,SR ,DMA_LEN ,DMA_SRC and VDP_DST are all shown here
 
 VDP Registers can be seen while running the debugger in IDA pro by doign to Debugger -> Debugger Windows -> VDP Registers
 
+## Launch without debugging
+
+Pass `-nodebug 1` to `gens_xxx.exe`.
