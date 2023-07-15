@@ -648,9 +648,9 @@ int Init_Genesis(struct Rom *MD_Rom)
     }
 
     if ((CPU_Mode == 1) || (Game_Mode == 0))
-        sprintf(Str_Err, GENS_NAME " - Megadrive : %s", MD_Rom->Rom_Name_W);
+        sprintf(Str_Err, "[%s] " GENS_NAME " - Megadrive : %s", DebugPort, MD_Rom->Rom_Name_W);
     else
-        sprintf(Str_Err, GENS_NAME " - Genesis : %s", MD_Rom->Rom_Name_W);
+        sprintf(Str_Err, "[%s] " GENS_NAME " - Genesis : %s", DebugPort, MD_Rom->Rom_Name_W);
 
     // Modif N. - remove double-spaces from title bar
     for (int i = 0; i < (int)strlen(Str_Err) - 1; i++)

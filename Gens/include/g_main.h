@@ -88,6 +88,7 @@ extern "C" {
     extern POINT Window_Pos;
 
     extern int no_debug; // -nodebug cmdline flag
+    extern char DebugPort[256];
 
 #define MAX_RECENT_SCRIPTS 15
     extern char Recent_Scripts[MAX_RECENT_SCRIPTS][1024];

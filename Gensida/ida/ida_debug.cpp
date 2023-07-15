@@ -296,12 +296,14 @@ class DbgClientHandler final : public DbgClient::Service {
   }
 };
 
-static void IdaServerFunc() {
-  std::string server_address("0.0.0.0:9091");
+static void IdaServerFunc(int portnum) {
+  qstring server_address("127.0.0.1:");
+  server_address.cat_sprnt("%d", portnum);
+
   DbgClientHandler service;
 
   ServerBuilder builder;
-  builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
+  builder.AddListeningPort(server_address.c_str(), grpc::InsecureServerCredentials());
   builder.RegisterService(&service);
 
   server = builder.BuildAndStart();
@@ -309,8 +311,8 @@ static void IdaServerFunc() {
   server->Wait();
 }
 
-static void init_ida_server() {
-  std::thread t1(IdaServerFunc);
+static void init_ida_server(int portnum) {
+  std::thread t1(IdaServerFunc, portnum);
   t1.detach();
 }
 
@@ -713,8 +715,11 @@ static bool finish_execution() {
   return true;
 }
 
-static bool init_emu_client() {
-  auto channel = grpc::CreateChannel("localhost:9090", grpc::InsecureChannelCredentials());
+static bool init_emu_client(int portnum) {
+  qstring conn;
+  conn.sprnt("localhost:%d", portnum);
+
+  auto channel = grpc::CreateChannel(conn.c_str(), grpc::InsecureChannelCredentials());
 
   show_wait_box("Waiting for GENS emulation...");
 
@@ -738,6 +743,9 @@ static bool init_emu_client() {
 static drc_t idaapi init_debugger(const char* hostname, int portnum, const char* password, qstring *errbuf) {
 #ifdef DEBUG_68K
   set_processor_type("68020", SETPROC_LOADER); // reset proc to "M68020"
+  netnode n;
+  n.create("$ portnum");
+  n.set_long(portnum == 0 ? 23946 : portnum);
 #endif
   return DRC_OK;
 }
@@ -778,8 +786,10 @@ static drc_t idaapi s_start_process(const char* path,
   qstring* errbuf = NULL) {
   events.clear();
 
-  init_ida_server();
-  if (!init_emu_client() || (client && !client->start())) {
+  netnode n("$ portnum");
+  int port = n.long_value();
+  init_ida_server(port+1000);
+  if (!init_emu_client(port) || (client && !client->start())) {
     return DRC_NETERR;
   }
 
@@ -1624,8 +1634,8 @@ debugger_t debugger = {
   0x8000 + 2,
   "z80",
 #endif
-  DBG_FLAG_NOHOST | DBG_FLAG_CAN_CONT_BPT | DBG_FLAG_FAKE_ATTACH | DBG_FLAG_SAFE | DBG_FLAG_NOPASSWORD | DBG_FLAG_NOSTARTDIR | DBG_FLAG_NOPARAMETERS | DBG_FLAG_ANYSIZE_HWBPT | DBG_FLAG_DEBTHREAD | DBG_FLAG_PREFER_SWBPTS,
-  DBG_HAS_GET_PROCESSES | DBG_HAS_REQUEST_PAUSE | DBG_HAS_SET_RESUME_MODE | DBG_HAS_CHECK_BPT | DBG_HAS_THREAD_SUSPEND | DBG_HAS_THREAD_CONTINUE | DBG_FLAG_LOWCNDS | DBG_FLAG_CONNSTRING,
+  DBG_FLAG_REMOTE | DBG_FLAG_NEEDPORT | DBG_FLAG_CAN_CONT_BPT | DBG_FLAG_FAKE_ATTACH | DBG_FLAG_SAFE | DBG_FLAG_NOPASSWORD | DBG_FLAG_NOSTARTDIR | DBG_FLAG_NOPARAMETERS | DBG_FLAG_ANYSIZE_HWBPT | DBG_FLAG_DEBTHREAD | DBG_FLAG_PREFER_SWBPTS,
+  DBG_HAS_GET_PROCESSES | DBG_HAS_REQUEST_PAUSE | DBG_HAS_SET_RESUME_MODE | DBG_HAS_CHECK_BPT | DBG_HAS_THREAD_SUSPEND | DBG_HAS_THREAD_CONTINUE | DBG_FLAG_LOWCNDS,
 
   register_classes,
   RC_GENERAL,

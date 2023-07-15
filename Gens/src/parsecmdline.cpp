@@ -26,7 +26,7 @@ void ParseCmdLine(LPSTR lpCmdLine, HWND HWnd)
   int argLength = argumentList.size();	//Size of command line argument
 
   //List of valid commandline args
-  std::string argCmds[] = { "-cfg", "-rom", "-play", "-readwrite", "-loadstate", "-pause", "-lua", "-nodebug", "" };	//Hint:  to add new commandlines, start by inserting them here.
+  std::string argCmds[] = { "-cfg", "-rom", "-play", "-readwrite", "-loadstate", "-pause", "-lua", "-nodebug", "-port", ""};	//Hint:  to add new commandlines, start by inserting them here.
 
   //Strings that will get parsed:
   std::string CfgToLoad = "";		//Cfg filename
@@ -90,9 +90,12 @@ void ParseCmdLine(LPSTR lpCmdLine, HWND HWnd)
       ScriptsToLoad.push_back(newCommand);
       break;
     case 7: //-nodebug
-      no_debug = 1;
+      no_debug = atoi(newCommand.c_str());
       break;
-    case 8: //  (a filename on its own, this must come BEFORE any other options on the commandline)
+    case 8:
+      strncpy(DebugPort, newCommand.c_str(), newCommand.size());
+      break;
+    case 9: //  (a filename on its own, this must come BEFORE any other options on the commandline)
       if (newCommand[0] != '-')
         FileToLoad = newCommand;
       break;

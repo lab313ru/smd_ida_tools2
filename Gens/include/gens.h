@@ -8,6 +8,7 @@ extern "C" {
 #endif /* #ifdef __cplusplus */
 
 #define GENS_RR_VERSION "Gens11"
+#define GENS_CLASS_NAME "GensDebug"
 
 #ifndef _DEBUG
 #define SUB_STRING ""
