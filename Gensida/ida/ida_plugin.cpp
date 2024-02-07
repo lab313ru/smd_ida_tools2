@@ -767,24 +767,29 @@ static void dump_name(FILE* fp, ea_t addr, bool extend) {
   }
 }
 
+static void dump_ram_names_sub(FILE* fp, ea_t start, size_t end, range_t exclude, bool extend) {
+    while (start != BADADDR && start < end) {
+        if (!exclude.contains(start)) {
+            dump_name(fp, start, extend);
+        }
+
+        start = next_not_tail(start);
+
+    }
+}
+
 static void dump_ram_names(FILE* fp) {
   print_line(fp, "; ---------- ram names -------------");
 
-  ea_t ea = 0xFF0000;
   ea_t start_ea = get_first_seg()->start_ea;
   ea_t end_ea = get_first_seg()->end_ea;
 
   range_t rr(start_ea, end_ea);
 
-  while (ea != BADADDR && ea < 0x1000000) {
-    if (!rr.contains(ea)) {
-      dump_name(fp, ea, true);
-    }
+  dump_ram_names_sub(fp, 0x00FF0000, 0x00FF0000ULL+0x10000ULL, rr, true);
+  dump_ram_names_sub(fp, 0xFFFF0000, 0xFFFF0000ULL +0x10000ULL, rr, false);
 
-    ea = next_not_tail(ea);
-  }
-
-  ea = rom_end;
+  ea_t ea = rom_end;
 
   while (ea != BADADDR && is_mapped(rom_end + 0x10000) && ea < (rom_end + 0x10000)) {
     dump_name(fp, ea, false);
