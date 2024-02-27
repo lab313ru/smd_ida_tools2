@@ -23,16 +23,18 @@ struct Breakpoint
     uint32 end;
 
     bool enabled;
-    bool is_forbid;
+
+    uint32 elang;
+    std::string condition;
 
 #ifdef DEBUG_68K
     bool is_vdp;
 
-    Breakpoint(bp_type _type, uint32 _start, uint32 _end, bool _enabled, bool _is_vdp, bool _is_forbid) :
-      type(_type), start(_start), end(_end), enabled(_enabled), is_vdp(_is_vdp), is_forbid(_is_forbid) {};
+    Breakpoint(bp_type _type, uint32 _start, uint32 _end, bool _enabled, bool _is_vdp, uint32 _elang, const std::string & _condition) :
+      type(_type), start(_start), end(_end), enabled(_enabled), is_vdp(_is_vdp), elang(_elang), condition(_condition) {};
 #else
-    Breakpoint(bp_type _type, uint32 _start, uint32 _end, bool _enabled, bool _is_forbid) :
-      type(_type), start(_start), end(_end), enabled(_enabled), is_forbid(_is_forbid) {};
+    Breakpoint(bp_type _type, uint32 _start, uint32 _end, bool _enabled, uint32 _elang, const std::string& _condition) :
+      type(_type), start(_start), end(_end), enabled(_enabled), elang(_elang), condition(_condition) {};
 #endif
 };
 
@@ -75,5 +77,6 @@ struct DebugWindow
 };
 
 extern void send_pause_event(int pc, std::map<uint32_t, uint32_t> changed);
+extern bool evaluate_condition(uint32 elang, const char* condition);
 
 #endif

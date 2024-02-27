@@ -3089,6 +3089,13 @@ class DbgClient final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::google::protobuf::Empty>> PrepareAsyncstop_event(::grpc::ClientContext* context, const ::idadebug::Changed& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::google::protobuf::Empty>>(PrepareAsyncstop_eventRaw(context, request, cq));
     }
+    virtual ::grpc::Status eval_condition(::grpc::ClientContext* context, const ::idadebug::Condition& request, ::google::protobuf::BoolValue* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::google::protobuf::BoolValue>> Asynceval_condition(::grpc::ClientContext* context, const ::idadebug::Condition& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::google::protobuf::BoolValue>>(Asynceval_conditionRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::google::protobuf::BoolValue>> PrepareAsynceval_condition(::grpc::ClientContext* context, const ::idadebug::Condition& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::google::protobuf::BoolValue>>(PrepareAsynceval_conditionRaw(context, request, cq));
+    }
     class async_interface {
      public:
       virtual ~async_interface() {}
@@ -3098,6 +3105,8 @@ class DbgClient final {
       virtual void pause_event(::grpc::ClientContext* context, const ::idadebug::PauseChanged* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       virtual void stop_event(::grpc::ClientContext* context, const ::idadebug::Changed* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) = 0;
       virtual void stop_event(::grpc::ClientContext* context, const ::idadebug::Changed* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      virtual void eval_condition(::grpc::ClientContext* context, const ::idadebug::Condition* request, ::google::protobuf::BoolValue* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void eval_condition(::grpc::ClientContext* context, const ::idadebug::Condition* request, ::google::protobuf::BoolValue* response, ::grpc::ClientUnaryReactor* reactor) = 0;
     };
     typedef class async_interface experimental_async_interface;
     virtual class async_interface* async() { return nullptr; }
@@ -3109,6 +3118,8 @@ class DbgClient final {
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::google::protobuf::Empty>* PrepareAsyncpause_eventRaw(::grpc::ClientContext* context, const ::idadebug::PauseChanged& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::google::protobuf::Empty>* Asyncstop_eventRaw(::grpc::ClientContext* context, const ::idadebug::Changed& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::google::protobuf::Empty>* PrepareAsyncstop_eventRaw(::grpc::ClientContext* context, const ::idadebug::Changed& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::google::protobuf::BoolValue>* Asynceval_conditionRaw(::grpc::ClientContext* context, const ::idadebug::Condition& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::google::protobuf::BoolValue>* PrepareAsynceval_conditionRaw(::grpc::ClientContext* context, const ::idadebug::Condition& request, ::grpc::CompletionQueue* cq) = 0;
   };
   class Stub final : public StubInterface {
    public:
@@ -3134,6 +3145,13 @@ class DbgClient final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::google::protobuf::Empty>> PrepareAsyncstop_event(::grpc::ClientContext* context, const ::idadebug::Changed& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::google::protobuf::Empty>>(PrepareAsyncstop_eventRaw(context, request, cq));
     }
+    ::grpc::Status eval_condition(::grpc::ClientContext* context, const ::idadebug::Condition& request, ::google::protobuf::BoolValue* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::google::protobuf::BoolValue>> Asynceval_condition(::grpc::ClientContext* context, const ::idadebug::Condition& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::google::protobuf::BoolValue>>(Asynceval_conditionRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::google::protobuf::BoolValue>> PrepareAsynceval_condition(::grpc::ClientContext* context, const ::idadebug::Condition& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::google::protobuf::BoolValue>>(PrepareAsynceval_conditionRaw(context, request, cq));
+    }
     class async final :
       public StubInterface::async_interface {
      public:
@@ -3143,6 +3161,8 @@ class DbgClient final {
       void pause_event(::grpc::ClientContext* context, const ::idadebug::PauseChanged* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
       void stop_event(::grpc::ClientContext* context, const ::idadebug::Changed* request, ::google::protobuf::Empty* response, std::function<void(::grpc::Status)>) override;
       void stop_event(::grpc::ClientContext* context, const ::idadebug::Changed* request, ::google::protobuf::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
+      void eval_condition(::grpc::ClientContext* context, const ::idadebug::Condition* request, ::google::protobuf::BoolValue* response, std::function<void(::grpc::Status)>) override;
+      void eval_condition(::grpc::ClientContext* context, const ::idadebug::Condition* request, ::google::protobuf::BoolValue* response, ::grpc::ClientUnaryReactor* reactor) override;
      private:
       friend class Stub;
       explicit async(Stub* stub): stub_(stub) { }
@@ -3160,9 +3180,12 @@ class DbgClient final {
     ::grpc::ClientAsyncResponseReader< ::google::protobuf::Empty>* PrepareAsyncpause_eventRaw(::grpc::ClientContext* context, const ::idadebug::PauseChanged& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::google::protobuf::Empty>* Asyncstop_eventRaw(::grpc::ClientContext* context, const ::idadebug::Changed& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::google::protobuf::Empty>* PrepareAsyncstop_eventRaw(::grpc::ClientContext* context, const ::idadebug::Changed& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::google::protobuf::BoolValue>* Asynceval_conditionRaw(::grpc::ClientContext* context, const ::idadebug::Condition& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::google::protobuf::BoolValue>* PrepareAsynceval_conditionRaw(::grpc::ClientContext* context, const ::idadebug::Condition& request, ::grpc::CompletionQueue* cq) override;
     const ::grpc::internal::RpcMethod rpcmethod_start_event_;
     const ::grpc::internal::RpcMethod rpcmethod_pause_event_;
     const ::grpc::internal::RpcMethod rpcmethod_stop_event_;
+    const ::grpc::internal::RpcMethod rpcmethod_eval_condition_;
   };
   static std::unique_ptr<Stub> NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
 
@@ -3173,6 +3196,7 @@ class DbgClient final {
     virtual ::grpc::Status start_event(::grpc::ServerContext* context, const ::google::protobuf::Empty* request, ::google::protobuf::Empty* response);
     virtual ::grpc::Status pause_event(::grpc::ServerContext* context, const ::idadebug::PauseChanged* request, ::google::protobuf::Empty* response);
     virtual ::grpc::Status stop_event(::grpc::ServerContext* context, const ::idadebug::Changed* request, ::google::protobuf::Empty* response);
+    virtual ::grpc::Status eval_condition(::grpc::ServerContext* context, const ::idadebug::Condition* request, ::google::protobuf::BoolValue* response);
   };
   template <class BaseClass>
   class WithAsyncMethod_start_event : public BaseClass {
@@ -3234,7 +3258,27 @@ class DbgClient final {
       ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
-  typedef WithAsyncMethod_start_event<WithAsyncMethod_pause_event<WithAsyncMethod_stop_event<Service > > > AsyncService;
+  template <class BaseClass>
+  class WithAsyncMethod_eval_condition : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_eval_condition() {
+      ::grpc::Service::MarkMethodAsync(3);
+    }
+    ~WithAsyncMethod_eval_condition() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status eval_condition(::grpc::ServerContext* /*context*/, const ::idadebug::Condition* /*request*/, ::google::protobuf::BoolValue* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void Requesteval_condition(::grpc::ServerContext* context, ::idadebug::Condition* request, ::grpc::ServerAsyncResponseWriter< ::google::protobuf::BoolValue>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(3, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  typedef WithAsyncMethod_start_event<WithAsyncMethod_pause_event<WithAsyncMethod_stop_event<WithAsyncMethod_eval_condition<Service > > > > AsyncService;
   template <class BaseClass>
   class WithCallbackMethod_start_event : public BaseClass {
    private:
@@ -3316,7 +3360,34 @@ class DbgClient final {
     virtual ::grpc::ServerUnaryReactor* stop_event(
       ::grpc::CallbackServerContext* /*context*/, const ::idadebug::Changed* /*request*/, ::google::protobuf::Empty* /*response*/)  { return nullptr; }
   };
-  typedef WithCallbackMethod_start_event<WithCallbackMethod_pause_event<WithCallbackMethod_stop_event<Service > > > CallbackService;
+  template <class BaseClass>
+  class WithCallbackMethod_eval_condition : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithCallbackMethod_eval_condition() {
+      ::grpc::Service::MarkMethodCallback(3,
+          new ::grpc::internal::CallbackUnaryHandler< ::idadebug::Condition, ::google::protobuf::BoolValue>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::idadebug::Condition* request, ::google::protobuf::BoolValue* response) { return this->eval_condition(context, request, response); }));}
+    void SetMessageAllocatorFor_eval_condition(
+        ::grpc::MessageAllocator< ::idadebug::Condition, ::google::protobuf::BoolValue>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(3);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::idadebug::Condition, ::google::protobuf::BoolValue>*>(handler)
+              ->SetMessageAllocator(allocator);
+    }
+    ~WithCallbackMethod_eval_condition() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status eval_condition(::grpc::ServerContext* /*context*/, const ::idadebug::Condition* /*request*/, ::google::protobuf::BoolValue* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* eval_condition(
+      ::grpc::CallbackServerContext* /*context*/, const ::idadebug::Condition* /*request*/, ::google::protobuf::BoolValue* /*response*/)  { return nullptr; }
+  };
+  typedef WithCallbackMethod_start_event<WithCallbackMethod_pause_event<WithCallbackMethod_stop_event<WithCallbackMethod_eval_condition<Service > > > > CallbackService;
   typedef CallbackService ExperimentalCallbackService;
   template <class BaseClass>
   class WithGenericMethod_start_event : public BaseClass {
@@ -3365,6 +3436,23 @@ class DbgClient final {
     }
     // disable synchronous version of this method
     ::grpc::Status stop_event(::grpc::ServerContext* /*context*/, const ::idadebug::Changed* /*request*/, ::google::protobuf::Empty* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
+  class WithGenericMethod_eval_condition : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_eval_condition() {
+      ::grpc::Service::MarkMethodGeneric(3);
+    }
+    ~WithGenericMethod_eval_condition() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status eval_condition(::grpc::ServerContext* /*context*/, const ::idadebug::Condition* /*request*/, ::google::protobuf::BoolValue* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -3427,6 +3515,26 @@ class DbgClient final {
     }
     void Requeststop_event(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
       ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithRawMethod_eval_condition : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_eval_condition() {
+      ::grpc::Service::MarkMethodRaw(3);
+    }
+    ~WithRawMethod_eval_condition() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status eval_condition(::grpc::ServerContext* /*context*/, const ::idadebug::Condition* /*request*/, ::google::protobuf::BoolValue* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void Requesteval_condition(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(3, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -3493,6 +3601,28 @@ class DbgClient final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     virtual ::grpc::ServerUnaryReactor* stop_event(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
+  };
+  template <class BaseClass>
+  class WithRawCallbackMethod_eval_condition : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawCallbackMethod_eval_condition() {
+      ::grpc::Service::MarkMethodRawCallback(3,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->eval_condition(context, request, response); }));
+    }
+    ~WithRawCallbackMethod_eval_condition() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status eval_condition(::grpc::ServerContext* /*context*/, const ::idadebug::Condition* /*request*/, ::google::protobuf::BoolValue* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* eval_condition(
       ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
@@ -3576,9 +3706,36 @@ class DbgClient final {
     // replace default version of method with streamed unary
     virtual ::grpc::Status Streamedstop_event(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::idadebug::Changed,::google::protobuf::Empty>* server_unary_streamer) = 0;
   };
-  typedef WithStreamedUnaryMethod_start_event<WithStreamedUnaryMethod_pause_event<WithStreamedUnaryMethod_stop_event<Service > > > StreamedUnaryService;
+  template <class BaseClass>
+  class WithStreamedUnaryMethod_eval_condition : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithStreamedUnaryMethod_eval_condition() {
+      ::grpc::Service::MarkMethodStreamed(3,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::idadebug::Condition, ::google::protobuf::BoolValue>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::idadebug::Condition, ::google::protobuf::BoolValue>* streamer) {
+                       return this->Streamedeval_condition(context,
+                         streamer);
+                  }));
+    }
+    ~WithStreamedUnaryMethod_eval_condition() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status eval_condition(::grpc::ServerContext* /*context*/, const ::idadebug::Condition* /*request*/, ::google::protobuf::BoolValue* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status Streamedeval_condition(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::idadebug::Condition,::google::protobuf::BoolValue>* server_unary_streamer) = 0;
+  };
+  typedef WithStreamedUnaryMethod_start_event<WithStreamedUnaryMethod_pause_event<WithStreamedUnaryMethod_stop_event<WithStreamedUnaryMethod_eval_condition<Service > > > > StreamedUnaryService;
   typedef Service SplitStreamedService;
-  typedef WithStreamedUnaryMethod_start_event<WithStreamedUnaryMethod_pause_event<WithStreamedUnaryMethod_stop_event<Service > > > StreamedService;
+  typedef WithStreamedUnaryMethod_start_event<WithStreamedUnaryMethod_pause_event<WithStreamedUnaryMethod_stop_event<WithStreamedUnaryMethod_eval_condition<Service > > > > StreamedService;
 };
 
 }  // namespace idadebug

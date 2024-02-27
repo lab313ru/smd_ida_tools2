@@ -3,6 +3,7 @@ syntax = "proto3";
 package idadebug;
 
 import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
 
 enum GpRegsEnum {
   AF = 0;
@@ -107,7 +108,8 @@ message DbgBreakpoint {
   uint32 bstart = 2;
   uint32 bend = 3;
   bool enabled = 4;
-  bool is_forbid = 5;
+  uint32 elang = 5;
+  string condition = 6;
 }
 
 message DbgBreakpoints {
@@ -172,8 +174,14 @@ message Changed {
   map<uint32, uint32> changed = 1;
 }
 
+message Condition {
+  uint32 elang = 1;
+  string condition = 2;
+}
+
 service DbgClient {
   rpc start_event(google.protobuf.Empty) returns (google.protobuf.Empty) {}
   rpc pause_event(PauseChanged) returns (google.protobuf.Empty) {}
   rpc stop_event(Changed) returns (google.protobuf.Empty) {}
+  rpc eval_condition(Condition) returns (google.protobuf.BoolValue) {}
 }

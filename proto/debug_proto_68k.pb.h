@@ -35,6 +35,7 @@
 #include <google/protobuf/generated_enum_reflection.h>
 #include <google/protobuf/unknown_field_set.h>
 #include <google/protobuf/empty.pb.h>
+#include <google/protobuf/wrappers.pb.h>
 // @@protoc_insertion_point(includes)
 #include <google/protobuf/port_def.inc>
 #define PROTOBUF_INTERNAL_EXPORT_debug_5fproto_5f68k_2eproto
@@ -62,6 +63,9 @@ extern ChangedDefaultTypeInternal _Changed_default_instance_;
 class Changed_ChangedEntry_DoNotUse;
 struct Changed_ChangedEntry_DoNotUseDefaultTypeInternal;
 extern Changed_ChangedEntry_DoNotUseDefaultTypeInternal _Changed_ChangedEntry_DoNotUse_default_instance_;
+class Condition;
+struct ConditionDefaultTypeInternal;
+extern ConditionDefaultTypeInternal _Condition_default_instance_;
 class DbgBreakpoint;
 struct DbgBreakpointDefaultTypeInternal;
 extern DbgBreakpointDefaultTypeInternal _DbgBreakpoint_default_instance_;
@@ -110,6 +114,7 @@ template<> ::idadebug::AnyRegValue* Arena::CreateMaybeMessage<::idadebug::AnyReg
 template<> ::idadebug::Callstack* Arena::CreateMaybeMessage<::idadebug::Callstack>(Arena*);
 template<> ::idadebug::Changed* Arena::CreateMaybeMessage<::idadebug::Changed>(Arena*);
 template<> ::idadebug::Changed_ChangedEntry_DoNotUse* Arena::CreateMaybeMessage<::idadebug::Changed_ChangedEntry_DoNotUse>(Arena*);
+template<> ::idadebug::Condition* Arena::CreateMaybeMessage<::idadebug::Condition>(Arena*);
 template<> ::idadebug::DbgBreakpoint* Arena::CreateMaybeMessage<::idadebug::DbgBreakpoint>(Arena*);
 template<> ::idadebug::DbgBreakpoints* Arena::CreateMaybeMessage<::idadebug::DbgBreakpoints>(Arena*);
 template<> ::idadebug::DmaInfo* Arena::CreateMaybeMessage<::idadebug::DmaInfo>(Arena*);
@@ -2220,13 +2225,28 @@ class DbgBreakpoint final :
   // accessors -------------------------------------------------------
 
   enum : int {
+    kConditionFieldNumber = 7,
     kTypeFieldNumber = 1,
     kBstartFieldNumber = 2,
     kBendFieldNumber = 3,
     kEnabledFieldNumber = 4,
     kIsVdpFieldNumber = 5,
-    kIsForbidFieldNumber = 6,
+    kElangFieldNumber = 6,
   };
+  // string condition = 7;
+  void clear_condition();
+  const std::string& condition() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_condition(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_condition();
+  PROTOBUF_NODISCARD std::string* release_condition();
+  void set_allocated_condition(std::string* condition);
+  private:
+  const std::string& _internal_condition() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_condition(const std::string& value);
+  std::string* _internal_mutable_condition();
+  public:
+
   // .idadebug.BpType type = 1;
   void clear_type();
   ::idadebug::BpType type() const;
@@ -2272,13 +2292,13 @@ class DbgBreakpoint final :
   void _internal_set_is_vdp(bool value);
   public:
 
-  // bool is_forbid = 6;
-  void clear_is_forbid();
-  bool is_forbid() const;
-  void set_is_forbid(bool value);
+  // uint32 elang = 6;
+  void clear_elang();
+  uint32_t elang() const;
+  void set_elang(uint32_t value);
   private:
-  bool _internal_is_forbid() const;
-  void _internal_set_is_forbid(bool value);
+  uint32_t _internal_elang() const;
+  void _internal_set_elang(uint32_t value);
   public:
 
   // @@protoc_insertion_point(class_scope:idadebug.DbgBreakpoint)
@@ -2289,12 +2309,13 @@ class DbgBreakpoint final :
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
   struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr condition_;
     int type_;
     uint32_t bstart_;
     uint32_t bend_;
     bool enabled_;
     bool is_vdp_;
-    bool is_forbid_;
+    uint32_t elang_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -3300,6 +3321,170 @@ class Changed final :
         uint32_t, uint32_t,
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::TYPE_UINT32,
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::TYPE_UINT32> changed_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_debug_5fproto_5f68k_2eproto;
+};
+// -------------------------------------------------------------------
+
+class Condition final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:idadebug.Condition) */ {
+ public:
+  inline Condition() : Condition(nullptr) {}
+  ~Condition() override;
+  explicit PROTOBUF_CONSTEXPR Condition(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  Condition(const Condition& from);
+  Condition(Condition&& from) noexcept
+    : Condition() {
+    *this = ::std::move(from);
+  }
+
+  inline Condition& operator=(const Condition& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline Condition& operator=(Condition&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const Condition& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const Condition* internal_default_instance() {
+    return reinterpret_cast<const Condition*>(
+               &_Condition_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    18;
+
+  friend void swap(Condition& a, Condition& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(Condition* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(Condition* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  Condition* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<Condition>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const Condition& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const Condition& from) {
+    Condition::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(Condition* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "idadebug.Condition";
+  }
+  protected:
+  explicit Condition(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kConditionFieldNumber = 2,
+    kElangFieldNumber = 1,
+  };
+  // string condition = 2;
+  void clear_condition();
+  const std::string& condition() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_condition(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_condition();
+  PROTOBUF_NODISCARD std::string* release_condition();
+  void set_allocated_condition(std::string* condition);
+  private:
+  const std::string& _internal_condition() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_condition(const std::string& value);
+  std::string* _internal_mutable_condition();
+  public:
+
+  // uint32 elang = 1;
+  void clear_elang();
+  uint32_t elang() const;
+  void set_elang(uint32_t value);
+  private:
+  uint32_t _internal_elang() const;
+  void _internal_set_elang(uint32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:idadebug.Condition)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr condition_;
+    uint32_t elang_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -4602,24 +4787,74 @@ inline void DbgBreakpoint::set_is_vdp(bool value) {
   // @@protoc_insertion_point(field_set:idadebug.DbgBreakpoint.is_vdp)
 }
 
-// bool is_forbid = 6;
-inline void DbgBreakpoint::clear_is_forbid() {
-  _impl_.is_forbid_ = false;
+// uint32 elang = 6;
+inline void DbgBreakpoint::clear_elang() {
+  _impl_.elang_ = 0u;
 }
-inline bool DbgBreakpoint::_internal_is_forbid() const {
-  return _impl_.is_forbid_;
+inline uint32_t DbgBreakpoint::_internal_elang() const {
+  return _impl_.elang_;
 }
-inline bool DbgBreakpoint::is_forbid() const {
-  // @@protoc_insertion_point(field_get:idadebug.DbgBreakpoint.is_forbid)
-  return _internal_is_forbid();
+inline uint32_t DbgBreakpoint::elang() const {
+  // @@protoc_insertion_point(field_get:idadebug.DbgBreakpoint.elang)
+  return _internal_elang();
 }
-inline void DbgBreakpoint::_internal_set_is_forbid(bool value) {
+inline void DbgBreakpoint::_internal_set_elang(uint32_t value) {
   
-  _impl_.is_forbid_ = value;
+  _impl_.elang_ = value;
 }
-inline void DbgBreakpoint::set_is_forbid(bool value) {
-  _internal_set_is_forbid(value);
-  // @@protoc_insertion_point(field_set:idadebug.DbgBreakpoint.is_forbid)
+inline void DbgBreakpoint::set_elang(uint32_t value) {
+  _internal_set_elang(value);
+  // @@protoc_insertion_point(field_set:idadebug.DbgBreakpoint.elang)
+}
+
+// string condition = 7;
+inline void DbgBreakpoint::clear_condition() {
+  _impl_.condition_.ClearToEmpty();
+}
+inline const std::string& DbgBreakpoint::condition() const {
+  // @@protoc_insertion_point(field_get:idadebug.DbgBreakpoint.condition)
+  return _internal_condition();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void DbgBreakpoint::set_condition(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.condition_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:idadebug.DbgBreakpoint.condition)
+}
+inline std::string* DbgBreakpoint::mutable_condition() {
+  std::string* _s = _internal_mutable_condition();
+  // @@protoc_insertion_point(field_mutable:idadebug.DbgBreakpoint.condition)
+  return _s;
+}
+inline const std::string& DbgBreakpoint::_internal_condition() const {
+  return _impl_.condition_.Get();
+}
+inline void DbgBreakpoint::_internal_set_condition(const std::string& value) {
+  
+  _impl_.condition_.Set(value, GetArenaForAllocation());
+}
+inline std::string* DbgBreakpoint::_internal_mutable_condition() {
+  
+  return _impl_.condition_.Mutable(GetArenaForAllocation());
+}
+inline std::string* DbgBreakpoint::release_condition() {
+  // @@protoc_insertion_point(field_release:idadebug.DbgBreakpoint.condition)
+  return _impl_.condition_.Release();
+}
+inline void DbgBreakpoint::set_allocated_condition(std::string* condition) {
+  if (condition != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.condition_.SetAllocated(condition, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.condition_.IsDefault()) {
+    _impl_.condition_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:idadebug.DbgBreakpoint.condition)
 }
 
 // -------------------------------------------------------------------
@@ -4885,9 +5120,85 @@ Changed::mutable_changed() {
   return _internal_mutable_changed();
 }
 
+// -------------------------------------------------------------------
+
+// Condition
+
+// uint32 elang = 1;
+inline void Condition::clear_elang() {
+  _impl_.elang_ = 0u;
+}
+inline uint32_t Condition::_internal_elang() const {
+  return _impl_.elang_;
+}
+inline uint32_t Condition::elang() const {
+  // @@protoc_insertion_point(field_get:idadebug.Condition.elang)
+  return _internal_elang();
+}
+inline void Condition::_internal_set_elang(uint32_t value) {
+  
+  _impl_.elang_ = value;
+}
+inline void Condition::set_elang(uint32_t value) {
+  _internal_set_elang(value);
+  // @@protoc_insertion_point(field_set:idadebug.Condition.elang)
+}
+
+// string condition = 2;
+inline void Condition::clear_condition() {
+  _impl_.condition_.ClearToEmpty();
+}
+inline const std::string& Condition::condition() const {
+  // @@protoc_insertion_point(field_get:idadebug.Condition.condition)
+  return _internal_condition();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void Condition::set_condition(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.condition_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:idadebug.Condition.condition)
+}
+inline std::string* Condition::mutable_condition() {
+  std::string* _s = _internal_mutable_condition();
+  // @@protoc_insertion_point(field_mutable:idadebug.Condition.condition)
+  return _s;
+}
+inline const std::string& Condition::_internal_condition() const {
+  return _impl_.condition_.Get();
+}
+inline void Condition::_internal_set_condition(const std::string& value) {
+  
+  _impl_.condition_.Set(value, GetArenaForAllocation());
+}
+inline std::string* Condition::_internal_mutable_condition() {
+  
+  return _impl_.condition_.Mutable(GetArenaForAllocation());
+}
+inline std::string* Condition::release_condition() {
+  // @@protoc_insertion_point(field_release:idadebug.Condition.condition)
+  return _impl_.condition_.Release();
+}
+inline void Condition::set_allocated_condition(std::string* condition) {
+  if (condition != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.condition_.SetAllocated(condition, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.condition_.IsDefault()) {
+    _impl_.condition_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:idadebug.Condition.condition)
+}
+
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

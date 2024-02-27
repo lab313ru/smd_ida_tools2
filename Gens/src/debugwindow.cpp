@@ -67,7 +67,7 @@ bool DebugWindow::BreakPC(int pc)
 
         if (pc <= (int)(i->end) && pc >= (int)(i->start))
         {
-            return !(i->is_forbid);
+            return evaluate_condition(i->elang, i->condition.c_str());
         }
     }
     return false;
@@ -91,7 +91,7 @@ bool DebugWindow::BreakRead(int pc, uint32 start, uint32 stop)
 
         if (start <= i->end && stop >= i->start)
         {
-            brk = !(i->is_forbid);
+            brk = evaluate_condition(i->elang, i->condition.c_str());
             break;
         }
     }
@@ -102,10 +102,13 @@ bool DebugWindow::BreakRead(int pc, uint32 start, uint32 stop)
     {
         if (i->type != bp_type::BP_PC) continue;
 
-        if (i->enabled && i->is_forbid)
-        {
-            if (pc <= (int)(i->end) && pc >= (int)(i->start))
-                return false;
+        if (i->enabled) {
+            bool ev = evaluate_condition(i->elang, i->condition.c_str());
+
+            if (!ev) {
+                if (pc <= (int)(i->end) && pc >= (int)(i->start))
+                    return false;
+            }
         }
     }
 
@@ -130,7 +133,7 @@ bool DebugWindow::BreakWrite(int pc, uint32 start, uint32 stop)
 
         if (start <= i->end && stop >= i->start)
         {
-            brk = !(i->is_forbid);
+            brk = evaluate_condition(i->elang, i->condition.c_str());
             break;
         }
     }
@@ -141,10 +144,13 @@ bool DebugWindow::BreakWrite(int pc, uint32 start, uint32 stop)
     {
         if (i->type != bp_type::BP_PC) continue;
 
-        if (i->enabled && i->is_forbid)
-        {
-            if (pc <= (int)(i->end) && pc >= (int)(i->start))
-                return false;
+        if (i->enabled) {
+            bool ev = evaluate_condition(i->elang, i->condition.c_str());
+
+            if (!ev) {
+                if (pc <= (int)(i->end) && pc >= (int)(i->start))
+                    return false;
+            }
         }
     }
 

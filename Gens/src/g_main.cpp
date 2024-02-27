@@ -33,6 +33,7 @@ using idadebug::SoundBankMap;
 using idadebug::SoundBankRange;
 #endif
 using idadebug::Changed;
+using idadebug::Condition;
 using idadebug::MemData;
 using idadebug::MemoryAS;
 using idadebug::MemoryAD;
@@ -42,6 +43,7 @@ using idadebug::DbgBreakpoints;
 using idadebug::Callstack;
 using idadebug::PauseChanged;
 using google::protobuf::Empty;
+using google::protobuf::BoolValue;
 using google::protobuf::Map;
 
 #include "gens.h"
@@ -1478,6 +1480,19 @@ public:
     return status.ok();
   }
 
+  bool eval_condition(uint32 elang, const char* condition) {
+      Condition req;
+      BoolValue resp;
+
+      req.set_elang(elang);
+      req.set_condition(condition);
+
+      ClientContext context;
+      Status status = stub_->eval_condition(&context, req, &resp);
+
+      return status.ok() && resp.value();
+  }
+
 private:
   std::unique_ptr<DbgClient::Stub> stub_;
 };
@@ -1490,6 +1505,14 @@ void send_pause_event(int pc, std::map<uint32_t, uint32_t> changed) {
   }
   
   client->pause_event(pc, changed);
+}
+
+bool evaluate_condition(uint32 elang, const char* condition) {
+    if (!client) {
+        return true;
+    }
+
+    return (condition && condition[0] == 0) || client->eval_condition(elang, condition);
 }
 
 void stop_client() {
@@ -1552,10 +1575,10 @@ static void toggle_pause() {
 class DbgServerHandler final : public DbgServer::Service {
   Status add_breakpoint(ServerContext* context, const DbgBreakpoint* request, Empty* response) override {
 #ifdef DEBUG_68K
-    Breakpoint b((bp_type)request->type(), request->bstart() & 0xFFFFFF, request->bend() & 0xFFFFFF, true, request->is_vdp(), false);
+    Breakpoint b((bp_type)request->type(), request->bstart() & 0xFFFFFF, request->bend() & 0xFFFFFF, true, request->is_vdp(), request->elang(), request->condition());
     M68kDW.Breakpoints.push_back(b);
 #else
-    Breakpoint b((bp_type)request->type(), request->bstart() & 0xFFFFFF, request->bend() & 0xFFFFFF, true, false);
+    Breakpoint b((bp_type)request->type(), request->bstart() & 0xFFFFFF, request->bend() & 0xFFFFFF, true, request->elang(), request->condition());
     Z80DW.Breakpoints.push_back(b);
 #endif
 
@@ -1637,7 +1660,8 @@ class DbgServerHandler final : public DbgServer::Service {
 #ifdef DEBUG_68K
       bpt->set_is_vdp(i->is_vdp);
 #endif
-      bpt->set_is_forbid(i->is_forbid);
+      bpt->set_elang(i->elang);
+      bpt->set_condition(i->condition.c_str());
       bpt->set_bstart(i->start);
       bpt->set_bend(i->end);
       bpt->set_type((BpType)i->type);
@@ -2190,7 +2214,8 @@ class DbgServerHandler final : public DbgServer::Service {
         if (request->is_vdp() == i->is_vdp) {
 #endif
           i->enabled = request->enabled();
-          i->is_forbid = request->is_forbid();
+          i->elang = request->elang();
+          i->condition = request->condition();
           break;
 #ifdef DEBUG_68K
       }
@@ -2261,11 +2286,11 @@ static void init_dbg_server(int portnum) {
 
 #ifdef DEBUG_68K
   M68kDW.Breakpoints.clear();
-  Breakpoint b(bp_type::BP_PC, main68k_context.pc & 0xFFFFFF, main68k_context.pc & 0xFFFFFF, true, false, false);
+  Breakpoint b(bp_type::BP_PC, main68k_context.pc & 0xFFFFFF, main68k_context.pc & 0xFFFFFF, true, false, 0, "");
   M68kDW.Breakpoints.push_back(b);
 #else
   Z80DW.Breakpoints.clear();
-  Breakpoint b(bp_type::BP_PC, 0, 0, true, false);
+  Breakpoint b(bp_type::BP_PC, 0, 0, true, 0, "");
   Z80DW.Breakpoints.push_back(b);
 #endif
 

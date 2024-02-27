@@ -968,6 +968,7 @@ static const char* DbgClient_method_names[] = {
   "/idadebug.DbgClient/start_event",
   "/idadebug.DbgClient/pause_event",
   "/idadebug.DbgClient/stop_event",
+  "/idadebug.DbgClient/eval_condition",
 };
 
 std::unique_ptr< DbgClient::Stub> DbgClient::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
@@ -980,6 +981,7 @@ DbgClient::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel,
   : channel_(channel), rpcmethod_start_event_(DbgClient_method_names[0], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   , rpcmethod_pause_event_(DbgClient_method_names[1], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   , rpcmethod_stop_event_(DbgClient_method_names[2], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_eval_condition_(DbgClient_method_names[3], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   {}
 
 ::grpc::Status DbgClient::Stub::start_event(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::google::protobuf::Empty* response) {
@@ -1051,6 +1053,29 @@ void DbgClient::Stub::async::stop_event(::grpc::ClientContext* context, const ::
   return result;
 }
 
+::grpc::Status DbgClient::Stub::eval_condition(::grpc::ClientContext* context, const ::idadebug::Condition& request, ::google::protobuf::BoolValue* response) {
+  return ::grpc::internal::BlockingUnaryCall< ::idadebug::Condition, ::google::protobuf::BoolValue, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_eval_condition_, context, request, response);
+}
+
+void DbgClient::Stub::async::eval_condition(::grpc::ClientContext* context, const ::idadebug::Condition* request, ::google::protobuf::BoolValue* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::idadebug::Condition, ::google::protobuf::BoolValue, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_eval_condition_, context, request, response, std::move(f));
+}
+
+void DbgClient::Stub::async::eval_condition(::grpc::ClientContext* context, const ::idadebug::Condition* request, ::google::protobuf::BoolValue* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_eval_condition_, context, request, response, reactor);
+}
+
+::grpc::ClientAsyncResponseReader< ::google::protobuf::BoolValue>* DbgClient::Stub::PrepareAsynceval_conditionRaw(::grpc::ClientContext* context, const ::idadebug::Condition& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::google::protobuf::BoolValue, ::idadebug::Condition, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_eval_condition_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::google::protobuf::BoolValue>* DbgClient::Stub::Asynceval_conditionRaw(::grpc::ClientContext* context, const ::idadebug::Condition& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsynceval_conditionRaw(context, request, cq);
+  result->StartCall();
+  return result;
+}
+
 DbgClient::Service::Service() {
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       DbgClient_method_names[0],
@@ -1082,6 +1107,16 @@ DbgClient::Service::Service() {
              ::google::protobuf::Empty* resp) {
                return service->stop_event(ctx, req, resp);
              }, this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      DbgClient_method_names[3],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< DbgClient::Service, ::idadebug::Condition, ::google::protobuf::BoolValue, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](DbgClient::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::idadebug::Condition* req,
+             ::google::protobuf::BoolValue* resp) {
+               return service->eval_condition(ctx, req, resp);
+             }, this)));
 }
 
 DbgClient::Service::~Service() {
@@ -1102,6 +1137,13 @@ DbgClient::Service::~Service() {
 }
 
 ::grpc::Status DbgClient::Service::stop_event(::grpc::ServerContext* context, const ::idadebug::Changed* request, ::google::protobuf::Empty* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status DbgClient::Service::eval_condition(::grpc::ServerContext* context, const ::idadebug::Condition* request, ::google::protobuf::BoolValue* response) {
   (void) context;
   (void) request;
   (void) response;

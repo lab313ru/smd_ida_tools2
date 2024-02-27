@@ -187,12 +187,13 @@ struct MemoryADDefaultTypeInternal {
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 MemoryADDefaultTypeInternal _MemoryAD_default_instance_;
 PROTOBUF_CONSTEXPR DbgBreakpoint::DbgBreakpoint(
     ::_pbi::ConstantInitialized): _impl_{
-    /*decltype(_impl_.type_)*/0
+    /*decltype(_impl_.condition_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.type_)*/0
   , /*decltype(_impl_.bstart_)*/0u
   , /*decltype(_impl_.bend_)*/0u
   , /*decltype(_impl_.enabled_)*/false
   , /*decltype(_impl_.is_vdp_)*/false
-  , /*decltype(_impl_.is_forbid_)*/false
+  , /*decltype(_impl_.elang_)*/0u
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct DbgBreakpointDefaultTypeInternal {
   PROTOBUF_CONSTEXPR DbgBreakpointDefaultTypeInternal()
@@ -305,8 +306,22 @@ struct ChangedDefaultTypeInternal {
   };
 };
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 ChangedDefaultTypeInternal _Changed_default_instance_;
+PROTOBUF_CONSTEXPR Condition::Condition(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.condition_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.elang_)*/0u
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct ConditionDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR ConditionDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~ConditionDefaultTypeInternal() {}
+  union {
+    Condition _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 ConditionDefaultTypeInternal _Condition_default_instance_;
 }  // namespace idadebug
-static ::_pb::Metadata file_level_metadata_debug_5fproto_5f68k_2eproto[18];
+static ::_pb::Metadata file_level_metadata_debug_5fproto_5f68k_2eproto[19];
 static const ::_pb::EnumDescriptor* file_level_enum_descriptors_debug_5fproto_5f68k_2eproto[3];
 static constexpr ::_pb::ServiceDescriptor const** file_level_service_descriptors_debug_5fproto_5f68k_2eproto = nullptr;
 
@@ -432,7 +447,8 @@ const uint32_t TableStruct_debug_5fproto_5f68k_2eproto::offsets[] PROTOBUF_SECTI
   PROTOBUF_FIELD_OFFSET(::idadebug::DbgBreakpoint, _impl_.bend_),
   PROTOBUF_FIELD_OFFSET(::idadebug::DbgBreakpoint, _impl_.enabled_),
   PROTOBUF_FIELD_OFFSET(::idadebug::DbgBreakpoint, _impl_.is_vdp_),
-  PROTOBUF_FIELD_OFFSET(::idadebug::DbgBreakpoint, _impl_.is_forbid_),
+  PROTOBUF_FIELD_OFFSET(::idadebug::DbgBreakpoint, _impl_.elang_),
+  PROTOBUF_FIELD_OFFSET(::idadebug::DbgBreakpoint, _impl_.condition_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::idadebug::DbgBreakpoints, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -496,6 +512,14 @@ const uint32_t TableStruct_debug_5fproto_5f68k_2eproto::offsets[] PROTOBUF_SECTI
   ~0u,  // no _weak_field_map_
   ~0u,  // no _inlined_string_donated_
   PROTOBUF_FIELD_OFFSET(::idadebug::Changed, _impl_.changed_),
+  ~0u,  // no _has_bits_
+  PROTOBUF_FIELD_OFFSET(::idadebug::Condition, _internal_metadata_),
+  ~0u,  // no _extensions_
+  ~0u,  // no _oneof_case_
+  ~0u,  // no _weak_field_map_
+  ~0u,  // no _inlined_string_donated_
+  PROTOBUF_FIELD_OFFSET(::idadebug::Condition, _impl_.elang_),
+  PROTOBUF_FIELD_OFFSET(::idadebug::Condition, _impl_.condition_),
 };
 static const ::_pbi::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   { 0, -1, -1, sizeof(::idadebug::GpReg)},
@@ -508,14 +532,15 @@ static const ::_pbi::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protode
   { 94, -1, -1, sizeof(::idadebug::MemoryAS)},
   { 102, -1, -1, sizeof(::idadebug::MemoryAD)},
   { 110, -1, -1, sizeof(::idadebug::DbgBreakpoint)},
-  { 122, -1, -1, sizeof(::idadebug::DbgBreakpoints)},
-  { 129, -1, -1, sizeof(::idadebug::Callstack)},
-  { 136, -1, -1, sizeof(::idadebug::AnyRegValue)},
-  { 143, -1, -1, sizeof(::idadebug::MemData)},
-  { 150, 158, -1, sizeof(::idadebug::PauseChanged_ChangedEntry_DoNotUse)},
-  { 160, -1, -1, sizeof(::idadebug::PauseChanged)},
-  { 168, 176, -1, sizeof(::idadebug::Changed_ChangedEntry_DoNotUse)},
-  { 178, -1, -1, sizeof(::idadebug::Changed)},
+  { 123, -1, -1, sizeof(::idadebug::DbgBreakpoints)},
+  { 130, -1, -1, sizeof(::idadebug::Callstack)},
+  { 137, -1, -1, sizeof(::idadebug::AnyRegValue)},
+  { 144, -1, -1, sizeof(::idadebug::MemData)},
+  { 151, 159, -1, sizeof(::idadebug::PauseChanged_ChangedEntry_DoNotUse)},
+  { 161, -1, -1, sizeof(::idadebug::PauseChanged)},
+  { 169, 177, -1, sizeof(::idadebug::Changed_ChangedEntry_DoNotUse)},
+  { 179, -1, -1, sizeof(::idadebug::Changed)},
+  { 186, -1, -1, sizeof(::idadebug::Condition)},
 };
 
 static const ::_pb::Message* const file_default_instances[] = {
@@ -537,108 +562,114 @@ static const ::_pb::Message* const file_default_instances[] = {
   &::idadebug::_PauseChanged_default_instance_._instance,
   &::idadebug::_Changed_ChangedEntry_DoNotUse_default_instance_._instance,
   &::idadebug::_Changed_default_instance_._instance,
+  &::idadebug::_Condition_default_instance_._instance,
 };
 
 const char descriptor_table_protodef_debug_5fproto_5f68k_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
   "\n\025debug_proto_68k.proto\022\010idadebug\032\033googl"
-  "e/protobuf/empty.proto\"*\n\005GpReg\022!\n\003reg\030\001"
-  " \001(\0162\024.idadebug.GpRegsEnum\"\354\001\n\006GpRegs\022\n\n"
-  "\002D0\030\001 \001(\r\022\n\n\002D1\030\002 \001(\r\022\n\n\002D2\030\003 \001(\r\022\n\n\002D3\030"
-  "\004 \001(\r\022\n\n\002D4\030\005 \001(\r\022\n\n\002D5\030\006 \001(\r\022\n\n\002D6\030\007 \001("
-  "\r\022\n\n\002D7\030\010 \001(\r\022\n\n\002A0\030\t \001(\r\022\n\n\002A1\030\n \001(\r\022\n\n"
-  "\002A2\030\013 \001(\r\022\n\n\002A3\030\014 \001(\r\022\n\n\002A4\030\r \001(\r\022\n\n\002A5\030"
-  "\016 \001(\r\022\n\n\002A6\030\017 \001(\r\022\n\n\002A7\030\020 \001(\r\022\n\n\002PC\030\021 \001("
-  "\r\022\n\n\002SP\030\022 \001(\r\022\n\n\002SR\030\023 \001(\r\"@\n\nGpRegValue\022"
-  "#\n\005index\030\001 \001(\0162\024.idadebug.GpRegsEnum\022\r\n\005"
-  "value\030\002 \001(\r\",\n\006VdpReg\022\"\n\003reg\030\001 \001(\0162\025.ida"
-  "debug.VdpRegsEnum\"\301\002\n\007VdpRegs\022\013\n\003V00\030\001 \001"
-  "(\r\022\013\n\003V01\030\002 \001(\r\022\013\n\003V02\030\003 \001(\r\022\013\n\003V03\030\004 \001("
-  "\r\022\013\n\003V04\030\005 \001(\r\022\013\n\003V05\030\006 \001(\r\022\013\n\003V06\030\007 \001(\r"
-  "\022\013\n\003V07\030\010 \001(\r\022\013\n\003V08\030\t \001(\r\022\013\n\003V09\030\n \001(\r\022"
-  "\013\n\003V0A\030\013 \001(\r\022\013\n\003V0B\030\014 \001(\r\022\013\n\003V0C\030\r \001(\r\022\013"
-  "\n\003V0D\030\016 \001(\r\022\013\n\003V0E\030\017 \001(\r\022\013\n\003V0F\030\020 \001(\r\022\013\n"
-  "\003V10\030\021 \001(\r\022\013\n\003V11\030\022 \001(\r\022\013\n\003V12\030\023 \001(\r\022\013\n\003"
-  "V13\030\024 \001(\r\022\013\n\003V14\030\025 \001(\r\022\013\n\003V15\030\026 \001(\r\022\013\n\003V"
-  "16\030\027 \001(\r\022\013\n\003V17\030\030 \001(\r\"B\n\013VdpRegValue\022$\n\005"
-  "index\030\001 \001(\0162\025.idadebug.VdpRegsEnum\022\r\n\005va"
-  "lue\030\002 \001(\r\"0\n\007DmaInfo\022\013\n\003len\030\001 \001(\r\022\013\n\003src"
-  "\030\002 \001(\r\022\013\n\003dst\030\003 \001(\r\")\n\010MemoryAS\022\017\n\007addre"
-  "ss\030\001 \001(\r\022\014\n\004size\030\002 \001(\r\")\n\010MemoryAD\022\017\n\007ad"
-  "dress\030\001 \001(\r\022\014\n\004data\030\002 \001(\014\"\201\001\n\rDbgBreakpo"
-  "int\022\036\n\004type\030\001 \001(\0162\020.idadebug.BpType\022\016\n\006b"
-  "start\030\002 \001(\r\022\014\n\004bend\030\003 \001(\r\022\017\n\007enabled\030\004 \001"
-  "(\010\022\016\n\006is_vdp\030\005 \001(\010\022\021\n\tis_forbid\030\006 \001(\010\"7\n"
-  "\016DbgBreakpoints\022%\n\004list\030\001 \003(\0132\027.idadebug"
-  ".DbgBreakpoint\"\036\n\tCallstack\022\021\n\tcallstack"
-  "\030\001 \003(\r\"\034\n\013AnyRegValue\022\r\n\005value\030\001 \001(\r\"\027\n\007"
-  "MemData\022\014\n\004data\030\001 \001(\014\"\205\001\n\014PauseChanged\022\017"
-  "\n\007address\030\001 \001(\r\0224\n\007changed\030\002 \003(\0132#.idade"
-  "bug.PauseChanged.ChangedEntry\032.\n\014Changed"
-  "Entry\022\013\n\003key\030\001 \001(\r\022\r\n\005value\030\002 \001(\r:\0028\001\"j\n"
-  "\007Changed\022/\n\007changed\030\001 \003(\0132\036.idadebug.Cha"
-  "nged.ChangedEntry\032.\n\014ChangedEntry\022\013\n\003key"
-  "\030\001 \001(\r\022\r\n\005value\030\002 \001(\r:\0028\001*\244\001\n\nGpRegsEnum"
-  "\022\006\n\002D0\020\000\022\006\n\002D1\020\001\022\006\n\002D2\020\002\022\006\n\002D3\020\003\022\006\n\002D4\020\004"
-  "\022\006\n\002D5\020\005\022\006\n\002D6\020\006\022\006\n\002D7\020\007\022\006\n\002A0\020\010\022\006\n\002A1\020\n"
-  "\022\006\n\002A2\020\014\022\006\n\002A3\020\016\022\006\n\002A4\020\020\022\006\n\002A5\020\022\022\006\n\002A6\020\024"
-  "\022\006\n\002A7\020\026\022\006\n\002PC\020\030\022\006\n\002SP\020\032\022\006\n\002SR\020\034*\345\001\n\013Vdp"
-  "RegsEnum\022\007\n\003V00\020\000\022\007\n\003V01\020\001\022\007\n\003V02\020\002\022\007\n\003V"
-  "03\020\003\022\007\n\003V04\020\004\022\007\n\003V05\020\005\022\007\n\003V06\020\006\022\007\n\003V07\020\007"
-  "\022\007\n\003V08\020\010\022\007\n\003V09\020\t\022\007\n\003V0A\020\n\022\007\n\003V0B\020\013\022\007\n\003"
-  "V0C\020\014\022\007\n\003V0D\020\r\022\007\n\003V0E\020\016\022\007\n\003V0F\020\017\022\007\n\003V10\020"
-  "\020\022\007\n\003V11\020\021\022\007\n\003V12\020\022\022\007\n\003V13\020\023\022\007\n\003V14\020\024\022\007\n"
-  "\003V15\020\025\022\007\n\003V16\020\026\022\007\n\003V17\020\027*9\n\006BpType\022\t\n\005DU"
-  "MMY\020\000\022\t\n\005BP_PC\020\001\022\013\n\007BP_READ\020\002\022\014\n\010BP_WRIT"
-  "E\020\0032\214\013\n\tDbgServer\0226\n\nget_gp_reg\022\017.idadeb"
-  "ug.GpReg\032\025.idadebug.AnyRegValue\"\000\0229\n\013get"
-  "_gp_regs\022\026.google.protobuf.Empty\032\020.idade"
-  "bug.GpRegs\"\000\022<\n\nset_gp_reg\022\024.idadebug.Gp"
-  "RegValue\032\026.google.protobuf.Empty\"\000\0228\n\013ge"
-  "t_vdp_reg\022\020.idadebug.VdpReg\032\025.idadebug.A"
-  "nyRegValue\"\000\022;\n\014get_vdp_regs\022\026.google.pr"
-  "otobuf.Empty\032\021.idadebug.VdpRegs\"\000\022>\n\013set"
-  "_vdp_reg\022\025.idadebug.VdpRegValue\032\026.google"
-  ".protobuf.Empty\"\000\022;\n\014get_dma_info\022\026.goog"
-  "le.protobuf.Empty\032\021.idadebug.DmaInfo\"\000\0226"
-  "\n\013read_memory\022\022.idadebug.MemoryAS\032\021.idad"
-  "ebug.MemData\"\000\022<\n\014write_memory\022\022.idadebu"
-  "g.MemoryAD\032\026.google.protobuf.Empty\"\000\022E\n\017"
-  "get_breakpoints\022\026.google.protobuf.Empty\032"
-  "\030.idadebug.DbgBreakpoints\"\000\022C\n\016add_break"
-  "point\022\027.idadebug.DbgBreakpoint\032\026.google."
-  "protobuf.Empty\"\000\022F\n\021toggle_breakpoint\022\027."
-  "idadebug.DbgBreakpoint\032\026.google.protobuf"
-  ".Empty\"\000\022F\n\021update_breakpoint\022\027.idadebug"
-  ".DbgBreakpoint\032\026.google.protobuf.Empty\"\000"
-  "\022C\n\016del_breakpoint\022\027.idadebug.DbgBreakpo"
-  "int\032\026.google.protobuf.Empty\"\000\022E\n\021clear_b"
-  "reakpoints\022\026.google.protobuf.Empty\032\026.goo"
-  "gle.protobuf.Empty\"\000\0229\n\005pause\022\026.google.p"
+  "e/protobuf/empty.proto\032\036google/protobuf/"
+  "wrappers.proto\"*\n\005GpReg\022!\n\003reg\030\001 \001(\0162\024.i"
+  "dadebug.GpRegsEnum\"\354\001\n\006GpRegs\022\n\n\002D0\030\001 \001("
+  "\r\022\n\n\002D1\030\002 \001(\r\022\n\n\002D2\030\003 \001(\r\022\n\n\002D3\030\004 \001(\r\022\n\n"
+  "\002D4\030\005 \001(\r\022\n\n\002D5\030\006 \001(\r\022\n\n\002D6\030\007 \001(\r\022\n\n\002D7\030"
+  "\010 \001(\r\022\n\n\002A0\030\t \001(\r\022\n\n\002A1\030\n \001(\r\022\n\n\002A2\030\013 \001("
+  "\r\022\n\n\002A3\030\014 \001(\r\022\n\n\002A4\030\r \001(\r\022\n\n\002A5\030\016 \001(\r\022\n\n"
+  "\002A6\030\017 \001(\r\022\n\n\002A7\030\020 \001(\r\022\n\n\002PC\030\021 \001(\r\022\n\n\002SP\030"
+  "\022 \001(\r\022\n\n\002SR\030\023 \001(\r\"@\n\nGpRegValue\022#\n\005index"
+  "\030\001 \001(\0162\024.idadebug.GpRegsEnum\022\r\n\005value\030\002 "
+  "\001(\r\",\n\006VdpReg\022\"\n\003reg\030\001 \001(\0162\025.idadebug.Vd"
+  "pRegsEnum\"\301\002\n\007VdpRegs\022\013\n\003V00\030\001 \001(\r\022\013\n\003V0"
+  "1\030\002 \001(\r\022\013\n\003V02\030\003 \001(\r\022\013\n\003V03\030\004 \001(\r\022\013\n\003V04"
+  "\030\005 \001(\r\022\013\n\003V05\030\006 \001(\r\022\013\n\003V06\030\007 \001(\r\022\013\n\003V07\030"
+  "\010 \001(\r\022\013\n\003V08\030\t \001(\r\022\013\n\003V09\030\n \001(\r\022\013\n\003V0A\030\013"
+  " \001(\r\022\013\n\003V0B\030\014 \001(\r\022\013\n\003V0C\030\r \001(\r\022\013\n\003V0D\030\016 "
+  "\001(\r\022\013\n\003V0E\030\017 \001(\r\022\013\n\003V0F\030\020 \001(\r\022\013\n\003V10\030\021 \001"
+  "(\r\022\013\n\003V11\030\022 \001(\r\022\013\n\003V12\030\023 \001(\r\022\013\n\003V13\030\024 \001("
+  "\r\022\013\n\003V14\030\025 \001(\r\022\013\n\003V15\030\026 \001(\r\022\013\n\003V16\030\027 \001(\r"
+  "\022\013\n\003V17\030\030 \001(\r\"B\n\013VdpRegValue\022$\n\005index\030\001 "
+  "\001(\0162\025.idadebug.VdpRegsEnum\022\r\n\005value\030\002 \001("
+  "\r\"0\n\007DmaInfo\022\013\n\003len\030\001 \001(\r\022\013\n\003src\030\002 \001(\r\022\013"
+  "\n\003dst\030\003 \001(\r\")\n\010MemoryAS\022\017\n\007address\030\001 \001(\r"
+  "\022\014\n\004size\030\002 \001(\r\")\n\010MemoryAD\022\017\n\007address\030\001 "
+  "\001(\r\022\014\n\004data\030\002 \001(\014\"\220\001\n\rDbgBreakpoint\022\036\n\004t"
+  "ype\030\001 \001(\0162\020.idadebug.BpType\022\016\n\006bstart\030\002 "
+  "\001(\r\022\014\n\004bend\030\003 \001(\r\022\017\n\007enabled\030\004 \001(\010\022\016\n\006is"
+  "_vdp\030\005 \001(\010\022\r\n\005elang\030\006 \001(\r\022\021\n\tcondition\030\007"
+  " \001(\t\"7\n\016DbgBreakpoints\022%\n\004list\030\001 \003(\0132\027.i"
+  "dadebug.DbgBreakpoint\"\036\n\tCallstack\022\021\n\tca"
+  "llstack\030\001 \003(\r\"\034\n\013AnyRegValue\022\r\n\005value\030\001 "
+  "\001(\r\"\027\n\007MemData\022\014\n\004data\030\001 \001(\014\"\205\001\n\014PauseCh"
+  "anged\022\017\n\007address\030\001 \001(\r\0224\n\007changed\030\002 \003(\0132"
+  "#.idadebug.PauseChanged.ChangedEntry\032.\n\014"
+  "ChangedEntry\022\013\n\003key\030\001 \001(\r\022\r\n\005value\030\002 \001(\r"
+  ":\0028\001\"j\n\007Changed\022/\n\007changed\030\001 \003(\0132\036.idade"
+  "bug.Changed.ChangedEntry\032.\n\014ChangedEntry"
+  "\022\013\n\003key\030\001 \001(\r\022\r\n\005value\030\002 \001(\r:\0028\001\"-\n\tCond"
+  "ition\022\r\n\005elang\030\001 \001(\r\022\021\n\tcondition\030\002 \001(\t*"
+  "\244\001\n\nGpRegsEnum\022\006\n\002D0\020\000\022\006\n\002D1\020\001\022\006\n\002D2\020\002\022\006"
+  "\n\002D3\020\003\022\006\n\002D4\020\004\022\006\n\002D5\020\005\022\006\n\002D6\020\006\022\006\n\002D7\020\007\022\006"
+  "\n\002A0\020\010\022\006\n\002A1\020\n\022\006\n\002A2\020\014\022\006\n\002A3\020\016\022\006\n\002A4\020\020\022\006"
+  "\n\002A5\020\022\022\006\n\002A6\020\024\022\006\n\002A7\020\026\022\006\n\002PC\020\030\022\006\n\002SP\020\032\022\006"
+  "\n\002SR\020\034*\345\001\n\013VdpRegsEnum\022\007\n\003V00\020\000\022\007\n\003V01\020\001"
+  "\022\007\n\003V02\020\002\022\007\n\003V03\020\003\022\007\n\003V04\020\004\022\007\n\003V05\020\005\022\007\n\003"
+  "V06\020\006\022\007\n\003V07\020\007\022\007\n\003V08\020\010\022\007\n\003V09\020\t\022\007\n\003V0A\020"
+  "\n\022\007\n\003V0B\020\013\022\007\n\003V0C\020\014\022\007\n\003V0D\020\r\022\007\n\003V0E\020\016\022\007\n"
+  "\003V0F\020\017\022\007\n\003V10\020\020\022\007\n\003V11\020\021\022\007\n\003V12\020\022\022\007\n\003V13"
+  "\020\023\022\007\n\003V14\020\024\022\007\n\003V15\020\025\022\007\n\003V16\020\026\022\007\n\003V17\020\027*9"
+  "\n\006BpType\022\t\n\005DUMMY\020\000\022\t\n\005BP_PC\020\001\022\013\n\007BP_REA"
+  "D\020\002\022\014\n\010BP_WRITE\020\0032\214\013\n\tDbgServer\0226\n\nget_g"
+  "p_reg\022\017.idadebug.GpReg\032\025.idadebug.AnyReg"
+  "Value\"\000\0229\n\013get_gp_regs\022\026.google.protobuf"
+  ".Empty\032\020.idadebug.GpRegs\"\000\022<\n\nset_gp_reg"
+  "\022\024.idadebug.GpRegValue\032\026.google.protobuf"
+  ".Empty\"\000\0228\n\013get_vdp_reg\022\020.idadebug.VdpRe"
+  "g\032\025.idadebug.AnyRegValue\"\000\022;\n\014get_vdp_re"
+  "gs\022\026.google.protobuf.Empty\032\021.idadebug.Vd"
+  "pRegs\"\000\022>\n\013set_vdp_reg\022\025.idadebug.VdpReg"
+  "Value\032\026.google.protobuf.Empty\"\000\022;\n\014get_d"
+  "ma_info\022\026.google.protobuf.Empty\032\021.idadeb"
+  "ug.DmaInfo\"\000\0226\n\013read_memory\022\022.idadebug.M"
+  "emoryAS\032\021.idadebug.MemData\"\000\022<\n\014write_me"
+  "mory\022\022.idadebug.MemoryAD\032\026.google.protob"
+  "uf.Empty\"\000\022E\n\017get_breakpoints\022\026.google.p"
+  "rotobuf.Empty\032\030.idadebug.DbgBreakpoints\""
+  "\000\022C\n\016add_breakpoint\022\027.idadebug.DbgBreakp"
+  "oint\032\026.google.protobuf.Empty\"\000\022F\n\021toggle"
+  "_breakpoint\022\027.idadebug.DbgBreakpoint\032\026.g"
+  "oogle.protobuf.Empty\"\000\022F\n\021update_breakpo"
+  "int\022\027.idadebug.DbgBreakpoint\032\026.google.pr"
+  "otobuf.Empty\"\000\022C\n\016del_breakpoint\022\027.idade"
+  "bug.DbgBreakpoint\032\026.google.protobuf.Empt"
+  "y\"\000\022E\n\021clear_breakpoints\022\026.google.protob"
+  "uf.Empty\032\026.google.protobuf.Empty\"\000\0229\n\005pa"
+  "use\022\026.google.protobuf.Empty\032\026.google.pro"
+  "tobuf.Empty\"\000\022:\n\006resume\022\026.google.protobu"
+  "f.Empty\032\026.google.protobuf.Empty\"\000\022C\n\017sta"
+  "rt_emulation\022\026.google.protobuf.Empty\032\026.g"
+  "oogle.protobuf.Empty\"\000\022B\n\016exit_emulation"
+  "\022\026.google.protobuf.Empty\032\026.google.protob"
+  "uf.Empty\"\000\022=\n\tstep_into\022\026.google.protobu"
+  "f.Empty\032\026.google.protobuf.Empty\"\000\022=\n\tste"
+  "p_over\022\026.google.protobuf.Empty\032\026.google."
+  "protobuf.Empty\"\000\022>\n\rget_callstack\022\026.goog"
+  "le.protobuf.Empty\032\023.idadebug.Callstack\"\000"
+  "2\215\002\n\tDbgClient\022\?\n\013start_event\022\026.google.p"
   "rotobuf.Empty\032\026.google.protobuf.Empty\"\000\022"
-  ":\n\006resume\022\026.google.protobuf.Empty\032\026.goog"
-  "le.protobuf.Empty\"\000\022C\n\017start_emulation\022\026"
-  ".google.protobuf.Empty\032\026.google.protobuf"
-  ".Empty\"\000\022B\n\016exit_emulation\022\026.google.prot"
-  "obuf.Empty\032\026.google.protobuf.Empty\"\000\022=\n\t"
-  "step_into\022\026.google.protobuf.Empty\032\026.goog"
-  "le.protobuf.Empty\"\000\022=\n\tstep_over\022\026.googl"
-  "e.protobuf.Empty\032\026.google.protobuf.Empty"
-  "\"\000\022>\n\rget_callstack\022\026.google.protobuf.Em"
-  "pty\032\023.idadebug.Callstack\"\0002\310\001\n\tDbgClient"
-  "\022\?\n\013start_event\022\026.google.protobuf.Empty\032"
-  "\026.google.protobuf.Empty\"\000\022\?\n\013pause_event"
-  "\022\026.idadebug.PauseChanged\032\026.google.protob"
-  "uf.Empty\"\000\0229\n\nstop_event\022\021.idadebug.Chan"
-  "ged\032\026.google.protobuf.Empty\"\000b\006proto3"
+  "\?\n\013pause_event\022\026.idadebug.PauseChanged\032\026"
+  ".google.protobuf.Empty\"\000\0229\n\nstop_event\022\021"
+  ".idadebug.Changed\032\026.google.protobuf.Empt"
+  "y\"\000\022C\n\016eval_condition\022\023.idadebug.Conditi"
+  "on\032\032.google.protobuf.BoolValue\"\000b\006proto3"
   ;
-static const ::_pbi::DescriptorTable* const descriptor_table_debug_5fproto_5f68k_2eproto_deps[1] = {
+static const ::_pbi::DescriptorTable* const descriptor_table_debug_5fproto_5f68k_2eproto_deps[2] = {
   &::descriptor_table_google_2fprotobuf_2fempty_2eproto,
+  &::descriptor_table_google_2fprotobuf_2fwrappers_2eproto,
 };
 static ::_pbi::once_flag descriptor_table_debug_5fproto_5f68k_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_debug_5fproto_5f68k_2eproto = {
-    false, false, 3597, descriptor_table_protodef_debug_5fproto_5f68k_2eproto,
+    false, false, 3760, descriptor_table_protodef_debug_5fproto_5f68k_2eproto,
     "debug_proto_68k.proto",
-    &descriptor_table_debug_5fproto_5f68k_2eproto_once, descriptor_table_debug_5fproto_5f68k_2eproto_deps, 1, 18,
+    &descriptor_table_debug_5fproto_5f68k_2eproto_once, descriptor_table_debug_5fproto_5f68k_2eproto_deps, 2, 19,
     schemas, file_default_instances, TableStruct_debug_5fproto_5f68k_2eproto::offsets,
     file_level_metadata_debug_5fproto_5f68k_2eproto, file_level_enum_descriptors_debug_5fproto_5f68k_2eproto,
     file_level_service_descriptors_debug_5fproto_5f68k_2eproto,
@@ -3595,18 +3626,27 @@ DbgBreakpoint::DbgBreakpoint(const DbgBreakpoint& from)
   : ::PROTOBUF_NAMESPACE_ID::Message() {
   DbgBreakpoint* const _this = this; (void)_this;
   new (&_impl_) Impl_{
-      decltype(_impl_.type_){}
+      decltype(_impl_.condition_){}
+    , decltype(_impl_.type_){}
     , decltype(_impl_.bstart_){}
     , decltype(_impl_.bend_){}
     , decltype(_impl_.enabled_){}
     , decltype(_impl_.is_vdp_){}
-    , decltype(_impl_.is_forbid_){}
+    , decltype(_impl_.elang_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  _impl_.condition_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.condition_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_condition().empty()) {
+    _this->_impl_.condition_.Set(from._internal_condition(), 
+      _this->GetArenaForAllocation());
+  }
   ::memcpy(&_impl_.type_, &from._impl_.type_,
-    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.is_forbid_) -
-    reinterpret_cast<char*>(&_impl_.type_)) + sizeof(_impl_.is_forbid_));
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.elang_) -
+    reinterpret_cast<char*>(&_impl_.type_)) + sizeof(_impl_.elang_));
   // @@protoc_insertion_point(copy_constructor:idadebug.DbgBreakpoint)
 }
 
@@ -3615,14 +3655,19 @@ inline void DbgBreakpoint::SharedCtor(
   (void)arena;
   (void)is_message_owned;
   new (&_impl_) Impl_{
-      decltype(_impl_.type_){0}
+      decltype(_impl_.condition_){}
+    , decltype(_impl_.type_){0}
     , decltype(_impl_.bstart_){0u}
     , decltype(_impl_.bend_){0u}
     , decltype(_impl_.enabled_){false}
     , decltype(_impl_.is_vdp_){false}
-    , decltype(_impl_.is_forbid_){false}
+    , decltype(_impl_.elang_){0u}
     , /*decltype(_impl_._cached_size_)*/{}
   };
+  _impl_.condition_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.condition_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
 DbgBreakpoint::~DbgBreakpoint() {
@@ -3636,6 +3681,7 @@ DbgBreakpoint::~DbgBreakpoint() {
 
 inline void DbgBreakpoint::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.condition_.Destroy();
 }
 
 void DbgBreakpoint::SetCachedSize(int size) const {
@@ -3648,9 +3694,10 @@ void DbgBreakpoint::Clear() {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
+  _impl_.condition_.ClearToEmpty();
   ::memset(&_impl_.type_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&_impl_.is_forbid_) -
-      reinterpret_cast<char*>(&_impl_.type_)) + sizeof(_impl_.is_forbid_));
+      reinterpret_cast<char*>(&_impl_.elang_) -
+      reinterpret_cast<char*>(&_impl_.type_)) + sizeof(_impl_.elang_));
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -3701,11 +3748,21 @@ const char* DbgBreakpoint::_InternalParse(const char* ptr, ::_pbi::ParseContext*
         } else
           goto handle_unusual;
         continue;
-      // bool is_forbid = 6;
+      // uint32 elang = 6;
       case 6:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 48)) {
-          _impl_.is_forbid_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          _impl_.elang_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // string condition = 7;
+      case 7:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 58)) {
+          auto str = _internal_mutable_condition();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, "idadebug.DbgBreakpoint.condition"));
         } else
           goto handle_unusual;
         continue;
@@ -3769,10 +3826,20 @@ uint8_t* DbgBreakpoint::_InternalSerialize(
     target = ::_pbi::WireFormatLite::WriteBoolToArray(5, this->_internal_is_vdp(), target);
   }
 
-  // bool is_forbid = 6;
-  if (this->_internal_is_forbid() != 0) {
+  // uint32 elang = 6;
+  if (this->_internal_elang() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteBoolToArray(6, this->_internal_is_forbid(), target);
+    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(6, this->_internal_elang(), target);
+  }
+
+  // string condition = 7;
+  if (!this->_internal_condition().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_condition().data(), static_cast<int>(this->_internal_condition().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "idadebug.DbgBreakpoint.condition");
+    target = stream->WriteStringMaybeAliased(
+        7, this->_internal_condition(), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -3790,6 +3857,13 @@ size_t DbgBreakpoint::ByteSizeLong() const {
   uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
+
+  // string condition = 7;
+  if (!this->_internal_condition().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_condition());
+  }
 
   // .idadebug.BpType type = 1;
   if (this->_internal_type() != 0) {
@@ -3817,9 +3891,9 @@ size_t DbgBreakpoint::ByteSizeLong() const {
     total_size += 1 + 1;
   }
 
-  // bool is_forbid = 6;
-  if (this->_internal_is_forbid() != 0) {
-    total_size += 1 + 1;
+  // uint32 elang = 6;
+  if (this->_internal_elang() != 0) {
+    total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_elang());
   }
 
   return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
@@ -3840,6 +3914,9 @@ void DbgBreakpoint::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
+  if (!from._internal_condition().empty()) {
+    _this->_internal_set_condition(from._internal_condition());
+  }
   if (from._internal_type() != 0) {
     _this->_internal_set_type(from._internal_type());
   }
@@ -3855,8 +3932,8 @@ void DbgBreakpoint::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::
   if (from._internal_is_vdp() != 0) {
     _this->_internal_set_is_vdp(from._internal_is_vdp());
   }
-  if (from._internal_is_forbid() != 0) {
-    _this->_internal_set_is_forbid(from._internal_is_forbid());
+  if (from._internal_elang() != 0) {
+    _this->_internal_set_elang(from._internal_elang());
   }
   _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
@@ -3874,10 +3951,16 @@ bool DbgBreakpoint::IsInitialized() const {
 
 void DbgBreakpoint::InternalSwap(DbgBreakpoint* other) {
   using std::swap;
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.condition_, lhs_arena,
+      &other->_impl_.condition_, rhs_arena
+  );
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(DbgBreakpoint, _impl_.is_forbid_)
-      + sizeof(DbgBreakpoint::_impl_.is_forbid_)
+      PROTOBUF_FIELD_OFFSET(DbgBreakpoint, _impl_.elang_)
+      + sizeof(DbgBreakpoint::_impl_.elang_)
       - PROTOBUF_FIELD_OFFSET(DbgBreakpoint, _impl_.type_)>(
           reinterpret_cast<char*>(&_impl_.type_),
           reinterpret_cast<char*>(&other->_impl_.type_));
@@ -5110,6 +5193,236 @@ void Changed::InternalSwap(Changed* other) {
       file_level_metadata_debug_5fproto_5f68k_2eproto[17]);
 }
 
+// ===================================================================
+
+class Condition::_Internal {
+ public:
+};
+
+Condition::Condition(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:idadebug.Condition)
+}
+Condition::Condition(const Condition& from)
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  Condition* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.condition_){}
+    , decltype(_impl_.elang_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  _impl_.condition_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.condition_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_condition().empty()) {
+    _this->_impl_.condition_.Set(from._internal_condition(), 
+      _this->GetArenaForAllocation());
+  }
+  _this->_impl_.elang_ = from._impl_.elang_;
+  // @@protoc_insertion_point(copy_constructor:idadebug.Condition)
+}
+
+inline void Condition::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.condition_){}
+    , decltype(_impl_.elang_){0u}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+  _impl_.condition_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.condition_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+}
+
+Condition::~Condition() {
+  // @@protoc_insertion_point(destructor:idadebug.Condition)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void Condition::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.condition_.Destroy();
+}
+
+void Condition::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void Condition::Clear() {
+// @@protoc_insertion_point(message_clear_start:idadebug.Condition)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  _impl_.condition_.ClearToEmpty();
+  _impl_.elang_ = 0u;
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+}
+
+const char* Condition::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // uint32 elang = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          _impl_.elang_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // string condition = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
+          auto str = _internal_mutable_condition();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, "idadebug.Condition.condition"));
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* Condition::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:idadebug.Condition)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // uint32 elang = 1;
+  if (this->_internal_elang() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(1, this->_internal_elang(), target);
+  }
+
+  // string condition = 2;
+  if (!this->_internal_condition().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_condition().data(), static_cast<int>(this->_internal_condition().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "idadebug.Condition.condition");
+    target = stream->WriteStringMaybeAliased(
+        2, this->_internal_condition(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:idadebug.Condition)
+  return target;
+}
+
+size_t Condition::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:idadebug.Condition)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // string condition = 2;
+  if (!this->_internal_condition().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_condition());
+  }
+
+  // uint32 elang = 1;
+  if (this->_internal_elang() != 0) {
+    total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_elang());
+  }
+
+  return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
+}
+
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData Condition::_class_data_ = {
+    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSourceCheck,
+    Condition::MergeImpl
+};
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*Condition::GetClassData() const { return &_class_data_; }
+
+
+void Condition::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg) {
+  auto* const _this = static_cast<Condition*>(&to_msg);
+  auto& from = static_cast<const Condition&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:idadebug.Condition)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (!from._internal_condition().empty()) {
+    _this->_internal_set_condition(from._internal_condition());
+  }
+  if (from._internal_elang() != 0) {
+    _this->_internal_set_elang(from._internal_elang());
+  }
+  _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void Condition::CopyFrom(const Condition& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:idadebug.Condition)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool Condition::IsInitialized() const {
+  return true;
+}
+
+void Condition::InternalSwap(Condition* other) {
+  using std::swap;
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.condition_, lhs_arena,
+      &other->_impl_.condition_, rhs_arena
+  );
+  swap(_impl_.elang_, other->_impl_.elang_);
+}
+
+::PROTOBUF_NAMESPACE_ID::Metadata Condition::GetMetadata() const {
+  return ::_pbi::AssignDescriptors(
+      &descriptor_table_debug_5fproto_5f68k_2eproto_getter, &descriptor_table_debug_5fproto_5f68k_2eproto_once,
+      file_level_metadata_debug_5fproto_5f68k_2eproto[18]);
+}
+
 // @@protoc_insertion_point(namespace_scope)
 }  // namespace idadebug
 PROTOBUF_NAMESPACE_OPEN
@@ -5184,6 +5497,10 @@ Arena::CreateMaybeMessage< ::idadebug::Changed_ChangedEntry_DoNotUse >(Arena* ar
 template<> PROTOBUF_NOINLINE ::idadebug::Changed*
 Arena::CreateMaybeMessage< ::idadebug::Changed >(Arena* arena) {
   return Arena::CreateMessageInternal< ::idadebug::Changed >(arena);
+}
+template<> PROTOBUF_NOINLINE ::idadebug::Condition*
+Arena::CreateMaybeMessage< ::idadebug::Condition >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::idadebug::Condition >(arena);
 }
 PROTOBUF_NAMESPACE_CLOSE
 
