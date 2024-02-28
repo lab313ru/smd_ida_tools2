@@ -1214,6 +1214,10 @@ static int idaapi is_ok_bpt(bpttype_t type, ea_t ea, int len) {
 // This function is called from debthread
 static drc_t idaapi update_bpts(int* nbpts, update_bpt_info_t *bpts, int nadd, int ndel, qstring *errbuf) {
   for (int i = 0; i < nadd; ++i) {
+    if (bpts[i].code == BPT_SKIP) {
+      continue;
+    }
+    
     ea_t start = bpts[i].ea;
     ea_t end = bpts[i].ea + bpts[i].size - 1;
 
@@ -1279,6 +1283,10 @@ static drc_t idaapi update_bpts(int* nbpts, update_bpt_info_t *bpts, int nadd, i
   }
 
   for (int i = 0; i < ndel; ++i) {
+    if (bpts[nadd + i].code == BPT_SKIP) {
+      continue;
+    }
+    
     ea_t start = bpts[nadd + i].ea;
     ea_t end = bpts[nadd + i].ea + bpts[nadd + i].size - 1;
     BpType type1 = BpType::BP_PC;
@@ -1656,14 +1664,12 @@ static ssize_t idaapi idd_notify(void*, int msgid, va_list va) {
   }
   break;*/
 
-#ifdef HAVE_UPDATE_CALL_STACK
   case debugger_t::ev_update_call_stack: {
     thid_t tid = va_argi(va, thid_t);
     call_stack_t* trace = va_arg(va, call_stack_t*);
     retcode = update_call_stack(tid, trace);
   }
   break;
-#endif
 
   //case debugger_t::ev_eval_lowcnd: {
   //  thid_t tid = va_argi(va, thid_t);
