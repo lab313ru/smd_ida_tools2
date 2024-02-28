@@ -42,13 +42,13 @@ static ssize_t idaapi hook_dbg(void* user_data, int notification_code, va_list v
 {
   switch (notification_code)
   {
-  case dbg_notification_t::dbg_process_start:
+  case dbg_notification_t::dbg_process_start: {
     dbg_started = true;
-    break;
+  } break;
 
-  case dbg_notification_t::dbg_process_exit:
+  case dbg_notification_t::dbg_process_exit: {
     dbg_started = false;
-    break;
+  } break;
   }
   return 0;
 }
