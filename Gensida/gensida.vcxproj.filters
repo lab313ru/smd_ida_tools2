@@ -27,6 +27,12 @@
     <ClCompile Include="..\proto\debug_proto_z80.pb.cc">
       <Filter>proto</Filter>
     </ClCompile>
+    <ClCompile Include="ida\paintform_moc.cpp">
+      <Filter>ida</Filter>
+    </ClCompile>
+    <ClCompile Include="ida\paintform.cpp">
+      <Filter>ida</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ida\ida_debmod.h">
@@ -53,5 +59,10 @@
     <ClInclude Include="..\proto\debug_proto_z80.pb.h">
       <Filter>proto</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="ida\paintform.h">
+      <Filter>ida</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>

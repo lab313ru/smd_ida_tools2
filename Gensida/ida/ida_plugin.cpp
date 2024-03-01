@@ -31,6 +31,10 @@
 #include "ida_registers.h"
 #include <mutex>
 
+#ifdef DEBUG_68K
+#include "paintform.h"
+#endif
+
 extern debugger_t debugger;
 
 static bool plugin_inited;
@@ -1857,6 +1861,22 @@ static bool init_plugin(void)
 }
 
 #ifdef DEBUG_68K
+static void idaapi update_tiles(bool create);
+
+struct data_as_tiles_action_t : public action_handler_t
+{
+  virtual int idaapi activate(action_activation_ctx_t* ctx)
+  {
+    update_tiles(true);
+    return 1;
+  }
+
+  virtual action_state_t idaapi update(action_update_ctx_t* ctx)
+  {
+    return AST_ENABLE_ALWAYS;
+  }
+};
+
 struct smd_constant_action_t : public action_handler_t
 {
   virtual int idaapi activate(action_activation_ctx_t* ctx)
@@ -1991,6 +2011,11 @@ struct smd_output_mark_action_t : public action_handler_t
   }
 };
 
+static const char data_as_tiles_title[] = "Tile data preview";
+static const char data_as_tiles_name[] = "gensida:data_as_tiles";
+static data_as_tiles_action_t data_as_tiles;
+static action_desc_t data_as_tiles_action = ACTION_DESC_LITERAL(data_as_tiles_name, "Paint data as tiles", &data_as_tiles, "Shift+D", NULL, -1);
+
 static const char smd_constant_name[] = "gensida:smd_constant";
 static const char smd_output_mark_name[] = "gensida:output_mark";
 static smd_constant_action_t smd_constant;
@@ -1998,24 +2023,89 @@ static smd_output_mark_action_t smd_output_mark;
 static action_desc_t smd_constant_action = ACTION_DESC_LITERAL(smd_constant_name, "Identify SMD constant", &smd_constant, "J", NULL, -1);
 static action_desc_t smd_output_mark_action = ACTION_DESC_LITERAL(smd_output_mark_name, "Mark ASM output", &smd_output_mark, "Shift+J", NULL, -1);
 
+static TWidget* g_tiles = nullptr;
+
 //--------------------------------------------------------------------------
 static ssize_t idaapi hook_ui(void* user_data, int notification_code, va_list va)
 {
-  if (notification_code == ui_populating_widget_popup)
-  {
+  if (notification_code == ui_populating_widget_popup) {
     TWidget* widget = va_arg(va, TWidget*);
 
-    if (get_widget_type(widget) == BWN_DISASM)
-    {
+    if (get_widget_type(widget) == BWN_DISASM) {
       TPopupMenu* p = va_arg(va, TPopupMenu*);
       attach_action_to_popup(widget, p, smd_constant_name);
-
       attach_action_to_popup(widget, p, smd_output_mark_name);
+      attach_action_to_popup(widget, p, data_as_tiles_name);
+    }
+  }
+  else if (notification_code == ui_widget_visible) {
+    TWidget* w = va_arg(va, TWidget*);
+
+    if (w == g_tiles) {
+      QLineEdit* pal_addr = new QLineEdit();
+      QRegExpValidator* hexVal = new QRegExpValidator(QRegExp("[0-9a-fA-F]{1,8}"));
+      pal_addr->setValidator(hexVal);
+      PaintForm* pf = new PaintForm();
+
+      QGridLayout* mainLayout = new QGridLayout();
+      mainLayout->setMargin(10);
+      mainLayout->addWidget(pf, 0, 0, 0, 2);
+      mainLayout->addWidget(new QLabel("Palette Address:"), 1, 0);
+      mainLayout->addWidget(pal_addr, 1, 1);
+      ((QWidget*)w)->setLayout(mainLayout);
+
+      QObject::connect(pal_addr, &QLineEdit::textChanged, pf, &PaintForm::textChanged);
+    }
+  }
+  else if (notification_code == ui_widget_invisible) {
+    TWidget* w = va_arg(va, TWidget*);
+
+    if (w == g_tiles) {
+      g_tiles = nullptr;
     }
   }
 
   return 0;
 }
+
+static void idaapi update_tiles(bool create) {
+  QWidget* w = (QWidget*)find_widget(data_as_tiles_title);
+  
+  if (w != nullptr) {
+    w->update();
+  }
+  else if (create) {
+    TWidget* w = find_widget(data_as_tiles_title);
+
+    if (w != nullptr) {
+      activate_widget(w, true);
+      update_tiles(false);
+      return;
+    }
+
+    g_tiles = w = create_empty_widget(data_as_tiles_title);
+
+    if (w != nullptr) {
+      display_widget(w, WOPN_PERSIST | WOPN_DP_RIGHT);
+      ((QWidget*)w)->show();
+    }
+    else {
+      close_widget(w, WCLS_SAVE);
+      g_tiles = nullptr;
+    }
+  }
+}
+
+static ssize_t idaapi hook_view(void* /*ud*/, int notification_code, va_list va) {
+  switch (notification_code) {
+  case view_loc_changed: {
+    update_tiles(false);
+  } break;
+  }
+
+  return 0;
+}
+
 #endif
 
 //--------------------------------------------------------------------------
@@ -2031,12 +2121,14 @@ static plugmod_t* idaapi init(void)
 #ifdef DEBUG_68K
     bool res = register_action(smd_constant_action);
     res = register_action(smd_output_mark_action);
+    res = register_action(data_as_tiles_action);
 
-    hook_to_notification_point(HT_UI, hook_ui, NULL);
+    hook_to_notification_point(HT_UI, hook_ui, nullptr);
     hook_to_notification_point(HT_IDP, hook_disasm, nullptr);
     hook_to_notification_point(HT_IDP, process_asm_output, nullptr);
     register_post_event_visitor(HT_IDP, &ctx, nullptr);
-    hook_to_notification_point(HT_DBG, hook_dbg, NULL);
+    hook_to_notification_point(HT_DBG, hook_dbg, nullptr);
+    hook_to_notification_point(HT_VIEW, hook_view, nullptr);
 #endif
 
     print_version();
@@ -2059,9 +2151,11 @@ static void idaapi term(void)
     unhook_from_notification_point(HT_IDP, process_asm_output);
     unhook_from_notification_point(HT_IDP, hook_disasm);
     unhook_from_notification_point(HT_DBG, hook_dbg);
+    unhook_from_notification_point(HT_VIEW, hook_view);
 
     unregister_action(smd_output_mark_name);
     unregister_action(smd_constant_name);
+    unregister_action(data_as_tiles_name);
 #endif
 
     plugin_inited = false;
