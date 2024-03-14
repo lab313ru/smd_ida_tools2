@@ -2042,14 +2042,24 @@ static ssize_t idaapi hook_ui(void* user_data, int notification_code, va_list va
       pal_addr->setValidator(hexVal);
       PaintForm* pf = new PaintForm();
 
+      QScrollBar* sb = new QScrollBar(Qt::Vertical, pf);
+      pf->setScrollBar(sb);
+
       QGridLayout* mainLayout = new QGridLayout();
-      mainLayout->setMargin(10);
-      mainLayout->addWidget(pf, 0, 0, 0, 2);
-      mainLayout->addWidget(new QLabel("Palette Address:"), 1, 0);
-      mainLayout->addWidget(pal_addr, 1, 1);
+      mainLayout->setMargin(4);
+
+      QGridLayout* lAddr = new QGridLayout();
+      lAddr->addWidget(new QLabel("Palette Address:"), 0, 0);
+      lAddr->addWidget(pal_addr, 0, 1);
+      mainLayout->addLayout(lAddr, 0, 0, 0, 2, Qt::AlignTop);
+      mainLayout->setRowStretch(0, 1);
+      mainLayout->setRowStretch(1, 30);
+      mainLayout->addWidget(pf, 1, 0);
+      mainLayout->addWidget(sb, 1, 1);
       ((QWidget*)w)->setLayout(mainLayout);
 
       QObject::connect(pal_addr, &QLineEdit::textChanged, pf, &PaintForm::textChanged);
+      QObject::connect(sb, &QScrollBar::valueChanged, pf, &PaintForm::scrollChanged);
     }
   }
   else if (notification_code == ui_widget_invisible) {

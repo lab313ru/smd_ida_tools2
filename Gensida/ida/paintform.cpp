@@ -1,16 +1,3 @@
-//#include <raylib.h>
-//
-//#define RAYGUI_IMPLEMENTATION
-//#define RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT 0
-//#define RAYGUI_NO_ICONS
-//#include <raygui.h>
-//
-//#undef RAYGUI_IMPLEMENTATION
-//#include "ray/style_dark.h"
-//
-//static const int window_w = 320;
-//static const int window_h = 240;
-
 #include <dbg.hpp>
 
 #include "paintform.h"
@@ -26,6 +13,23 @@ static const uint16_t pal_raw[16] = {
   0x0CCC, 0x0444, 0x0886, 0x0CAA, 0x0026, 0x022C, 0x026C, 0x02CC,
   0x0220, 0x0240, 0x0C86, 0x0420, 0x0A42, 0x0462, 0x08AC, 0x0000,
 };
+
+void PaintForm::setScrollBar(QScrollBar* sb) {
+  scroll = sb;
+}
+
+int PaintForm::getFullTiles() {
+  ea_t start = get_screen_ea();
+
+  if (start == BADADDR) {
+    return 0;
+  }
+
+  start = get_item_head(start);
+  ea_t end = get_item_end(start);
+
+  return std::max(1U, (end - start) / 0x20);
+}
 
 PaintForm::PaintForm() {
   memcpy(pal, pal_raw, sizeof(pal_raw));
@@ -53,14 +57,20 @@ void PaintForm::textChanged(const QString& text) {
   update();
 }
 
+void PaintForm::scrollChanged(int value) {
+  update();
+}
+
 void PaintForm::paintEvent(QPaintEvent* event) {
   ea_t start = get_screen_ea();
 
-  if (start == BADADDR || start == prev_ea)
+  if (start == BADADDR) {
     return;
+  }
 
-  ea_t end = start + VDP_TILES_IN_ROW * VDP_TILES_IN_COL;
-  ea_t tiles = end - start;
+  int full_tiles = getFullTiles();
+  int val = full_tiles / VDP_TILES_IN_ROW - VDP_TILES_IN_COL;
+  scroll->setMaximum(std::max(0, val));
 
   QPainter painter(this);
   painter.begin(this);
@@ -78,14 +88,15 @@ void PaintForm::paintEvent(QPaintEvent* event) {
     palette[i] = QColor(r, g, b);
   }
 
-  for (ea_t i = 0; i < tiles; ++i)
+  int scroll_val = scroll->value() * VDP_TILES_IN_ROW;
+  for (int i = scroll_val; i < full_tiles; ++i)
   {
     for (int y = 0; y < VDP_TILE_H; ++y)
     {
       for (int x = 0; x < (VDP_TILE_W / 2); ++x)
       {
-        int _x = (i % VDP_TILES_IN_ROW) * VDP_TILE_W + x * 2;
-        int _y = (i / VDP_TILES_IN_ROW) * VDP_TILE_H + y;
+        int _x = ((i - scroll_val) % VDP_TILES_IN_ROW) * VDP_TILE_W + x * 2;
+        int _y = ((i - scroll_val) / VDP_TILES_IN_ROW) * VDP_TILE_H + y;
 
         ea_t addr = start + i * 0x20 + y * (VDP_TILE_W / 2) + x;
         uint32 t = 0;
@@ -108,6 +119,9 @@ void PaintForm::paintEvent(QPaintEvent* event) {
       }
     }
   }
+
+  //painter.setPen(myPen2);
+  //painter.drawLine(QPoint(0, 0), QPoint(1, 1));
 
   painter.end();
 }
