@@ -12,28 +12,23 @@
 // A copy of the GPL 2.0 should have been included with the program.
 // If not, see http ://www.gnu.org/licenses/
 
-#include <Windows.h>
-#include <Psapi.h>
-#include <ida.hpp>
 #include <dbg.hpp>
-#include <idd.hpp>
-#include <loader.hpp>
-#include <idp.hpp>
-#include <offset.hpp>
-#include <struct.hpp>
-#include <enum.hpp>
 #include <expr.hpp>
-#include <regex>
+#include <ida.hpp>
+#include <idd.hpp>
+#include <idp.hpp>
+#include <loader.hpp>
+#include <name.hpp>
+#include <offset.hpp>
 
 #include "ida_plugin.h"
-
-#include "ida_debmod.h"
 #include "ida_registers.h"
-#include <mutex>
 
 #ifdef DEBUG_68K
 #include "paintform.h"
 #endif
+
+#include <regex>
 
 extern debugger_t debugger;
 

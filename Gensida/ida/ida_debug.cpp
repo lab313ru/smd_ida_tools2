@@ -1,8 +1,5 @@
-#include <Windows.h>
-#include <algorithm>
-#include <vector>
-#include <iostream>
 #include <thread>
+#include <vector>
 
 #include <grpcpp/grpcpp.h>
 
@@ -49,15 +46,12 @@ using google::protobuf::Map;
 #include <ida.hpp>
 #include <idd.hpp>
 #include <dbg.hpp>
-#include <diskio.hpp>
 #include <auto.hpp>
-#include <funcs.hpp>
 #include <expr.hpp>
 
 #include "ida_debmod.h"
 
 #include "ida_registers.h"
-#include "ida_debug.h"
 #include "ida_plugin.h"
 
 
