@@ -13,7 +13,7 @@ The IDA Pro tools for the Sega Genesis/MegaDrive romhackers
 4. Install Perl from: https://strawberryperl.com/
 5. Edit `build.py` from IDA Pro QT distro. Add: `"-nomake", "examples",` after `"-nomake", "tests",`
 6. Install and add to PATH `jom` from: https://ftp.funet.fi/pub/mirrors/download.qt-project.org/official_releases/jom/jom_1_1_4.zip
-7. Build IDA Pro QT: `python build.py -j 16 -v`
+7. Build IDA Pro QT (using **Visual Studio 2019 Developement Command Prompt**): `python build.py -j 16 -v`
 8. Compile solution with **Visual Studio 2022** or newer
 
 ## How to use
