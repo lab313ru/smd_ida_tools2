@@ -8,8 +8,8 @@ The IDA Pro tools for the Sega Genesis/MegaDrive romhackers
 
 ## How to compile
 1. Edit paths to your IDA/SDK installation according to your real paths (`IDA_DIR`, `IDA_SDK`)
-2. Use `vcpkg` to install dependencies: `vcpkg install grpc:x86-windows-static grpc:x64-windows-static`
-3. Download and unpack IDA Pro QT distro: https://hex-rays.com/blog/ida-8-3-qt-5-15-2-sources-build-scripts/
+2. Install `vcpkg` as described in the [Tutorial: Install and use packages with MSBuild in Visual Studio](https://learn.microsoft.com/en-us/vcpkg/get_started/get-started-msbuild) step 1.
+3. Download and unpack IDA Pro QT distro: [qt-5.15.2-full-IDA83.tar.bz2](qt_ida_src_while_original_link_is_dead/qt-5.15.2-full-IDA83.tar.bz2)
 4. Install Perl from: https://strawberryperl.com/
 5. Edit `build.py` from IDA Pro QT distro. Add: `"-nomake", "examples",` after `"-nomake", "tests",`
 6. Install and add to PATH `jom` from: https://ftp.funet.fi/pub/mirrors/download.qt-project.org/official_releases/jom/jom_1_1_4.zip
