@@ -214,7 +214,7 @@ private:
 public:
   apply_codemap_req(const google::protobuf::Map<google::protobuf::uint32, google::protobuf::uint32>& changed) : _changed(changed) {};
 
-  int idaapi execute(void) override {
+  ssize_t idaapi execute(void) override {
     for (auto i = _changed.cbegin(); i != _changed.cend(); ++i) {
       auto_make_code((ea_t)i->first);
       plan_ea((ea_t)i->first);
@@ -256,7 +256,7 @@ public:
     cond_break_t() {};
     cond_break_t(uint32 _elang, const char* _cond) : elang(_elang), cond(_cond) {};
 
-    int idaapi execute(void) override {
+    ssize_t idaapi execute(void) override {
         extlang_object_t elng = find_extlang_by_index(elang);
 
         idc_value_t rv;

@@ -1845,6 +1845,7 @@ static void print_version()
 // Initialize debugger plugin
 static bool init_plugin(void)
 {
+  processor_t& ph = PH;
 #ifdef DEBUG_68K
   if (ph.id != PLFM_68K)
 #else

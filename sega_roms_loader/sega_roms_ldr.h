@@ -3,7 +3,7 @@
 #include <ida.hpp>
 #include <loader.hpp>
 
-#define VERSION "2.0"
+#define LDR_VERSION "2.0"
 
 struct gen_hdr {
     unsigned char CopyRights[32];

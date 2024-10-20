@@ -1,6 +1,9 @@
 #include <Windows.h>
 #include <vector>
 
+#undef min
+#undef max
+
 #include <grpcpp/grpcpp.h>
 
 #ifdef DEBUG_68K

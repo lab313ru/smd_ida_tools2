@@ -28,7 +28,7 @@ int PaintForm::getFullTiles() {
   start = get_item_head(start);
   ea_t end = calc_max_item_end(start);
 
-  return std::max(1U, (end - start) / 0x20);
+  return std::max(1ULL, (end - start) / 0x20);
 }
 
 PaintForm::PaintForm() {

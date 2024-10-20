@@ -3,9 +3,8 @@
 #include <idp.hpp>
 #include <diskio.hpp>
 #include <name.hpp>
-#include <struct.hpp>
+#include <typeinf.hpp>
 #include <auto.hpp>
-#include <enum.hpp>
 
 #include "sega_roms_ldr.h"
 
@@ -83,10 +82,11 @@ static void add_segment(ea_t start, ea_t end, const char* name, const char* clas
   s.sel = 0;
   s.start_ea = start;
   s.end_ea = end;
-  s.align = saRelByte;
+  s.align = saAbs;
   s.comb = scPub;
   s.bitness = 1; // 32-bit
   s.perm = perm;
+  s.set_loader_segm(true);
 
   int flags = ADDSEG_NOSREG | ADDSEG_NOTRUNC | ADDSEG_QUIET;
 
@@ -145,31 +145,6 @@ static void make_segments(size_t romsize) {
   }
 }
 
-static void add_offset_field(struc_t* st, segment_t* code_segm, const char* name) {
-  opinfo_t info = { 0 };
-  info.ri.init(REF_OFF32, BADADDR);
-  add_struc_member(st, name, BADADDR, dword_flag() | off_flag(), &info, 4);
-}
-
-static void add_string_field(struc_t* st, const char* name, asize_t size) {
-  opinfo_t info = { 0 };
-  info.strtype = STRTYPE_C;
-  add_struc_member(st, name, BADADDR, strlit_flag(), &info, size);
-}
-
-static void add_short_field(struc_t* st, const char* name, const char* cmt = NULL) {
-  add_struc_member(st, name, BADADDR, word_flag() | hex_flag(), NULL, 2);
-  member_t* mm = get_member_by_name(st, name);
-
-  set_member_cmt(mm, cmt, true);
-}
-
-static void add_byte_field(struc_t* st, const char* name, const char* cmt = NULL) {
-  add_struc_member(st, name, BADADDR, byte_flag() | hex_flag(), NULL, 1);
-  member_t* mm = get_member_by_name(st, name);
-  set_member_cmt(mm, cmt, true);
-}
-
 static void define_header() {
   make_array(0x100, 1, "CopyRights", 0x20);
   make_array(0x120, 1, "DomesticName", 0x30);
@@ -216,30 +191,32 @@ static void add_vector_subs(gen_vect* table, unsigned int rom_size) {
   }
 }
 
-static void add_enum_member_with_mask(enum_t id, const char* name, unsigned int value, unsigned int mask = DEFMASK, const char* cmt = NULL) {
-  int res = add_enum_member(id, name, value, mask);
-  if (cmt != NULL) set_enum_member_cmt(get_enum_member_by_name(name), cmt, false);
+static void add_enum_member(enum_type_data_t& id, const char* name, unsigned int value, const char* cmt = NULL) {
+  id.add_constant(name, value, cmt);
 }
 
 
 static void add_vdp_status_enum() {
-  enum_t vdp_status = add_enum(BADADDR, "vdp_status", hex_flag());
-  add_enum_member_with_mask(vdp_status, "FIFO_EMPTY", 9);
-  add_enum_member_with_mask(vdp_status, "FIFO_FULL", 8);
-  add_enum_member_with_mask(vdp_status, "VBLANK_PENDING", 7);
-  add_enum_member_with_mask(vdp_status, "SPRITE_OVERFLOW", 6);
-  add_enum_member_with_mask(vdp_status, "SPRITE_COLLISION", 5);
-  add_enum_member_with_mask(vdp_status, "ODD_FRAME", 4);
-  add_enum_member_with_mask(vdp_status, "VBLANKING", 3);
-  add_enum_member_with_mask(vdp_status, "HBLANKING", 2);
-  add_enum_member_with_mask(vdp_status, "DMA_IN_PROGRESS", 1);
-  add_enum_member_with_mask(vdp_status, "PAL_MODE", 0);
+  enum_type_data_t en;
+
+  add_enum_member(en, "FIFO_EMPTY", 9);
+  add_enum_member(en, "FIFO_FULL", 8);
+  add_enum_member(en, "VBLANK_PENDING", 7);
+  add_enum_member(en, "SPRITE_OVERFLOW", 6);
+  add_enum_member(en, "SPRITE_COLLISION", 5);
+  add_enum_member(en, "ODD_FRAME", 4);
+  add_enum_member(en, "VBLANKING", 3);
+  add_enum_member(en, "HBLANKING", 2);
+  add_enum_member(en, "DMA_IN_PROGRESS", 1);
+  add_enum_member(en, "PAL_MODE", 0);
+
+  create_enum_type("vdp_status", en, 1, type_unsigned, false);
 }
 
 static void print_version() {
   static const char format[] = "Sega Genesis/Megadrive ROMs loader plugin v%s;\nAuthor: DrMefistO [Lab 313] <newinferno@gmail.com>.";
-  info(format, VERSION);
-  msg(format, VERSION);
+  info(format, LDR_VERSION);
+  msg(format, LDR_VERSION);
 }
 
 static int idaapi accept_file(qstring* fileformatname, qstring* processor, linput_t* li, const char* filename) {
@@ -253,12 +230,13 @@ static int idaapi accept_file(qstring* fileformatname, qstring* processor, linpu
 }
 
 static void idaapi load_file(linput_t* li, ushort neflags, const char* fileformatname) {
+  processor_t& ph = PH;
   if (ph.id != PLFM_68K) {
     set_processor_type("68020", SETPROC_LOADER); // Motorola 68020
     set_target_assembler(0);
   }
 
-  inf.af = 0
+  inf_set_af(0
       //| AF_FIXUP //        0x0001          // Create offsets and segments using fixup info
       //| AF_MARKCODE  //     0x0002          // Mark typical code sequences as code
       | AF_UNK //          0x0004          // Delete instructions with no xrefs
@@ -283,8 +261,8 @@ static void idaapi load_file(linput_t* li, ushort neflags, const char* fileforma
       | AF_DATOFF  //     0x0200          // Automatically convert data to offsets
       | AF_TRFUNC  //     0x2000          // Truncate functions upon code deletion
       | AF_PURDAT  //     0x4000          // Control flow to data segment is ignored
-      ;
-  inf.af2 = 0;
+      );
+  inf_set_af2(0);
 
   unsigned int size = qlsize(li); // size of rom
 
@@ -301,12 +279,13 @@ static void idaapi load_file(linput_t* li, ushort neflags, const char* fileforma
   add_vector_subs(&_vect, size); // mark vector subroutines as procedures
   add_vdp_status_enum();
 
-  idainfo *_inf = &inf;
-  //_inf->outflags |= OFLG_LZERO;
-  _inf->baseaddr = _inf->start_cs = 0;
-  _inf->start_ip = _inf->start_ea = _inf->main = _vect.Reset; // Reset
-  _inf->start_sp = _vect.SSP;
-  _inf->lowoff = 0x200;
+  inf_set_baseaddr(0);
+  inf_set_start_cs(0);
+  inf_set_start_ip(_vect.Reset);
+  inf_set_start_ea(_vect.Reset);
+  inf_set_main(_vect.Reset);
+  inf_set_start_sp(_vect.SSP);
+  inf_set_lowoff(0x200);
 
   print_version();
 }
