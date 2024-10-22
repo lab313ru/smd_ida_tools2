@@ -141,6 +141,10 @@ static void print_insn(insn_t* insn)
   }
 }
 
+static __inline ea_t dw_ea(ea_t addr) {
+  return (addr & 0xFFFFFFFF);
+}
+
 static void print_op(ea_t ea, op_t* op)
 {
   if (my_dbg)
@@ -169,7 +173,7 @@ static void print_op(ea_t ea, op_t* op)
     else
       msg("reg_phrase=%x, ", op->phrase);
 
-    msg("addr=%x, ", op->addr);
+    msg("addr=%x, ", dw_ea(op->addr));
 
     msg("value=%x, ", op->value);
 
@@ -994,7 +998,7 @@ static ssize_t idaapi hook_disasm(void* user_data, int notification_code, va_lis
 
     if (insn->itype == M68K_linea || insn->itype == M68K_linef)
     {
-      insn->add_cref(insn->Op1.addr, 0, fl_CN);
+      insn->add_cref(dw_ea(insn->Op1.addr), 0, fl_CN);
       insn->add_cref(insn->ea + insn->size, insn->Op1.offb, fl_F);
       return 1;
     }
@@ -1050,17 +1054,18 @@ struct m68k_events_visitor_t : public post_event_visitor_t
         case o_near:
         case o_mem:
         {
-          if (op.addr >= 0xFFFF0000 && op.addr <= 0xFFFFFFFF) {
-            op.addr &= 0xFFFFFF;
+          ea_t op_addr = dw_ea(op.addr);
+          if (op_addr >= 0xFFFF0000 && op_addr <= 0xFFFFFFFF) {
+            op.addr = op_addr & 0xFFFFFF;
           }
 
-          if ((op.addr & 0xFFE00000) == 0xE00000) { // RAM mirrors
-            op.addr |= 0x1F0000;
+          if ((op_addr & 0xFFE00000) == 0xE00000) { // RAM mirrors
+            op.addr = op_addr | 0x1F0000;
           }
 
-          if ((op.addr >= 0xC00000 && op.addr <= 0xC0001F) ||
-            (op.addr >= 0xC00020 && op.addr <= 0xC0003F)) { // VDP mirrors
-            op.addr &= 0xC000FF;
+          if ((op_addr >= 0xC00000 && op_addr <= 0xC0001F) ||
+            (op_addr >= 0xC00020 && op_addr <= 0xC0003F)) { // VDP mirrors
+            op.addr = op_addr & 0xC000FF;
           }
 
           if (out->itype == 0x75 && op.n == 0 && op.phrase == 9 && out->size == 6) { // jsr (label).l
@@ -1071,9 +1076,9 @@ struct m68k_events_visitor_t : public post_event_visitor_t
           }
           else if ((out->itype == 0x76 || out->itype == 0x75 || out->itype == 0x74) && op.n == 0 &&
             (op.phrase == 0x09 || op.phrase == 0x0A) &&
-            (op.addr != 0 && op.addr <= 0xA00000) &&
+            (op_addr != 0 && op_addr <= 0xA00000) &&
             (op.specflag1 == 2 || op.specflag1 == 3)) { // lea table(pc),Ax; jsr func(pc); jmp label(pc)
-            short diff = op.addr - out->ea;
+            short diff = op_addr - out->ea;
             if (diff >= SHRT_MIN && diff <= SHRT_MAX)
             {
               out->Op1.type = o_displ;
@@ -1112,10 +1117,10 @@ struct m68k_events_visitor_t : public post_event_visitor_t
       if ((insn->itype == 0x76 || insn->itype == 0x75 || insn->itype == 0x74) &&
         insn->Op1.phrase == 0x5B && insn->Op1.specflag1 == 0x10) // lea table(pc),Ax; jsr func(pc); jmp label(pc)
       {
-        short diff = insn->Op1.addr - insn->ea;
+        short diff = dw_ea(insn->Op1.addr) - insn->ea;
         if (diff >= SHRT_MIN && diff <= SHRT_MAX)
         {
-          insn->add_dref(insn->Op1.addr, insn->Op1.offb, dr_O);
+          insn->add_dref(dw_ea(insn->Op1.addr), insn->Op1.offb, dr_O);
 
           if (insn->itype != 0x74) {
             insn->add_cref(insn->ea + insn->size, 0, fl_F);
@@ -1191,7 +1196,7 @@ struct m68k_events_visitor_t : public post_event_visitor_t
           switch (op.type)
           {
           case o_mem:
-          case o_near: opinf->ea = op.addr; break;
+          case o_near: opinf->ea = dw_ea(op.addr); break;
           case o_imm: opinf->ea = op.value; break;
           }
 
@@ -1266,7 +1271,7 @@ struct m68k_events_visitor_t : public post_event_visitor_t
           if (main_reg_idx != R_PC)
             main_reg = getreg(dbg->regs(main_reg_idx).name, regvalues);
 
-          ea_t addr = (ea_t)main_reg.ival + op.addr + (ea_t)add_reg.ival;
+          ea_t addr = (ea_t)main_reg.ival + dw_ea(op.addr) + (ea_t)add_reg.ival;
           opinf->ea = addr;
           size_t read_size = 0;
 
@@ -1309,7 +1314,7 @@ struct m68k_events_visitor_t : public post_event_visitor_t
 
         if (
           op->type == o_displ && assembler != out_asm_t::asm_asm68k &&
-          (((op->phrase == 0x0A) || (op->phrase == 0x0B) || (op->phrase == 0x08) || (op->phrase == 0x09)) && op->addr == 0)
+          (((op->phrase == 0x0A) || (op->phrase == 0x0B) || (op->phrase == 0x08) || (op->phrase == 0x09)) && dw_ea(op->addr) == 0)
           ) {
           qstring tmp;
 
@@ -1900,9 +1905,9 @@ struct smd_constant_action_t : public action_handler_t
         do_cmt_sr_ccr_reg_const(ea, value);
       }
       else if (out.Op1.type == o_imm && out.Op2.type == o_mem &&
-        (out.Op2.addr == 0xA11200 || out.Op2.addr == 0xA11100))
+        (dw_ea(out.Op2.addr) == 0xA11200 || dw_ea(out.Op2.addr) == 0xA11100))
       {
-        do_cmt_z80_bus_command(ea, out.Op2.addr, value);
+        do_cmt_z80_bus_command(ea, dw_ea(out.Op2.addr), value);
       }
       else if (is_call16_const_cmd(value))
       {

@@ -7,7 +7,7 @@
 *****************************************************************************/
 
 #include <memory>
-#include "C:\git\smd_ida_tools2\Gensida\ida\paintform.h"
+#include "C:\dev\smd_ida_tools2\Gensida\ida\paintform.h"
 #include <QtCore/qbytearray.h>
 #include <QtCore/qmetatype.h>
 #if !defined(Q_MOC_OUTPUT_REVISION)
