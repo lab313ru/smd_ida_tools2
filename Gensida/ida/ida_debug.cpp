@@ -249,7 +249,7 @@ void stop_server() {
   server->Shutdown(); //std::chrono::system_clock::now() + std::chrono::milliseconds(100));
 }
 
-static class cond_break_t : public exec_request_t {
+class cond_break_t : public exec_request_t {
     uint32 elang = 0;
     const char* cond = nullptr;
 public:

@@ -141,10 +141,6 @@ static void print_insn(insn_t* insn)
   }
 }
 
-static __inline ea_t dw_ea(ea_t addr) {
-  return (addr & 0xFFFFFFFF);
-}
-
 static void print_op(ea_t ea, op_t* op)
 {
   if (my_dbg)
@@ -894,6 +890,10 @@ static bool ask_assembler() {
   }
 
   return res == 1;
+}
+
+static __inline ea_t dw_ea(ea_t addr) {
+  return (addr & 0xFFFFFFFF);
 }
 
 
