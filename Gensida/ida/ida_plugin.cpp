@@ -36,6 +36,10 @@ static bool plugin_inited;
 static bool dbg_started;
 static bool my_dbg;
 
+static __inline ea_t dw_ea(ea_t addr) {
+  return (addr & 0xFFFFFFFF);
+}
+
 #ifdef DEBUG_68K
 static ssize_t idaapi hook_dbg(void* user_data, int notification_code, va_list va)
 {
@@ -892,11 +896,6 @@ static bool ask_assembler() {
   return res == 1;
 }
 
-static __inline ea_t dw_ea(ea_t addr) {
-  return (addr & 0xFFFFFFFF);
-}
-
-
 static ssize_t idaapi process_asm_output(void* user_data, int notification_code, va_list va) {
   switch (notification_code) {
   case processor_t::ev_gen_asm_or_lst: {
@@ -1114,8 +1113,8 @@ struct m68k_events_visitor_t : public post_event_visitor_t
         return 1;
       }
 
-      if ((insn->itype == 0x76 || insn->itype == 0x75 || insn->itype == 0x74) &&
-        insn->Op1.phrase == 0x5B && insn->Op1.specflag1 == 0x10) // lea table(pc),Ax; jsr func(pc); jmp label(pc)
+      if ((insn->itype == 0x76 || insn->itype == 0x75 || insn->itype == 0x74 || insn->itype == 0x7F) &&
+        insn->Op1.phrase == 0x5B && insn->Op1.specflag1 == 0x10) // lea table(pc),Ax; jsr func(pc); jmp label(pc), movea.l label(pc,
       {
         short diff = dw_ea(insn->Op1.addr) - insn->ea;
         if (diff >= SHRT_MIN && diff <= SHRT_MAX)
