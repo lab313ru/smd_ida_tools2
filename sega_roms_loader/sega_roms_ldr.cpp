@@ -8,6 +8,10 @@
 
 #include "sega_roms_ldr.h"
 
+#ifndef _MSC_VER
+#define _countof(a) (sizeof(a)/sizeof(*(a)))
+#endif
+
 static gen_hdr _hdr;
 static gen_vect _vect;
 
@@ -235,6 +239,8 @@ static void idaapi load_file(linput_t* li, ushort neflags, const char* fileforma
     set_processor_type("68020", SETPROC_LOADER); // Motorola 68020
     set_target_assembler(0);
   }
+
+  inf_set_app_bitness(32);
 
   inf_set_af(0
       //| AF_FIXUP //        0x0001          // Create offsets and segments using fixup info

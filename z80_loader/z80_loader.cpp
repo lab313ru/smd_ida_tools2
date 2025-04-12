@@ -19,10 +19,14 @@
 
 #include "z80_loader.h"
 
+#ifndef _MSC_VER
+#define _countof(a) (sizeof(a)/sizeof(*(a)))
+#endif
+
 struct reg {
   asize_t size;
   ea_t addr;
-  char *name;
+  const char *name;
 };
 
 static const reg spec_regs[] = {
@@ -543,6 +547,8 @@ void idaapi load_file(linput_t *li, ushort neflags, const char *fileformatname) 
   if (ph.id != PLFM_Z80) {
     set_processor_type(Z80, SETPROC_LOADER); // Z80
   }
+
+  inf_set_app_bitness(16);
 
   inf_set_af(0
     //| AF_FIXUP //        0x0001          // Create offsets and segments using fixup info
