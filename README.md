@@ -6,7 +6,7 @@ The IDA Pro tools for the Sega Genesis/MegaDrive romhackers
 2. Z80 sound drivers loader
 3. IDA Pro debugger for Sega Mega Drive/Genesis roms and Z80 sound drivers
 
-## How to compile
+## How to compile on Windows
 1. Edit paths to your IDA/SDK installation according to your real paths (`IDA_DIR`, `IDA_SDK`)
 2. Install `vcpkg` as described in the [Tutorial: Install and use packages with MSBuild in Visual Studio](https://learn.microsoft.com/en-us/vcpkg/get_started/get-started-msbuild) step 1.
 3. Download and unpack IDA Pro QT distro: [qt-5.15.2-full-IDA83.tar.bz2](qt_ida_src_while_original_link_is_dead/qt-5.15.2-full-IDA83.tar.bz2)
@@ -16,13 +16,25 @@ The IDA Pro tools for the Sega Genesis/MegaDrive romhackers
 7. Build IDA Pro QT (using **Visual Studio Developement Command Prompt**): `python build.py -j 16 -v`
 8. Compile solution with **Visual Studio 2022** or newer
 
+## How to compile on Linux
+1. Edit path to your SDK installation according to your real path `IDA_SDK`
+2. Download and unpack IDA Pro QT distro: [qt-5.15.2-full-IDA83.tar.bz2](qt_ida_src_while_original_link_is_dead/qt-5.15.2-full-IDA83.tar.bz2)
+3. Edit `build.py` from IDA Pro QT distro. Add: `"-nomake", "examples",` after `"-nomake", "tests",`
+4. Build IDA Pro QT: `python3 build.py -j 16 -v`
+5. `./build_proto_68k.sh`
+6. `./build_proto_z80.sh`
+7. `./compile_loaders.sh`
+8. `./compile_gensida.sh`
+9. `cp ./linux_loaders/* ~/ida-pro-9.x/loaders/`
+10. `cp ./linux_gensida/* ~/ida-pro-9.x/plugins/`
+
 ## How to use
 1. Put files from the `loaders` dir into the corresponding IDA folder
 2. Put files from the `plugins` dir into the corresponding IDA folder
 3. Open ROM in IDA
 4. Choose `GensIDA debugger plugin` or `Z80 debugger plugin` debugger
 5. Press `F9` to start a debugging process
-6. Run `gens_68k.exe` or `gens_z80.exe` from `gens` folder, choose a ROM
+6. Run `[wine] gens_68k.exe` or `[wine] gens_z80.exe` from `gens` folder, choose a ROM
 7. Debug!
 
 ## Available assemblers
@@ -56,11 +68,11 @@ Once you are debugging, in the IDA View click 'g' and go to either:
 | CRAM | 0x00D10000 | DBG_VDP_CRAM:00D10000 |
 | VSRAM | 0x00D20000 | DBG_VDP_VSRAM:00D20000 |
 
-Find the address or addresses you want, offsetted from the above. Then select it / them . Right click. a prompt will come up. Click "Add Beakpoint" , or press F2 after selecting. 
+Find the address or addresses you want, offsetted from the above. Then select it / them . Right click. a prompt will come up. Click "Add Beakpoint" , or press F2 after selecting.
 A "Breakpoint Settings" window will come up. Select either read or write or both under Hardware breakpoint mode and set the size. You can enable other settings like actions etc.
 
 ## Debugger in IDA PRO
-General Registers can be seen while running the debugger in IDA Pro by going to Debugger -> Debugger Windows -> General Registers. 
+General Registers can be seen while running the debugger in IDA Pro by going to Debugger -> Debugger Windows -> General Registers.
 `D0-D7`, `A0-A7`, `PC`, `SP`, `SR`, `DMA_LEN`, `DMA_SRC` and `VDP_DST` are all shown here
 
 VDP Registers can be seen while running the debugger in IDA pro by doign to Debugger -> Debugger Windows -> VDP Registers
