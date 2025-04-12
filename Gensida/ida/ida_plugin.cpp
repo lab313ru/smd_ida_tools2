@@ -345,21 +345,21 @@ static asm_out_state check_binclude(qstring& line, ea_t addr) {
     qstring path = match.str(1).c_str();
 
     if (!path_create_dir(path)) {
-      free(tmp);
+      qfree(tmp);
       return asm_o_state;
     }
 
     FILE* f = qfopen(path.c_str(), "wb");
 
     if (f == nullptr) {
-      free(tmp);
+      qfree(tmp);
       return asm_o_state;
     }
 
     qfwrite(f, tmp, size);
     qfclose(f);
 
-    free(tmp);
+    qfree(tmp);
 
     qstring name = get_name(addr);
     line.clear();
@@ -504,7 +504,7 @@ static void check_align(qstring& line) {
   if (asm_o_state != asm_out_inc_start && asm_o_state != asm_out_none) {
     return;
   }
-  
+
   switch (assembler) {
   case asm_as: {
     rep = std::regex_replace(line.c_str(), re_check_align, ASM_SPACE ASM_AS_ALIGN2);
@@ -518,7 +518,7 @@ static void check_align(qstring& line) {
   default:
     return;
   }
-  
+
   line = rep.c_str();
 }
 
@@ -679,13 +679,13 @@ static int idaapi equ_output(FILE* fp, const qstring& line, bgcolor_t prefix_col
 
   fix_arrows(qbuf);
   equ_parse(qbuf);
-  
+
   return 1;
 }
 
 static void asm_add_header(FILE* fp, ea_t first_addr) {
   qstring org_first;
-  org_first.sprnt(ASM_SPACE "org $%x\n\n", first_addr);
+  org_first.sprnt(ASM_SPACE "org $%llx\n\n", first_addr);
 
   print_line(fp, org_first);
 
@@ -882,7 +882,7 @@ static bool ask_assembler() {
            "<ASM68K Website :q4:0:::>",
            &disable_links,
            &chosen_asm, &skip_delete, &link1, &link2, &link3);
-  
+
   if (res) {
     skip_unused = skip_delete & 1;
     dont_delete = skip_delete & 2;
@@ -899,9 +899,9 @@ static bool ask_assembler() {
 static ssize_t idaapi process_asm_output(void* user_data, int notification_code, va_list va) {
   switch (notification_code) {
   case processor_t::ev_gen_asm_or_lst: {
-    bool starting = va_arg(va, bool);
+    bool starting = (bool)va_arg(va, int);
     FILE* fp = va_arg(va, FILE*);
-    bool is_asm = va_arg(va, bool);
+    bool is_asm = (bool)va_arg(va, int);
     int flags = va_arg(va, int);
     html_line_cb_t** outline = va_arg(va, html_line_cb_t**);
 
@@ -2080,7 +2080,7 @@ static ssize_t idaapi hook_ui(void* user_data, int notification_code, va_list va
 
 static void idaapi update_tiles(bool create) {
   QWidget* w = (QWidget*)find_widget(data_as_tiles_title);
-  
+
   if (w != nullptr) {
     w->update();
   }
@@ -2118,6 +2118,8 @@ static ssize_t idaapi hook_view(void* /*ud*/, int notification_code, va_list va)
 
 #endif
 
+extern ssize_t idaapi debugger_callback(void*, int msgid, va_list va);
+
 //--------------------------------------------------------------------------
 // Initialize debugger plugin
 static plugmod_t* idaapi init(void)
@@ -2129,6 +2131,8 @@ static plugmod_t* idaapi init(void)
     my_dbg = false;
 
 #ifdef DEBUG_68K
+    inf_set_app_bitness(32);
+
     bool res = register_action(smd_constant_action);
     res = register_action(smd_output_mark_action);
     res = register_action(data_as_tiles_action);
@@ -2138,7 +2142,10 @@ static plugmod_t* idaapi init(void)
     hook_to_notification_point(HT_IDP, process_asm_output, nullptr);
     register_post_event_visitor(HT_IDP, &ctx, nullptr);
     hook_to_notification_point(HT_DBG, hook_dbg, nullptr);
+    hook_to_notification_point(HT_IDD, debugger_callback, nullptr);
     hook_to_notification_point(HT_VIEW, hook_view, nullptr);
+#else
+    inf_set_app_bitness(16);
 #endif
 
     print_version();
@@ -2156,16 +2163,18 @@ static void idaapi term(void)
   if (plugin_inited)
   {
 #ifdef DEBUG_68K
-    unhook_from_notification_point(HT_UI, hook_ui);
-    unregister_post_event_visitor(HT_IDP, &ctx);
-    unhook_from_notification_point(HT_IDP, process_asm_output);
-    unhook_from_notification_point(HT_IDP, hook_disasm);
-    unhook_from_notification_point(HT_DBG, hook_dbg);
-    unhook_from_notification_point(HT_VIEW, hook_view);
-
     unregister_action(smd_output_mark_name);
     unregister_action(smd_constant_name);
     unregister_action(data_as_tiles_name);
+
+    unhook_from_notification_point(HT_VIEW, hook_view);
+    unhook_from_notification_point(HT_IDD, debugger_callback);
+    unhook_from_notification_point(HT_DBG, hook_dbg);
+    unregister_post_event_visitor(HT_IDP, &ctx);
+    unhook_from_notification_point(HT_IDP, process_asm_output);
+    unhook_from_notification_point(HT_IDP, hook_disasm);
+    unhook_from_notification_point(HT_UI, hook_ui);
+
 #endif
 
     plugin_inited = false;

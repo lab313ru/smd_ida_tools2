@@ -5,4 +5,4 @@
 #else
 #define NAME "Zida80"
 #endif
-#define VERSION "1.25"
+#define VERSION "1.30"

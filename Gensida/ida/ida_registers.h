@@ -5,7 +5,7 @@
 #define RC_VDP 2
 #endif
 
-enum register_t {
+typedef enum {
 #ifdef DEBUG_68K
   R_D0,
   R_D1,
@@ -70,7 +70,7 @@ enum register_t {
   R_BC,
   R_DE,
   R_HL,
-  
+
   R_IX,
   R_IY,
 
@@ -100,9 +100,9 @@ enum register_t {
 
   R_BANK,
 #endif
-};
+} gens_register_t;
 
-enum m68k_insn_type_t {
+typedef enum {
   M68K_linea = CUSTOM_INSN_ITYPE,
   M68K_linef,
-};
+} m68k_insn_type_t;

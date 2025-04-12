@@ -132,37 +132,37 @@ register_info_t registers[] = {
 
   { "PC", REGISTER_ADDRESS | REGISTER_IP | REGISTER_READONLY, RC_GENERAL, dt_dword, NULL, 0 },
   { "SP", REGISTER_ADDRESS | REGISTER_SP, RC_GENERAL, dt_dword, NULL, 0 },
-  { "SR", NULL, RC_GENERAL, dt_word, SRReg, 0xFFFF },
+  { "SR", 0, RC_GENERAL, dt_word, SRReg, 0xFFFF },
 
   { "DMA_LEN", REGISTER_READONLY, RC_GENERAL, dt_word, NULL, 0 },
   { "DMA_SRC", REGISTER_ADDRESS | REGISTER_READONLY, RC_GENERAL, dt_dword, NULL, 0 },
   { "VDP_DST", REGISTER_ADDRESS | REGISTER_READONLY, RC_GENERAL, dt_dword, NULL, 0 },
 
   // VDP Registers
-  { "Set1", NULL, RC_VDP, dt_byte, NULL, 0 },
-  { "Set2", NULL, RC_VDP, dt_byte, NULL, 0 },
-  { "PlaneA", NULL, RC_VDP, dt_byte, NULL, 0 },
-  { "Window", NULL, RC_VDP, dt_byte, NULL, 0 },
-  { "PlaneB", NULL, RC_VDP, dt_byte, NULL, 0 },
-  { "Sprite", NULL, RC_VDP, dt_byte, NULL, 0 },
-  { "Reg6", NULL, RC_VDP, dt_byte, NULL, 0 },
-  { "BgClr", NULL, RC_VDP, dt_byte, NULL, 0 },
-  { "Reg8", NULL, RC_VDP, dt_byte, NULL, 0 },
-  { "Reg9", NULL, RC_VDP, dt_byte, NULL, 0 },
-  { "HInt", NULL, RC_VDP, dt_byte, NULL, 0 },
-  { "Set3", NULL, RC_VDP, dt_byte, NULL, 0 },
-  { "Set4", NULL, RC_VDP, dt_byte, NULL, 0 },
-  { "HScrl", NULL, RC_VDP, dt_byte, NULL, 0 },
-  { "Reg14", NULL, RC_VDP, dt_byte, NULL, 0 },
-  { "WrInc", NULL, RC_VDP, dt_byte, NULL, 0 },
-  { "ScrSz", NULL, RC_VDP, dt_byte, NULL, 0 },
-  { "WinX", NULL, RC_VDP, dt_byte, NULL, 0 },
-  { "WinY", NULL, RC_VDP, dt_byte, NULL, 0 },
-  { "LenLo", NULL, RC_VDP, dt_byte, NULL, 0 },
-  { "LenHi", NULL, RC_VDP, dt_byte, NULL, 0 },
-  { "SrcLo", NULL, RC_VDP, dt_byte, NULL, 0 },
-  { "SrcMid", NULL, RC_VDP, dt_byte, NULL, 0 },
-  { "SrcHi", NULL, RC_VDP, dt_byte, NULL, 0 },
+  { "Set1", 0, RC_VDP, dt_byte, NULL, 0 },
+  { "Set2", 0, RC_VDP, dt_byte, NULL, 0 },
+  { "PlaneA", 0, RC_VDP, dt_byte, NULL, 0 },
+  { "Window", 0, RC_VDP, dt_byte, NULL, 0 },
+  { "PlaneB", 0, RC_VDP, dt_byte, NULL, 0 },
+  { "Sprite", 0, RC_VDP, dt_byte, NULL, 0 },
+  { "Reg6", 0, RC_VDP, dt_byte, NULL, 0 },
+  { "BgClr", 0, RC_VDP, dt_byte, NULL, 0 },
+  { "Reg8", 0, RC_VDP, dt_byte, NULL, 0 },
+  { "Reg9", 0, RC_VDP, dt_byte, NULL, 0 },
+  { "HInt", 0, RC_VDP, dt_byte, NULL, 0 },
+  { "Set3", 0, RC_VDP, dt_byte, NULL, 0 },
+  { "Set4", 0, RC_VDP, dt_byte, NULL, 0 },
+  { "HScrl", 0, RC_VDP, dt_byte, NULL, 0 },
+  { "Reg14", 0, RC_VDP, dt_byte, NULL, 0 },
+  { "WrInc", 0, RC_VDP, dt_byte, NULL, 0 },
+  { "ScrSz", 0, RC_VDP, dt_byte, NULL, 0 },
+  { "WinX", 0, RC_VDP, dt_byte, NULL, 0 },
+  { "WinY", 0, RC_VDP, dt_byte, NULL, 0 },
+  { "LenLo", 0, RC_VDP, dt_byte, NULL, 0 },
+  { "LenHi", 0, RC_VDP, dt_byte, NULL, 0 },
+  { "SrcLo", 0, RC_VDP, dt_byte, NULL, 0 },
+  { "SrcMid", 0, RC_VDP, dt_byte, NULL, 0 },
+  { "SrcHi", 0, RC_VDP, dt_byte, NULL, 0 },
 #else
   { "AF", 0, RC_GENERAL, dt_word, SRReg, 0x00FF },
   { "BC", 0, RC_GENERAL, dt_word, NULL, 0 },
@@ -195,8 +195,8 @@ register_info_t registers[] = {
 
   { "SP", REGISTER_ADDRESS | REGISTER_SP, RC_GENERAL, dt_word, NULL, 0 },
   { "IP", REGISTER_ADDRESS | REGISTER_IP, RC_GENERAL, dt_word, NULL, 0 },
-    
-  { "BANK", 0, RC_GENERAL, dt_dword, NULL, 0 },
+
+  { "BANK", 0, RC_GENERAL, dt_dword, NULL, 0 }
 #endif
 };
 
@@ -285,13 +285,13 @@ public:
         bool res = elng->eval_snippet(func.c_str(), &errbuf);
 
         if (!res || !errbuf.empty()) {
-            warning(errbuf.c_str());
+            warning("%s\n", errbuf.c_str());
         }
         else {
             res = elng->call_func(&rv, "main", nullptr, 0, &errbuf);
 
             if (!res || !errbuf.empty()) {
-                warning(errbuf.c_str());
+                warning("%s\n", errbuf.c_str());
             }
             else {
                 return rv.num;
@@ -897,7 +897,7 @@ static gdecode_t idaapi get_debug_event(debug_event_t *event, int timeout_ms) {
       break;
     }
   }
-  
+
   return GDE_NO_EVENT;
 }
 
@@ -1211,7 +1211,7 @@ static drc_t idaapi update_bpts(int* nbpts, update_bpt_info_t *bpts, int nadd, i
     if (bpts[i].code == BPT_SKIP) {
       continue;
     }
-    
+
     ea_t start = bpts[i].ea;
     ea_t end = bpts[i].ea + bpts[i].size - 1;
 
@@ -1280,7 +1280,7 @@ static drc_t idaapi update_bpts(int* nbpts, update_bpt_info_t *bpts, int nadd, i
     if (bpts[nadd + i].code == BPT_SKIP) {
       continue;
     }
-    
+
     ea_t start = bpts[nadd + i].ea;
     ea_t end = bpts[nadd + i].ea + bpts[nadd + i].size - 1;
     BpType type1 = BpType::BP_PC;
@@ -1440,7 +1440,7 @@ static drc_t idaapi update_call_stack(thid_t tid, call_stack_t *trace) {
   return DRC_OK;
 }
 
-static ssize_t idaapi idd_notify(void*, int msgid, va_list va) {
+ssize_t idaapi debugger_callback(void *user_data, int msgid, va_list va) {
   drc_t retcode = DRC_NONE;
   qstring* errbuf;
 
@@ -1708,7 +1708,7 @@ debugger_t debugger = {
   0x8000 + 2,
   "z80",
 #endif
-  DBG_FLAG_NOHOST | DBG_FLAG_CAN_CONT_BPT | DBG_FLAG_SAFE | DBG_FLAG_FAKE_ATTACH | DBG_FLAG_NOPASSWORD | DBG_FLAG_NOSTARTDIR | DBG_FLAG_NOPARAMETERS | DBG_FLAG_ANYSIZE_HWBPT | DBG_FLAG_DEBTHREAD | DBG_FLAG_PREFER_SWBPTS /*| DBG_FLAG_LOWCNDS*/,
+  DBG_FLAG_NOHOST | DBG_FLAG_CAN_CONT_BPT | DBG_FLAG_SAFE | DBG_FLAG_FAKE_ATTACH | DBG_FLAG_NOPASSWORD | DBG_FLAG_NOSTARTDIR | DBG_FLAG_NOPARAMETERS | DBG_FLAG_ANYSIZE_HWBPT | DBG_FLAG_DEBTHREAD | DBG_FLAG_PREFER_SWBPTS /*| DBG_FLAG_LOWCNDS*/ |
   DBG_HAS_GET_PROCESSES | DBG_HAS_REQUEST_PAUSE | DBG_HAS_SET_RESUME_MODE | DBG_HAS_CHECK_BPT | DBG_HAS_THREAD_SUSPEND | DBG_HAS_THREAD_CONTINUE,
 
   register_classes,
@@ -1723,7 +1723,4 @@ debugger_t debugger = {
   0,
 
   DBG_RESMOD_STEP_INTO | DBG_RESMOD_STEP_OVER,
-
-  NULL, // set_dbg_options
-  idd_notify
 };

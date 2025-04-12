@@ -2,6 +2,10 @@
 
 #include "paintform.h"
 
+#ifndef _MSC_VER
+#define _countof(a) (sizeof(a)/sizeof(*(a)))
+#endif
+
 #define VDP_TILE_W 8
 #define VDP_TILE_H 8
 #define VDP_TILE_ZOOM 4
@@ -28,7 +32,7 @@ int PaintForm::getFullTiles() {
   start = get_item_head(start);
   ea_t end = calc_max_item_end(start);
 
-  return std::max(1ULL, (end - start) / 0x20);
+  return std::max(1ULL, (end - start) / 0x20ULL);
 }
 
 PaintForm::PaintForm() {
@@ -89,23 +93,17 @@ void PaintForm::paintEvent(QPaintEvent* event) {
   }
 
   int scroll_val = scroll->value() * VDP_TILES_IN_ROW;
-  for (int i = scroll_val; i < full_tiles; ++i)
-  {
-    for (int y = 0; y < VDP_TILE_H; ++y)
-    {
-      for (int x = 0; x < (VDP_TILE_W / 2); ++x)
-      {
+  for (int i = scroll_val; i < full_tiles; ++i) {
+    for (int y = 0; y < VDP_TILE_H; ++y) {
+      for (int x = 0; x < (VDP_TILE_W / 2); ++x) {
         int _x = ((i - scroll_val) % VDP_TILES_IN_ROW) * VDP_TILE_W + x * 2;
         int _y = ((i - scroll_val) / VDP_TILES_IN_ROW) * VDP_TILE_H + y;
 
         ea_t addr = start + i * 0x20 + y * (VDP_TILE_W / 2) + x;
         uint32 t = 0;
-        if (!get_dbg_byte(&t, addr))
-        {
+        if (!get_dbg_byte(&t, addr)) {
           t = get_db_byte(start + i * 0x20 + y * (VDP_TILE_W / 2) + x);
-        }
-        else
-        {
+        } else {
           t = t & 0xFF;
         }
 
