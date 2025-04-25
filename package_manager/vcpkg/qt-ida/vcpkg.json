@@ -1,0 +1,5 @@
+{
+  "name": "qt-ida",
+  "version": "5.15.2",
+  "description": "Qt 5.15.2 build for IDA Pro integration"
+}
