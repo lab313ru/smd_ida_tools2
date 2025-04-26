@@ -1,36 +1,17 @@
-string(LENGTH "${CURRENT_BUILDTREES_DIR}" buildtrees_path_length)
-if(buildtrees_path_length GREATER 32 AND CMAKE_HOST_WIN32)
-    set(FALLBACK_BUILDTREES_DIR "C:/qt-vcpkg" CACHE PATH "Fallback build directory if current is too long.")
+set(BUILDTREES_DIR_IS_FALLBACK FALSE)
 
-    message(WARNING "${PORT}'s buildsystem uses very long paths and may fail on your system.\n" "Build tree is ${FALLBACK_BUILDTREES_DIR} now.")
-    set(CURRENT_BUILDTREES_DIR ${FALLBACK_BUILDTREES_DIR})
+if(CMAKE_HOST_WIN32)
+    string(LENGTH "${CURRENT_BUILDTREES_DIR}" buildtrees_path_length)
+    if(buildtrees_path_length GREATER 32)
+        set(FALLBACK_BUILDTREES_DIR "C:/qt-vcpkg" CACHE PATH "Fallback build directory if current is too long.")
+
+        message(WARNING "${PORT}'s buildsystem uses very long paths and may fail on your system.\n" "Build tree is ${FALLBACK_BUILDTREES_DIR} now.")
+        set(CURRENT_BUILDTREES_DIR ${FALLBACK_BUILDTREES_DIR})
+        set(BUILDTREES_DIR_IS_FALLBACK TRUE)
+    endif()
 endif()
 
-execute_process(
-    COMMAND cmd /c "echo %ProgramFiles(x86)%"
-    OUTPUT_VARIABLE PROGRAMFILES_X86
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
-set(VSWHERE_EXE "${PROGRAMFILES_X86}/Microsoft Visual Studio/Installer/vswhere.exe")
-
-execute_process(
-    COMMAND "${VSWHERE_EXE}" -latest -products * -property installationPath
-    OUTPUT_VARIABLE VS_PATH
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
-file(TO_CMAKE_PATH "${VS_PATH}" VS_PATH)
-message(STATUS "VS_PATH: ${VS_PATH}")
-
-set(DEV_CMD "${VS_PATH}/Common7/Tools/VsDevCmd.bat")
-message(STATUS "DEV_CMD: ${DEV_CMD}")
-
-vcpkg_download_distfile(ARCHIVE
-    URLS "https://hex-rays.com/hubfs/freefile/qt-5.15.2-full-IDA83.tar.bz2"
-    FILENAME "qt-5.15.2-full-IDA83.tar.bz2"
-    SHA512 0f752da52216fc527464c667733e13204eae5975215045706a8288ede7ea1243d2ff13410541c4b5abefcb95d1b6d2366ad1f18087399ecf21229387bec7de2f
-)
+set(ARCHIVE "${CMAKE_CURRENT_LIST_DIR}/qt-5.15.2-full-IDA83.tar.bz2")
 
 vcpkg_extract_source_archive(
     SOURCE_PATH
@@ -52,17 +33,45 @@ if(VCPKG_TARGET_IS_WINDOWS)
     vcpkg_find_acquire_program(JOM)
     get_filename_component(JOM_PATH "${JOM}" DIRECTORY)
     vcpkg_add_to_path("${JOM_PATH}")
+
+    execute_process(
+        COMMAND cmd /c "echo %ProgramFiles(x86)%"
+        OUTPUT_VARIABLE PROGRAMFILES_X86
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+    set(VSWHERE_EXE "${PROGRAMFILES_X86}/Microsoft Visual Studio/Installer/vswhere.exe")
+
+    execute_process(
+        COMMAND "${VSWHERE_EXE}" -latest -products * -property installationPath
+        OUTPUT_VARIABLE VS_PATH
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+    file(TO_CMAKE_PATH "${VS_PATH}" VS_PATH)
+    set(DEV_CMD "${VS_PATH}/Common7/Tools/VsDevCmd.bat")
+
+    if(NOT EXISTS "${DEV_CMD}")
+        message(FATAL_ERROR "Cannot find VsDevCmd.bat at ${DEV_CMD}")
+    endif()
+
+    file(WRITE "${SOURCE_PATH}/build/build.bat"
+        "@echo off\n"
+        "call \"${DEV_CMD}\"\n"
+        "python build.py -j ${VCPKG_CONCURRENCY} -v\n"
+    )
+    set(BUILD_COMMAND "cmd" "/c" "build.bat")
+else()
+    set(BUILD_COMMAND "${PYTHON3}" "build.py" "-j" "${VCPKG_CONCURRENCY}" "-v")
 endif()
 
-file(WRITE "${SOURCE_PATH}/build/build.bat"
-    "@echo off\n"
-    "call \"${DEV_CMD}\"\n"
-    "python build.py -j ${VCPKG_CONCURRENCY} -v\n")
-
 vcpkg_execute_build_process(
-    COMMAND cmd /c build.bat
+    COMMAND ${BUILD_COMMAND}
     WORKING_DIRECTORY "${SOURCE_PATH}/build"
-    LOGNAME  qt-ida-build
+    LOGNAME qt-ida-build
 )
 
-file(REMOVE_RECURSE "${CURRENT_BUILDTREES_DIR}")
+if(BUILDTREES_DIR_IS_FALLBACK)
+    message(STATUS "Clean up build tree fallback: ${CURRENT_BUILDTREES_DIR}")
+    file(REMOVE_RECURSE "${CURRENT_BUILDTREES_DIR}")
+endif()
