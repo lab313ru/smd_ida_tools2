@@ -21,7 +21,10 @@
 #include <name.hpp>
 #include <offset.hpp>
 
+#undef wait
+
 #include "ida_plugin.h"
+#include "ida_debug.h"
 #include "ida_registers.h"
 
 #ifdef DEBUG_68K
@@ -36,14 +39,17 @@ static bool plugin_inited;
 static bool dbg_started;
 static bool my_dbg;
 
+int data_id;
+
 static __inline ea_t dw_ea(ea_t addr) {
   return (addr & 0xFFFFFFFF);
 }
 
 #ifdef DEBUG_68K
-static ssize_t idaapi hook_dbg(void* user_data, int notification_code, va_list va)
+
+ssize_t idaapi dbg_listener_t::on_event(ssize_t code, va_list va)
 {
-  switch (notification_code)
+  switch (code)
   {
   case dbg_notification_t::dbg_process_start: {
     dbg_started = true;
@@ -896,8 +902,8 @@ static bool ask_assembler() {
   return res == 1;
 }
 
-static ssize_t idaapi process_asm_output(void* user_data, int notification_code, va_list va) {
-  switch (notification_code) {
+ssize_t idaapi asm_listener_t::on_event(ssize_t code, va_list va) {
+  switch (code) {
   case processor_t::ev_gen_asm_or_lst: {
     bool starting = (bool)va_arg(va, int);
     FILE* fp = va_arg(va, FILE*);
@@ -951,9 +957,9 @@ static ssize_t idaapi process_asm_output(void* user_data, int notification_code,
   return 0;
 }
 
-static ssize_t idaapi hook_disasm(void* user_data, int notification_code, va_list va)
+ssize_t idaapi dis_listener_t::on_event(ssize_t code, va_list va)
 {
-  switch (notification_code)
+  switch (code)
   {
   case processor_t::ev_ana_insn:
   {
@@ -1012,338 +1018,11 @@ static ssize_t idaapi hook_disasm(void* user_data, int notification_code, va_lis
     }
   } break;
   default:
-    notification_code = notification_code;
+    code = code;
   }
 
   return 0;
 }
-
-struct m68k_events_visitor_t : public post_event_visitor_t
-{
-  ssize_t idaapi handle_post_event(ssize_t code, int notification_code, va_list va) override
-  {
-    switch (notification_code)
-    {
-    case processor_t::ev_ana_insn:
-    {
-      insn_t* out = va_arg(va, insn_t*);
-
-#ifdef _DEBUG
-      print_insn(out);
-#endif
-
-      for (int i = 0; i < UA_MAXOP; ++i)
-      {
-        op_t& op = out->ops[i];
-
-#ifdef _DEBUG
-        print_op(out->ea, &op);
-#endif
-
-        switch (out->itype) {
-        case 0x7d: { // move
-          if (out->Op2.type == o_reg && out->Op2.reg == 0x5e) { // move to usp
-            out->segpref = 0x3; // move.l to usp
-          }
-        } break;
-        }
-
-        switch (op.type)
-        {
-        case o_near:
-        case o_mem:
-        {
-          ea_t op_addr = dw_ea(op.addr);
-          if (op_addr >= 0xFFFF0000 && op_addr <= 0xFFFFFFFF) {
-            op.addr = op_addr & 0xFFFFFF;
-          }
-
-          if ((op_addr & 0xFFE00000) == 0xE00000) { // RAM mirrors
-            op.addr = op_addr | 0x1F0000;
-          }
-
-          if ((op_addr >= 0xC00000 && op_addr <= 0xC0001F) ||
-            (op_addr >= 0xC00020 && op_addr <= 0xC0003F)) { // VDP mirrors
-            op.addr = op_addr & 0xC000FF;
-          }
-
-          if (out->itype == 0x75 && op.n == 0 && op.phrase == 9 && out->size == 6) { // jsr (label).l
-            op.type = o_mem;
-          }
-          else if (out->itype == 0x74 && op.n == 0 && op.phrase == 8 && out->size == 4) { // jmp (label).w
-            op.type = o_mem;
-          }
-          else if ((out->itype == 0x76 || out->itype == 0x75 || out->itype == 0x74) && op.n == 0 &&
-            (op.phrase == 0x09 || op.phrase == 0x0A) &&
-            (op_addr != 0 && op_addr <= 0xA00000) &&
-            (op.specflag1 == 2 || op.specflag1 == 3)) { // lea table(pc),Ax; jsr func(pc); jmp label(pc)
-            short diff = op_addr - out->ea;
-            if (diff >= SHRT_MIN && diff <= SHRT_MAX)
-            {
-              out->Op1.type = o_displ;
-              out->Op1.offb = 2;
-              out->Op1.dtype = dt_dword;
-              out->Op1.phrase = 0x5B;
-              out->Op1.specflag1 = 0x10;
-            }
-          }
-        } break;
-        }
-      }
-
-      return out->size;
-    } break;
-    case processor_t::ev_emu_insn:
-    {
-      insn_t* insn = va_arg(va, insn_t*);
-      if (insn->itype == 0xB6) // trap #X
-      {
-        qstring name;
-        ea_t trap_addr = get_dword((0x20 + (insn->Op1.value & 0xF)) * sizeof(uint32));
-        get_func_name(&name, trap_addr);
-        set_cmt(insn->ea, name.c_str(), false);
-        insn->add_cref(trap_addr, insn->Op1.offb, fl_CN);
-
-        if (func_does_return(trap_addr)) {
-          func_t* trap_func = get_func(trap_addr);
-          int argsize = (trap_func != nullptr) ? trap_func->argsize : 0;
-          insn->add_cref(insn->ea + 2 + argsize, 0, fl_F); // calc next insn
-        }
-
-        return 1;
-      }
-
-      if ((insn->itype == 0x76 || insn->itype == 0x75 || insn->itype == 0x74 || insn->itype == 0x7F) &&
-        insn->Op1.phrase == 0x5B && insn->Op1.specflag1 == 0x10) // lea table(pc),Ax; jsr func(pc); jmp label(pc), movea.l label(pc,
-      {
-        short diff = dw_ea(insn->Op1.addr) - insn->ea;
-        if (diff >= SHRT_MIN && diff <= SHRT_MAX)
-        {
-          insn->add_dref(dw_ea(insn->Op1.addr), insn->Op1.offb, dr_O);
-
-          if (insn->itype != 0x74) {
-            insn->add_cref(insn->ea + insn->size, 0, fl_F);
-          }
-
-          return 1;
-        }
-      }
-
-      if (insn->itype == 0x7F && insn->Op1.type == o_imm && insn->Op1.value & 0xFF0000 && insn->Op1.dtype == dt_word) { // movea
-        insn->Op1.value &= 0xFFFF;
-
-        op_offset(insn->ea, insn->Op1.n, REF_OFF32, BADADDR, 0xFF0000);
-        insn->add_cref(insn->ea + insn->size, insn->Op1.offb, fl_F);
-        return 1;
-      }
-    } break;
-    case processor_t::ev_get_idd_opinfo:
-    {
-      idd_opinfo_t* opinf = va_arg(va, idd_opinfo_t*);
-      ea_t ea = va_arg(va, ea_t);
-      int n = va_arg(va, int);
-      int thread_id = va_arg(va, int);
-      processor_t::regval_getter_t* getreg = va_arg(va, processor_t::regval_getter_t*);
-      const regval_t* regvalues = va_arg(va, const regval_t*);
-
-      opinf->ea = BADADDR;
-      opinf->debregidx = 0;
-      opinf->modified = false;
-      opinf->value.ival = 0;
-      opinf->value_size = 4;
-
-      insn_t out;
-      if (decode_insn(&out, ea))
-      {
-        op_t op = out.ops[n];
-
-#ifdef _DEBUG
-        print_insn(&out);
-#endif
-
-        int size = 0;
-        switch (op.dtype)
-        {
-        case dt_byte:
-          size = 1;
-          break;
-        case dt_word:
-          size = 2;
-          break;
-        default:
-          size = 4;
-          break;
-        }
-
-        opinf->value_size = size;
-
-        switch (op.type)
-        {
-        case o_mem:
-        case o_near:
-        case o_imm:
-        {
-          flags_t flags;
-
-          switch (n)
-          {
-          case 0: flags = get_optype_flags0(get_flags(ea)); break;
-          case 1: flags = get_optype_flags1(get_flags(ea)); break;
-          default: flags = 0; break;
-          }
-
-          switch (op.type)
-          {
-          case o_mem:
-          case o_near: opinf->ea = dw_ea(op.addr); break;
-          case o_imm: opinf->ea = op.value; break;
-          }
-
-          opinfo_t info;
-          if (get_opinfo(&info, ea, n, flags) != NULL)
-          {
-            opinf->ea += info.ri.base;
-          }
-        } break;
-        case o_phrase:
-        case o_reg:
-        {
-          int reg_idx = idp_to_dbg_reg(op.reg);
-          regval_t reg = getreg(dbg->regs(reg_idx).name, regvalues);
-
-          if (op.phrase >= 0x10 && op.phrase <= 0x1F || // (A0)..(A7), (A0)+..(A7)+
-            op.phrase >= 0x20 && op.phrase <= 0x27) // -(A0)..-(A7)
-          {
-            if (op.phrase >= 0x20 && op.phrase <= 0x27)
-              reg.ival -= size;
-
-            opinf->ea = (ea_t)reg.ival;
-            size_t read_size = 0;
-
-            switch (size)
-            {
-            case 1:
-            {
-              uint8_t b = 0;
-              dbg->read_memory(&read_size, (ea_t)reg.ival, &b, 1);
-              opinf->value.ival = b;
-            } break;
-            case 2:
-            {
-              uint16_t w = 0;
-              dbg->read_memory(&read_size, (ea_t)reg.ival, &w, 2);
-              w = swap16(w);
-              opinf->value.ival = w;
-            } break;
-            default:
-            {
-              uint32_t l = 0;
-              dbg->read_memory(&read_size, (ea_t)reg.ival, &l, 4);
-              l = swap32(l);
-              opinf->value.ival = l;
-            } break;
-            }
-          }
-          else
-            opinf->value = reg;
-
-          opinf->debregidx = reg_idx;
-        } break;
-        case o_displ:
-        {
-          regval_t main_reg, add_reg;
-          int main_reg_idx = idp_to_dbg_reg(op.reg);
-          int add_reg_idx = idp_to_dbg_reg(op.specflag1 & 0xF);
-
-          main_reg.ival = 0;
-          add_reg.ival = 0;
-          if (op.specflag2 & 0x10)
-          {
-            add_reg = getreg(dbg->regs(add_reg_idx).name, regvalues);
-            if (op.specflag1 & 0x10)
-            {
-              add_reg.ival &= 0xFFFF;
-              add_reg.ival = (uint64)((int16_t)add_reg.ival);
-            }
-          }
-
-          if (main_reg_idx != R_PC)
-            main_reg = getreg(dbg->regs(main_reg_idx).name, regvalues);
-
-          ea_t addr = (ea_t)main_reg.ival + dw_ea(op.addr) + (ea_t)add_reg.ival;
-          opinf->ea = addr;
-          size_t read_size = 0;
-
-          switch (size)
-          {
-          case 1:
-          {
-            uint8_t b = 0;
-            dbg->read_memory(&read_size, addr, &b, 1);
-            opinf->value.ival = b;
-          } break;
-          case 2:
-          {
-            uint16_t w = 0;
-            dbg->read_memory(&read_size, addr, &w, 2);
-            w = swap16(w);
-            opinf->value.ival = w;
-          } break;
-          default:
-          {
-            uint32_t l = 0;
-            dbg->read_memory(&read_size, addr, &l, 4);
-            l = swap32(l);
-            opinf->value.ival = l;
-          } break;
-          }
-        } break;
-        }
-
-        if (opinf->ea != BADADDR && opinf->ea >= 0xFFFF0000 && opinf->ea < 0xFFFFFFFF) {
-          opinf->ea &= 0xFFFFFF;
-        }
-
-        return 1;
-      }
-    } break;
-      case processor_t::ev_out_operand: {
-        outctx_t* outctx = va_arg(va, outctx_t*);
-        const op_t* op = va_arg(va, const op_t*);
-
-        if (
-          op->type == o_displ && assembler != out_asm_t::asm_asm68k &&
-          (((op->phrase == 0x0A) || (op->phrase == 0x0B) || (op->phrase == 0x08) || (op->phrase == 0x09)) && dw_ea(op->addr) == 0)
-          ) {
-          qstring tmp;
-
-          tmp.append(COLSTR("0", SCOLOR_NUMBER));
-          tmp.append(COLSTR("(", SCOLOR_SYMBOL) SCOLOR_ON SCOLOR_REG "a");
-          tmp.append(0x28 + op->reg);
-          tmp.append(SCOLOR_OFF SCOLOR_REG);
-
-          size_t pos = outctx->outbuf.find(tmp.c_str());
-
-          if (pos != qstring::npos) {
-            outctx->outbuf.insert(pos + 5, COLSTR(".w", SCOLOR_SYMBOL));
-          }
-        }
-      } break;
-    default:
-    {
-#ifdef _DEBUG
-      if (my_dbg)
-      {
-        qstring p;
-        p.sprnt("%d\n", notification_code);
-        OutputDebugStringA(p.c_str());
-      }
-#endif
-    } break;
-    }
-    return code;
-  }
-} ctx;
 
 //--------------------------------------------------------------------------
 static unsigned int mask(unsigned char bit_idx, unsigned char bits_cnt = 1)
@@ -1861,78 +1540,42 @@ static bool init_plugin(void)
 }
 
 #ifdef DEBUG_68K
-static void idaapi update_tiles(bool create);
+
+static const char data_as_tiles_title[] = "Tile data preview";
+static const char data_as_tiles_name[] = "gensida:data_as_tiles";
+
+static const char smd_constant_name[] = "gensida:smd_constant";
+static const char smd_output_mark_name[] = "gensida:output_mark";
 
 struct data_as_tiles_action_t : public action_handler_t
 {
-  virtual int idaapi activate(action_activation_ctx_t* ctx)
-  {
-    update_tiles(true);
-    return 1;
-  }
+  plugin_ctx_t& plug;
+  data_as_tiles_action_t(plugin_ctx_t& _plug) : plug(_plug) {}
 
-  virtual action_state_t idaapi update(action_update_ctx_t* ctx)
-  {
+  virtual int idaapi activate(action_activation_ctx_t* ctx) override;
+
+  virtual action_state_t idaapi update(action_update_ctx_t* ctx) override {
     return AST_ENABLE_ALWAYS;
   }
 };
 
 struct smd_constant_action_t : public action_handler_t
 {
-  virtual int idaapi activate(action_activation_ctx_t* ctx)
-  {
-    qstring name;
-    ea_t ea = get_screen_ea();
-    if (is_mapped(ea)) // address belongs to disassembly
-    {
-      if (get_cmt(&name, ea, false) != -1) // remove previous comment and exit
-      {
-        set_cmt(ea, "", false);
-        return 1;
-      }
+  plugin_ctx_t& plug;
+  smd_constant_action_t(plugin_ctx_t& _plug) : plug(_plug) {}
 
-      insn_t out;
-      decode_insn(&out, ea);
-      print_operand(&name, ea, 1);
-      tag_remove(&name, name);
+  virtual int idaapi activate(action_activation_ctx_t* ctx) override;
 
-      uval_t val = 0;
-      get_immvals(&val, ea, 0, get_flags(ea));
-      uint32 value = (uint32)val;
-      if (out.Op1.type == o_imm && out.Op2.type == o_reg && !::qstrcmp(name.c_str(), "sr"))
-      {
-        do_cmt_sr_ccr_reg_const(ea, value);
-      }
-      else if (out.Op1.type == o_imm && out.Op2.type == o_mem &&
-        (dw_ea(out.Op2.addr) == 0xA11200 || dw_ea(out.Op2.addr) == 0xA11100))
-      {
-        do_cmt_z80_bus_command(ea, dw_ea(out.Op2.addr), value);
-      }
-      else if (is_call16_const_cmd(value))
-      {
-        do_call16_const(ea, value & 0xFFFF);
-      }
-      else if (is_vdp_rw_cmd(value))
-      {
-        do_cmt_vdp_rw_command(ea, value);
-      }
-      else if (is_vdp_send_cmd(value)) // comment set vdp reg cmd
-      {
-        do_cmt_vdp_reg_const(ea, value);
-        do_cmt_vdp_reg_const(ea, value >> 16);
-      }
-    }
-    return 1;
-  }
-
-  virtual action_state_t idaapi update(action_update_ctx_t* ctx)
-  {
+  virtual action_state_t idaapi update(action_update_ctx_t* ctx) override {
     return AST_ENABLE_ALWAYS;
   }
 };
 
 struct smd_output_mark_action_t : public action_handler_t
 {
+  plugin_ctx_t& plug;
+  smd_output_mark_action_t(plugin_ctx_t& _plug) : plug(_plug) {}
+
   static int idaapi clear_current(int button_code, form_actions_t& fa)
   {
     ea_t ea1 = BADADDR, ea2 = BADADDR;
@@ -1952,83 +1595,513 @@ struct smd_output_mark_action_t : public action_handler_t
     return 1;
   }
 
-  virtual int idaapi activate(action_activation_ctx_t* ctx)
-  {
-    ea_t ea1 = BADADDR, ea2 = BADADDR;
-    bool good = read_range_selection(nullptr, &ea1, &ea2);
+  virtual int idaapi activate(action_activation_ctx_t* ctx) override;
 
-    if (!good) {
-      ea1 = ea2 = get_screen_ea();
-    }
-    else {
-      ea2 -= 1;
-    }
-
-    qstring prev_path;
-    get_extra_cmt(&prev_path, ea1, E_PREV);
-
-    ushort bin_inc_del = 0;
-
-    if (!prev_path.empty()) {
-      if (!strncmp(prev_path.begin(), "BIN", 3)) {
-        bin_inc_del = 0;
-      }
-      else if (!strncmp(prev_path.begin(), "INC_", 4)) {
-        bin_inc_del = 1;
-      }
-      else if (!strncmp(prev_path.begin(), "DEL_", 4)) {
-        bin_inc_del = 2;
-      }
-    }
-
-    if (ask_form("Choose output method\n\n"
-                 "<#binclude#Mode#~B~inary include block:R><|>"
-                 "<#include#ASM ~I~nclude block:R><|>"
-                 "<#delete#~D~on't output block:R>2>\n"
-                 "<#Clear existing tag#~C~lear:B:0:::>\n", &bin_inc_del, &clear_current) == 1) {
-      delete_extra_cmts(ea1, E_PREV);
-      delete_extra_cmts(ea2, E_NEXT);
-      switch (bin_inc_del) {
-      case 0: {
-        add_extra_line(ea1, true, "BIN \"rel/path/file.bin\"");
-      } break;
-      case 1: {
-        add_extra_line(ea1, true, "INC_START \"rel/path/file.inc\"");
-        add_extra_line(ea2, false, "INC_END");
-      } break;
-      case 2: {
-        add_extra_line(ea1, true, "DEL_START");
-        add_extra_line(ea2, false, "DEL_END");
-      } break;
-      }
-    }
-    return 1;
-  }
-
-  virtual action_state_t idaapi update(action_update_ctx_t* ctx)
+  virtual action_state_t idaapi update(action_update_ctx_t* ctx) override
   {
     return AST_ENABLE_ALWAYS;
   }
 };
+#endif
 
-static const char data_as_tiles_title[] = "Tile data preview";
-static const char data_as_tiles_name[] = "gensida:data_as_tiles";
-static data_as_tiles_action_t data_as_tiles;
-static action_desc_t data_as_tiles_action = ACTION_DESC_LITERAL(data_as_tiles_name, "Paint data as tiles", &data_as_tiles, "Shift+D", NULL, -1);
+struct plugin_ctx_t : public plugmod_t, public post_event_visitor_t
+{
+#ifdef DEBUG_68K
+  TWidget* g_tiles = nullptr;
 
-static const char smd_constant_name[] = "gensida:smd_constant";
-static const char smd_output_mark_name[] = "gensida:output_mark";
-static smd_constant_action_t smd_constant;
-static smd_output_mark_action_t smd_output_mark;
-static action_desc_t smd_constant_action = ACTION_DESC_LITERAL(smd_constant_name, "Identify SMD constant", &smd_constant, "J", NULL, -1);
-static action_desc_t smd_output_mark_action = ACTION_DESC_LITERAL(smd_output_mark_name, "Mark ASM output", &smd_output_mark, "Shift+J", NULL, -1);
+  ui_listener_t ui_listener = ui_listener_t(*this);
+  dis_listener_t dis_listener = dis_listener_t(*this);
+  asm_listener_t asm_listener = asm_listener_t(*this);
+  dbg_listener_t dbg_listener = dbg_listener_t(*this);
+  view_listener_t view_listener = view_listener_t(*this);
 
-static TWidget* g_tiles = nullptr;
+  data_as_tiles_action_t data_as_tiles = data_as_tiles_action_t(*this);
+  smd_constant_action_t smd_constant = smd_constant_action_t(*this);
+  smd_output_mark_action_t smd_output_mark = smd_output_mark_action_t(*this);
+
+  action_desc_t data_as_tiles_action = ACTION_DESC_LITERAL_PLUGMOD(data_as_tiles_name, "Paint data as tiles", &data_as_tiles, this, "Shift+D", NULL, -1);
+  action_desc_t smd_constant_action = ACTION_DESC_LITERAL_PLUGMOD(smd_constant_name, "Identify SMD constant", &smd_constant, this, "J", NULL, -1);
+  action_desc_t smd_output_mark_action = ACTION_DESC_LITERAL_PLUGMOD(smd_output_mark_name, "Mark ASM output", &smd_output_mark, this, "Shift+J", NULL, -1);
+#endif
+
+  idd_listener_t idd_listener = idd_listener_t(*this);
+
+  plugin_ctx_t()
+  {
+#ifdef DEBUG_68K
+    hook_event_listener(HT_UI, &ui_listener);
+    hook_event_listener(HT_IDP, &dis_listener);
+    hook_event_listener(HT_IDP, &asm_listener);
+    hook_event_listener(HT_DBG, &dbg_listener);
+    hook_event_listener(HT_VIEW, &view_listener);
+
+    bool res = register_action(smd_constant_action);
+    res = register_action(smd_output_mark_action);
+    res = register_action(data_as_tiles_action);
+
+    register_post_event_visitor(HT_IDP, this, this);
+#endif
+
+    hook_event_listener(HT_IDD, &idd_listener);
+
+    set_module_data(&data_id, this);
+  }
+  ~plugin_ctx_t()
+  {
+    clr_module_data(data_id);
+
+#ifdef DEBUG_68K
+    unregister_action(smd_output_mark_name);
+    unregister_action(smd_constant_name);
+    unregister_action(data_as_tiles_name);
+
+    g_tiles = nullptr;
+#endif
+  }
+
+#ifdef DEBUG_68K
+  void idaapi update_tiles(bool create);
+  ssize_t idaapi handle_post_event(ssize_t code, int notification_code, va_list va) override;
+#endif
+
+  virtual bool idaapi run(size_t) override;
+};
+
+#ifdef DEBUG_68K
+int idaapi data_as_tiles_action_t::activate(action_activation_ctx_t* ctx)
+{
+  plug.update_tiles(true);
+  return 1;
+}
+
+int idaapi smd_constant_action_t::activate(action_activation_ctx_t* ctx)
+{
+  qstring name;
+  ea_t ea = get_screen_ea();
+  if (is_mapped(ea)) // address belongs to disassembly
+  {
+    if (get_cmt(&name, ea, false) != -1) // remove previous comment and exit
+    {
+      set_cmt(ea, "", false);
+      return 1;
+    }
+
+    insn_t out;
+    decode_insn(&out, ea);
+    print_operand(&name, ea, 1);
+    tag_remove(&name, name);
+
+    uval_t val = 0;
+    get_immvals(&val, ea, 0, get_flags(ea));
+    uint32 value = (uint32)val;
+    if (out.Op1.type == o_imm && out.Op2.type == o_reg && !::qstrcmp(name.c_str(), "sr"))
+    {
+      do_cmt_sr_ccr_reg_const(ea, value);
+    }
+    else if (out.Op1.type == o_imm && out.Op2.type == o_mem &&
+      (dw_ea(out.Op2.addr) == 0xA11200 || dw_ea(out.Op2.addr) == 0xA11100))
+    {
+      do_cmt_z80_bus_command(ea, dw_ea(out.Op2.addr), value);
+    }
+    else if (is_call16_const_cmd(value))
+    {
+      do_call16_const(ea, value & 0xFFFF);
+    }
+    else if (is_vdp_rw_cmd(value))
+    {
+      do_cmt_vdp_rw_command(ea, value);
+    }
+    else if (is_vdp_send_cmd(value)) // comment set vdp reg cmd
+    {
+      do_cmt_vdp_reg_const(ea, value);
+      do_cmt_vdp_reg_const(ea, value >> 16);
+    }
+  }
+  return 1;
+}
+
+int idaapi smd_output_mark_action_t::activate(action_activation_ctx_t* ctx)
+{
+  ea_t ea1 = BADADDR, ea2 = BADADDR;
+  bool good = read_range_selection(nullptr, &ea1, &ea2);
+
+  if (!good) {
+    ea1 = ea2 = get_screen_ea();
+  }
+  else {
+    ea2 -= 1;
+  }
+
+  qstring prev_path;
+  get_extra_cmt(&prev_path, ea1, E_PREV);
+
+  ushort bin_inc_del = 0;
+
+  if (!prev_path.empty()) {
+    if (!strncmp(prev_path.begin(), "BIN", 3)) {
+      bin_inc_del = 0;
+    }
+    else if (!strncmp(prev_path.begin(), "INC_", 4)) {
+      bin_inc_del = 1;
+    }
+    else if (!strncmp(prev_path.begin(), "DEL_", 4)) {
+      bin_inc_del = 2;
+    }
+  }
+
+  if (ask_form("Choose output method\n\n"
+    "<#binclude#Mode#~B~inary include block:R><|>"
+    "<#include#ASM ~I~nclude block:R><|>"
+    "<#delete#~D~on't output block:R>2>\n"
+    "<#Clear existing tag#~C~lear:B:0:::>\n", &bin_inc_del, &clear_current) == 1) {
+    delete_extra_cmts(ea1, E_PREV);
+    delete_extra_cmts(ea2, E_NEXT);
+    switch (bin_inc_del) {
+    case 0: {
+      add_extra_line(ea1, true, "BIN \"rel/path/file.bin\"");
+    } break;
+    case 1: {
+      add_extra_line(ea1, true, "INC_START \"rel/path/file.inc\"");
+      add_extra_line(ea2, false, "INC_END");
+    } break;
+    case 2: {
+      add_extra_line(ea1, true, "DEL_START");
+      add_extra_line(ea2, false, "DEL_END");
+    } break;
+    }
+  }
+  return 1;
+}
+
+ssize_t idaapi plugin_ctx_t::handle_post_event(ssize_t code, int notification_code, va_list va)
+{
+  switch (notification_code)
+  {
+  case processor_t::ev_ana_insn:
+  {
+    insn_t* out = va_arg(va, insn_t*);
+
+#ifdef _DEBUG
+    print_insn(out);
+#endif
+
+    for (int i = 0; i < UA_MAXOP; ++i)
+    {
+      op_t& op = out->ops[i];
+
+#ifdef _DEBUG
+      print_op(out->ea, &op);
+#endif
+
+      switch (out->itype) {
+      case 0x7d: { // move
+        if (out->Op2.type == o_reg && out->Op2.reg == 0x5e) { // move to usp
+          out->segpref = 0x3; // move.l to usp
+        }
+      } break;
+      }
+
+      switch (op.type)
+      {
+      case o_near:
+      case o_mem:
+      {
+        ea_t op_addr = dw_ea(op.addr);
+        if (op_addr >= 0xFFFF0000 && op_addr <= 0xFFFFFFFF) {
+          op.addr = op_addr & 0xFFFFFF;
+        }
+
+        if ((op_addr & 0xFFE00000) == 0xE00000) { // RAM mirrors
+          op.addr = op_addr | 0x1F0000;
+        }
+
+        if ((op_addr >= 0xC00000 && op_addr <= 0xC0001F) ||
+          (op_addr >= 0xC00020 && op_addr <= 0xC0003F)) { // VDP mirrors
+          op.addr = op_addr & 0xC000FF;
+        }
+
+        if (out->itype == 0x75 && op.n == 0 && op.phrase == 9 && out->size == 6) { // jsr (label).l
+          op.type = o_mem;
+        }
+        else if (out->itype == 0x74 && op.n == 0 && op.phrase == 8 && out->size == 4) { // jmp (label).w
+          op.type = o_mem;
+        }
+        else if ((out->itype == 0x76 || out->itype == 0x75 || out->itype == 0x74) && op.n == 0 &&
+          (op.phrase == 0x09 || op.phrase == 0x0A) &&
+          (op_addr != 0 && op_addr <= 0xA00000) &&
+          (op.specflag1 == 2 || op.specflag1 == 3)) { // lea table(pc),Ax; jsr func(pc); jmp label(pc)
+          short diff = op_addr - out->ea;
+          if (diff >= SHRT_MIN && diff <= SHRT_MAX)
+          {
+            out->Op1.type = o_displ;
+            out->Op1.offb = 2;
+            out->Op1.dtype = dt_dword;
+            out->Op1.phrase = 0x5B;
+            out->Op1.specflag1 = 0x10;
+          }
+        }
+      } break;
+      }
+    }
+
+    return out->size;
+  } break;
+  case processor_t::ev_emu_insn:
+  {
+    insn_t* insn = va_arg(va, insn_t*);
+    if (insn->itype == 0xB6) // trap #X
+    {
+      qstring name;
+      ea_t trap_addr = get_dword((0x20 + (insn->Op1.value & 0xF)) * sizeof(uint32));
+      get_func_name(&name, trap_addr);
+      set_cmt(insn->ea, name.c_str(), false);
+      insn->add_cref(trap_addr, insn->Op1.offb, fl_CN);
+
+      if (func_does_return(trap_addr)) {
+        func_t* trap_func = get_func(trap_addr);
+        int argsize = (trap_func != nullptr) ? trap_func->argsize : 0;
+        insn->add_cref(insn->ea + 2 + argsize, 0, fl_F); // calc next insn
+      }
+
+      return 1;
+    }
+
+    if ((insn->itype == 0x76 || insn->itype == 0x75 || insn->itype == 0x74 || insn->itype == 0x7F) &&
+      insn->Op1.phrase == 0x5B && insn->Op1.specflag1 == 0x10) // lea table(pc),Ax; jsr func(pc); jmp label(pc), movea.l label(pc,
+    {
+      short diff = dw_ea(insn->Op1.addr) - insn->ea;
+      if (diff >= SHRT_MIN && diff <= SHRT_MAX)
+      {
+        insn->add_dref(dw_ea(insn->Op1.addr), insn->Op1.offb, dr_O);
+
+        if (insn->itype != 0x74) {
+          insn->add_cref(insn->ea + insn->size, 0, fl_F);
+        }
+
+        return 1;
+      }
+    }
+
+    if (insn->itype == 0x7F && insn->Op1.type == o_imm && insn->Op1.value & 0xFF0000 && insn->Op1.dtype == dt_word) { // movea
+      insn->Op1.value &= 0xFFFF;
+
+      op_offset(insn->ea, insn->Op1.n, REF_OFF32, BADADDR, 0xFF0000);
+      insn->add_cref(insn->ea + insn->size, insn->Op1.offb, fl_F);
+      return 1;
+    }
+  } break;
+  case processor_t::ev_get_idd_opinfo:
+  {
+    idd_opinfo_t* opinf = va_arg(va, idd_opinfo_t*);
+    ea_t ea = va_arg(va, ea_t);
+    int n = va_arg(va, int);
+    int thread_id = va_arg(va, int);
+    processor_t::regval_getter_t* getreg = va_arg(va, processor_t::regval_getter_t*);
+    const regval_t* regvalues = va_arg(va, const regval_t*);
+
+    opinf->ea = BADADDR;
+    opinf->debregidx = 0;
+    opinf->modified = false;
+    opinf->value.ival = 0;
+    opinf->value_size = 4;
+
+    insn_t out;
+    if (decode_insn(&out, ea))
+    {
+      op_t op = out.ops[n];
+
+#ifdef _DEBUG
+      print_insn(&out);
+#endif
+
+      int size = 0;
+      switch (op.dtype)
+      {
+      case dt_byte:
+        size = 1;
+        break;
+      case dt_word:
+        size = 2;
+        break;
+      default:
+        size = 4;
+        break;
+      }
+
+      opinf->value_size = size;
+
+      switch (op.type)
+      {
+      case o_mem:
+      case o_near:
+      case o_imm:
+      {
+        flags_t flags;
+
+        switch (n)
+        {
+        case 0: flags = get_optype_flags0(get_flags(ea)); break;
+        case 1: flags = get_optype_flags1(get_flags(ea)); break;
+        default: flags = 0; break;
+        }
+
+        switch (op.type)
+        {
+        case o_mem:
+        case o_near: opinf->ea = dw_ea(op.addr); break;
+        case o_imm: opinf->ea = op.value; break;
+        }
+
+        opinfo_t info;
+        if (get_opinfo(&info, ea, n, flags) != NULL)
+        {
+          opinf->ea += info.ri.base;
+        }
+      } break;
+      case o_phrase:
+      case o_reg:
+      {
+        int reg_idx = idp_to_dbg_reg(op.reg);
+        regval_t reg = getreg(dbg->regs(reg_idx).name, regvalues);
+
+        if (op.phrase >= 0x10 && op.phrase <= 0x1F || // (A0)..(A7), (A0)+..(A7)+
+          op.phrase >= 0x20 && op.phrase <= 0x27) // -(A0)..-(A7)
+        {
+          if (op.phrase >= 0x20 && op.phrase <= 0x27)
+            reg.ival -= size;
+
+          opinf->ea = (ea_t)reg.ival;
+          size_t read_size = 0;
+
+          switch (size)
+          {
+          case 1:
+          {
+            uint8_t b = 0;
+            dbg->read_memory(&read_size, (ea_t)reg.ival, &b, 1);
+            opinf->value.ival = b;
+          } break;
+          case 2:
+          {
+            uint16_t w = 0;
+            dbg->read_memory(&read_size, (ea_t)reg.ival, &w, 2);
+            w = swap16(w);
+            opinf->value.ival = w;
+          } break;
+          default:
+          {
+            uint32_t l = 0;
+            dbg->read_memory(&read_size, (ea_t)reg.ival, &l, 4);
+            l = swap32(l);
+            opinf->value.ival = l;
+          } break;
+          }
+        }
+        else
+          opinf->value = reg;
+
+        opinf->debregidx = reg_idx;
+      } break;
+      case o_displ:
+      {
+        regval_t main_reg, add_reg;
+        int main_reg_idx = idp_to_dbg_reg(op.reg);
+        int add_reg_idx = idp_to_dbg_reg(op.specflag1 & 0xF);
+
+        main_reg.ival = 0;
+        add_reg.ival = 0;
+        if (op.specflag2 & 0x10)
+        {
+          add_reg = getreg(dbg->regs(add_reg_idx).name, regvalues);
+          if (op.specflag1 & 0x10)
+          {
+            add_reg.ival &= 0xFFFF;
+            add_reg.ival = (uint64)((int16_t)add_reg.ival);
+          }
+        }
+
+        if (main_reg_idx != R_PC)
+          main_reg = getreg(dbg->regs(main_reg_idx).name, regvalues);
+
+        ea_t addr = (ea_t)main_reg.ival + dw_ea(op.addr) + (ea_t)add_reg.ival;
+        opinf->ea = addr;
+        size_t read_size = 0;
+
+        switch (size)
+        {
+        case 1:
+        {
+          uint8_t b = 0;
+          dbg->read_memory(&read_size, addr, &b, 1);
+          opinf->value.ival = b;
+        } break;
+        case 2:
+        {
+          uint16_t w = 0;
+          dbg->read_memory(&read_size, addr, &w, 2);
+          w = swap16(w);
+          opinf->value.ival = w;
+        } break;
+        default:
+        {
+          uint32_t l = 0;
+          dbg->read_memory(&read_size, addr, &l, 4);
+          l = swap32(l);
+          opinf->value.ival = l;
+        } break;
+        }
+      } break;
+      }
+
+      if (opinf->ea != BADADDR && opinf->ea >= 0xFFFF0000 && opinf->ea < 0xFFFFFFFF) {
+        opinf->ea &= 0xFFFFFF;
+      }
+
+      return 1;
+    }
+  } break;
+  case processor_t::ev_out_operand: {
+    outctx_t* outctx = va_arg(va, outctx_t*);
+    const op_t* op = va_arg(va, const op_t*);
+
+    if (
+      op->type == o_displ && assembler != out_asm_t::asm_asm68k &&
+      (((op->phrase == 0x0A) || (op->phrase == 0x0B) || (op->phrase == 0x08) || (op->phrase == 0x09)) && dw_ea(op->addr) == 0)
+      ) {
+      qstring tmp;
+
+      tmp.append(COLSTR("0", SCOLOR_NUMBER));
+      tmp.append(COLSTR("(", SCOLOR_SYMBOL) SCOLOR_ON SCOLOR_REG "a");
+      tmp.append(0x28 + op->reg);
+      tmp.append(SCOLOR_OFF SCOLOR_REG);
+
+      size_t pos = outctx->outbuf.find(tmp.c_str());
+
+      if (pos != qstring::npos) {
+        outctx->outbuf.insert(pos + 5, COLSTR(".w", SCOLOR_SYMBOL));
+      }
+    }
+  } break;
+  default:
+  {
+#ifdef _DEBUG
+    if (my_dbg)
+    {
+      qstring p;
+      p.sprnt("%d\n", notification_code);
+      qDebug() << p.c_str();
+    }
+#endif
+  } break;
+  }
+  return code;
+}
 
 //--------------------------------------------------------------------------
-static ssize_t idaapi hook_ui(void* user_data, int notification_code, va_list va)
+ssize_t idaapi ui_listener_t::on_event(ssize_t code, va_list va)
 {
-  if (notification_code == ui_populating_widget_popup) {
+  switch (code) {
+  case ui_populating_widget_popup: {
     TWidget* widget = va_arg(va, TWidget*);
 
     if (get_widget_type(widget) == BWN_DISASM) {
@@ -2037,13 +2110,13 @@ static ssize_t idaapi hook_ui(void* user_data, int notification_code, va_list va
       attach_action_to_popup(widget, p, smd_output_mark_name);
       attach_action_to_popup(widget, p, data_as_tiles_name);
     }
-  }
-  else if (notification_code == ui_widget_visible) {
+  } break;
+  case ui_widget_visible: {
     TWidget* w = va_arg(va, TWidget*);
 
-    if (w == g_tiles) {
+    if (w == ctx.g_tiles) {
       QLineEdit* pal_addr = new QLineEdit();
-      QRegExpValidator* hexVal = new QRegExpValidator(QRegExp("[0-9a-fA-F]{1,8}"));
+      QRegularExpressionValidator* hexVal = new QRegularExpressionValidator(QRegularExpression("[0-9a-fA-F]{1,8}"));
       pal_addr->setValidator(hexVal);
       PaintForm* pf = new PaintForm();
 
@@ -2051,7 +2124,7 @@ static ssize_t idaapi hook_ui(void* user_data, int notification_code, va_list va
       pf->setScrollBar(sb);
 
       QGridLayout* mainLayout = new QGridLayout();
-      mainLayout->setMargin(4);
+      mainLayout->setContentsMargins(4, 4, 4, 4);
 
       QGridLayout* lAddr = new QGridLayout();
       lAddr->addWidget(new QLabel("Palette Address:"), 0, 0);
@@ -2066,19 +2139,20 @@ static ssize_t idaapi hook_ui(void* user_data, int notification_code, va_list va
       QObject::connect(pal_addr, &QLineEdit::textChanged, pf, &PaintForm::textChanged);
       QObject::connect(sb, &QScrollBar::valueChanged, pf, &PaintForm::scrollChanged);
     }
-  }
-  else if (notification_code == ui_widget_invisible) {
+  } break;
+  case ui_widget_invisible: {
     TWidget* w = va_arg(va, TWidget*);
 
-    if (w == g_tiles) {
-      g_tiles = nullptr;
+    if (w == ctx.g_tiles) {
+      ctx.g_tiles = nullptr;
     }
+  } break;
   }
 
   return 0;
 }
 
-static void idaapi update_tiles(bool create) {
+void idaapi plugin_ctx_t::update_tiles(bool create) {
   QWidget* w = (QWidget*)find_widget(data_as_tiles_title);
 
   if (w != nullptr) {
@@ -2106,10 +2180,10 @@ static void idaapi update_tiles(bool create) {
   }
 }
 
-static ssize_t idaapi hook_view(void* /*ud*/, int notification_code, va_list va) {
-  switch (notification_code) {
-  case view_loc_changed: {
-    update_tiles(false);
+ssize_t idaapi view_listener_t::on_event(ssize_t code, va_list va) {
+  switch (code) {
+  case view_notification_t::view_loc_changed: {
+    ctx.update_tiles(false);
   } break;
   }
 
@@ -2117,8 +2191,6 @@ static ssize_t idaapi hook_view(void* /*ud*/, int notification_code, va_list va)
 }
 
 #endif
-
-extern ssize_t idaapi debugger_callback(void*, int msgid, va_list va);
 
 //--------------------------------------------------------------------------
 // Initialize debugger plugin
@@ -2132,18 +2204,6 @@ static plugmod_t* idaapi init(void)
 
 #ifdef DEBUG_68K
     inf_set_app_bitness(32);
-
-    bool res = register_action(smd_constant_action);
-    res = register_action(smd_output_mark_action);
-    res = register_action(data_as_tiles_action);
-
-    hook_to_notification_point(HT_UI, hook_ui, nullptr);
-    hook_to_notification_point(HT_IDP, hook_disasm, nullptr);
-    hook_to_notification_point(HT_IDP, process_asm_output, nullptr);
-    register_post_event_visitor(HT_IDP, &ctx, nullptr);
-    hook_to_notification_point(HT_DBG, hook_dbg, nullptr);
-    hook_to_notification_point(HT_IDD, debugger_callback, nullptr);
-    hook_to_notification_point(HT_VIEW, hook_view, nullptr);
 #else
     inf_set_app_bitness(16);
 #endif
@@ -2151,7 +2211,11 @@ static plugmod_t* idaapi init(void)
     print_version();
 
     dbg = &debugger; // temporary workaround for a dbg pointer absence
+#ifdef DEBUG_68K
+    return new plugin_ctx_t;
+#else
     return PLUGIN_KEEP;
+#endif
   }
   return PLUGIN_SKIP;
 }
@@ -2162,21 +2226,6 @@ static void idaapi term(void)
 {
   if (plugin_inited)
   {
-#ifdef DEBUG_68K
-    unregister_action(smd_output_mark_name);
-    unregister_action(smd_constant_name);
-    unregister_action(data_as_tiles_name);
-
-    unhook_from_notification_point(HT_VIEW, hook_view);
-    unhook_from_notification_point(HT_IDD, debugger_callback);
-    unhook_from_notification_point(HT_DBG, hook_dbg);
-    unregister_post_event_visitor(HT_IDP, &ctx);
-    unhook_from_notification_point(HT_IDP, process_asm_output);
-    unhook_from_notification_point(HT_IDP, hook_disasm);
-    unhook_from_notification_point(HT_UI, hook_ui);
-
-#endif
-
     plugin_inited = false;
     dbg_started = false;
 
@@ -2188,7 +2237,7 @@ static void idaapi term(void)
 
 //--------------------------------------------------------------------------
 // The plugin method - usually is not used for debugger plugins
-static bool idaapi run(size_t arg) { return false; }
+bool idaapi plugin_ctx_t::run(size_t arg) { return false; }
 
 //--------------------------------------------------------------------------
 char comment[] = NAME " debugger plugin by DrMefistO.";
@@ -2217,7 +2266,7 @@ plugin_t PLUGIN =
 
     term, // terminate. this pointer may be NULL.
 
-    run, // invoke plugin
+    nullptr, // invoke plugin
 
     comment, // long comment about the plugin
     // it could appear in the status line

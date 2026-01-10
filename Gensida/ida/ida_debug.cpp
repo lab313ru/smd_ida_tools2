@@ -53,7 +53,7 @@ using google::protobuf::Map;
 
 #include "ida_registers.h"
 #include "ida_plugin.h"
-
+#include "ida_debug.h"
 
 typedef qvector<std::pair<uint32, bool>> codemap_t;
 static eventlist_t events;
@@ -347,7 +347,7 @@ class DbgClientHandler final : public DbgClient::Service {
   Status eval_condition(ServerContext* context, const Condition* request, BoolValue* response) override {
       suspend_process();
       cond_break_t cond(request->elang(), request->condition().c_str());
-      int res = execute_sync(cond, MFF_FAST);
+      ssize_t res = execute_sync(cond, MFF_FAST);
       response->set_value(res);
       continue_process();
       return Status::OK;
@@ -845,7 +845,7 @@ static drc_t idaapi s_start_process(const char* path,
   events.clear();
 
   netnode n("$ portnum");
-  int port = n.long_value();
+  int port = (int)n.long_value();
   init_ida_server(port+1000);
   if (!init_emu_client(port) || (client && !client->start())) {
     return DRC_NETERR;
@@ -1175,14 +1175,14 @@ static drc_t idaapi get_memory_info(meminfo_vec_t &areas, qstring *errbuf) {
 // -1 means that the process does not exist anymore
 // This function is called from debthread
 static ssize_t idaapi read_memory(ea_t ea, void *buffer, size_t size, qstring *errbuf) {
-  return client && client->read_memory(ea, size, (uint8_t*)buffer) ? size : 0;
+  return client && client->read_memory((uint32_t)ea, (uint32_t)size, (uint8_t*)buffer) ? size : 0;
 }
 
 // Write process memory
 // Returns number of written bytes, -1-fatal error
 // This function is called from debthread
 static ssize_t idaapi write_memory(ea_t ea, const void *buffer, size_t size, qstring *errbuf) {
-  return client && client->write_memory((const uint8_t*)buffer, ea, size) ? size : 0;
+  return client && client->write_memory((const uint8_t*)buffer, (uint32_t)ea, (uint32_t)size) ? size : 0;
 }
 
 // Is it possible to set breakpoint?
@@ -1257,7 +1257,7 @@ static drc_t idaapi update_bpts(int* nbpts, update_bpt_info_t *bpts, int nadd, i
 
     bpt_t bpt;
     if (get_bpt(start, &bpt) && !bpt.cndbody.empty()) {
-        bp.set_elang(bpt.get_cnd_elang_idx());
+        bp.set_elang((uint32_t)bpt.get_cnd_elang_idx());
         bp.set_condition(bpt.cndbody.c_str());
     }
 
@@ -1325,7 +1325,7 @@ static drc_t idaapi update_bpts(int* nbpts, update_bpt_info_t *bpts, int nadd, i
 
     bpt_t bpt;
     if (get_bpt(start, &bpt) && !bpt.cndbody.empty()) {
-        bp.set_elang(bpt.get_cnd_elang_idx());
+        bp.set_elang((uint32_t)bpt.get_cnd_elang_idx());
         bp.set_condition(bpt.cndbody.c_str());
     }
 
@@ -1440,11 +1440,11 @@ static drc_t idaapi update_call_stack(thid_t tid, call_stack_t *trace) {
   return DRC_OK;
 }
 
-ssize_t idaapi debugger_callback(void *user_data, int msgid, va_list va) {
+ssize_t idaapi idd_listener_t::on_event(ssize_t code, va_list va) {
   drc_t retcode = DRC_NONE;
   qstring* errbuf;
 
-  switch (msgid) {
+  switch (code) {
   case debugger_t::ev_init_debugger: {
     const char* hostname = va_arg(va, const char*);
 
