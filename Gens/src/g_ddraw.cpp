@@ -134,7 +134,7 @@ int Update_Frame_Fast_Hook()
     return retval;
 }
 
-void Put_Info_NonImmediate(char *Message, int Duration)
+void Put_Info_NonImmediate(const char *Message, int Duration)
 {
     if (Show_Message)
     {
@@ -144,7 +144,7 @@ void Put_Info_NonImmediate(char *Message, int Duration)
     }
 }
 
-void Put_Info(char *Message, int Duration)
+void Put_Info(const char *Message, int Duration)
 {
     if (Show_Message)
     {
@@ -168,7 +168,7 @@ void Put_Info(char *Message, int Duration)
     }
 }
 
-int Init_Fail(HWND hwnd, char *err)
+int Init_Fail(HWND hwnd, const char *err)
 {
     End_DDraw();
     MessageBox(hwnd, err, "Oups ...", MB_OK);

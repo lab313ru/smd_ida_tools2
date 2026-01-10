@@ -270,7 +270,7 @@ static void idaapi load_file(linput_t* li, ushort neflags, const char* fileforma
       );
   inf_set_af2(0);
 
-  unsigned int size = qlsize(li); // size of rom
+  unsigned int size = (unsigned int)qlsize(li); // size of rom
 
   qlseek(li, 0, SEEK_SET);
   if (qlread(li, &_vect, sizeof(_vect)) != sizeof(_vect)) loader_failure(); // trying to read rom vectors

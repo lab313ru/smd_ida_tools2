@@ -36,9 +36,9 @@ extern "C" {
 
     extern ALIGN16 unsigned char State_Buffer[MAX_STATE_FILE_LENGTH];
 
-    int Change_File_S(char *Dest, char *Dir, char *Titre, char *Filter, char *Ext, HWND hwnd);
-    int Change_File_L(char *Dest, char *Dir, char *Titre, char *Filter, char *Ext, HWND hwnd);
-    int Change_Dir(char *Dest, char *Dir, char *Titre, char *Filter, char *Ext, HWND hwnd);
+    int Change_File_S(char *Dest, const char *Dir, const char *Titre, const char *Filter, const char *Ext, HWND hwnd);
+    int Change_File_L(char *Dest, const char *Dir, const char *Titre, const char *Filter, const char *Ext, HWND hwnd);
+    int Change_Dir(char *Dest, const char *Dir, const char *Titre, const char *Filter, const char *Ext, HWND hwnd);
     FILE *Get_State_File();
     void Get_State_File_Name(char *name);
     int Load_State_From_Buffer(unsigned char *buf);

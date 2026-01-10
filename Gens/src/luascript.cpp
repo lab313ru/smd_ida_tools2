@@ -57,7 +57,7 @@ extern bool g_disableStatestateWarnings;
 extern bool g_onlyCallSavestateCallbacks;
 extern bool Step_Gens_MainLoop(bool allowSleep, bool allowEmulate);
 extern bool frameadvSkipLagForceDisable;
-extern "C" void Put_Info_NonImmediate(char *Message, int Duration);
+extern "C" void Put_Info_NonImmediate(const char *Message, int Duration);
 extern int Show_Genesis_Screen();
 extern void GensReplayMovie();
 extern bool SkipNextRerecordIncrement;
@@ -667,7 +667,6 @@ LRESULT CALLBACK LuaPromptProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
     int dx1, dy1, dx2, dy2;
 
     const char* msg = "";
-    char* length = "";
     //int uid;
 
     switch (uMsg)
@@ -727,7 +726,7 @@ LRESULT CALLBACK LuaPromptProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
                 while (ShowCursor(false) >= 0);
             }
 
-            prompt_result = "";
+            prompt_result[0] = '\0';
 
             EndDialog(hDlg, false);
             return true;
@@ -741,7 +740,7 @@ LRESULT CALLBACK LuaPromptProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
             while (ShowCursor(true) < 0);
             while (ShowCursor(false) >= 0);
         }
-        prompt_result = "";
+        prompt_result[0] = '\0';
         EndDialog(hDlg, false);
 
         return true;
@@ -4825,8 +4824,8 @@ struct TieredRegion
 
         bool Contains(unsigned int address, int size) const
         {
-            std::vector<Island>::const_iterator iter = islands.begin();
-            std::vector<Island>::const_iterator end = islands.end();
+            auto iter = islands.cbegin();
+            auto end = islands.cend();
             for (; iter != end; ++iter)
                 if (iter->Contains(address, size))
                     return true;
@@ -4849,7 +4848,8 @@ struct TieredRegion
 
     TieredRegion()
     {
-        Calculate(std::vector<unsigned int>());
+        auto empty = std::vector<unsigned int>();
+        Calculate(empty);
     }
 
     __forceinline int NotEmpty()

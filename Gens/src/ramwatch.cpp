@@ -63,7 +63,7 @@ bool VerifyWatchNotAlreadyAdded(const AddressWatcher& watch)
 /*
 int i: either the number of existing watches minus 1, or the index of the watch to edit.
 */
-bool InsertWatch(const AddressWatcher& Watch, char *Comment, int i)
+bool InsertWatch(const AddressWatcher& Watch, const char *Comment, int i)
 {
     if (i == WatchCount) // append new watch
     {
@@ -1074,7 +1074,12 @@ LRESULT CALLBACK RamWatchProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
                 Item->item.pszText = num;
             }	return true;
             case 2:
-                Item->item.pszText = rswatches[iNum].comment ? rswatches[iNum].comment : "";
+                if (rswatches[iNum].comment) {
+                    Item->item.pszText = rswatches[iNum].comment;
+                }
+                else {
+                    Item->item.pszText[0] = '\0';
+                }
                 return true;
 
             default:

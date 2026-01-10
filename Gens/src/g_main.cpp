@@ -472,7 +472,7 @@ int Change_Fast_Blur()
 
 int Change_Layer(int Num) //Nitsuja added this to allow for layer enabling and disabling.
 {
-    struct { char * val; char *name; } layers[] = {
+    struct { char * val; const char *name; } layers[] = {
         { &VScrollAl, "Scroll A Low" },
         { &VScrollBl, "Scroll B Low" },
         { &VScrollAh, "Scroll A High" },

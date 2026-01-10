@@ -169,7 +169,7 @@ void HexUpdateCommon(HexParams *Hex) {
     HexCommon.DrawLines = Hex->DrawLines;
 }
 
-void HexAddName(u8* Array, UINT Start, UINT Length, char *Name) {
+void HexAddName(u8* Array, UINT Start, UINT Length, const char *Name) {
     char *buf = (char *)malloc(strlen(Name) + 1);
     sprintf(buf, Name);
     SymbolName Instance = { Array, Start, Length, buf };

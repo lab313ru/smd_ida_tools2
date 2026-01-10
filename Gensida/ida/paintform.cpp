@@ -1,5 +1,7 @@
 #include <dbg.hpp>
 
+#undef wait
+
 #include "paintform.h"
 
 #ifndef _MSC_VER
@@ -32,7 +34,7 @@ int PaintForm::getFullTiles() {
   start = get_item_head(start);
   ea_t end = calc_max_item_end(start);
 
-  return std::max(1ULL, (end - start) / 0x20ULL);
+  return (int)std::max(1ULL, (end - start) / 0x20ULL);
 }
 
 PaintForm::PaintForm() {
