@@ -1057,8 +1057,16 @@ static void do_call16_const(ea_t ea, uint32 val)
 
   insn_add_dref(insn, val, 2, dr_O);
 
+  qstring addr_name = get_name((ea_t)val);
+
   char buf[MAXSTR];
-  ::qsnprintf(buf, MAXSTR, "jsr 0x%.4X", val);
+
+  if (addr_name.empty()) {
+    ::qsnprintf(buf, MAXSTR, "jsr 0x%.4X", val);
+  }
+  else {
+    ::qsnprintf(buf, MAXSTR, "jsr %s", addr_name.c_str());
+  }
   append_cmt(ea, buf, false);
 }
 
