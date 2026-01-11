@@ -1874,8 +1874,9 @@ ssize_t idaapi plugin_ctx_t::handle_post_event(ssize_t code, int notification_co
       return 1;
     }
 
+    // lea table(pc),Ax; jsr func(pc); jmp label(pc), movea.l label(pc,; move.l label(pc,; move.w label(pc,;
     if ((insn->itype == 0x76 || insn->itype == 0x75 || insn->itype == 0x74 || insn->itype == 0x7F || insn->itype == 0x7D) &&
-      insn->Op1.phrase == 0x5B && insn->Op1.specflag1 == 0x10) // lea table(pc),Ax; jsr func(pc); jmp label(pc), movea.l label(pc,; move.l label(pc;
+      insn->Op1.phrase == 0x5B && (insn->Op1.specflag1 == 0x10 || insn->Op1.specflag1 == 0x11))
     {
       short diff = dw_ea(insn->Op1.addr) - insn->ea;
       if (diff >= SHRT_MIN && diff <= SHRT_MAX)
