@@ -31,6 +31,7 @@ DbgClient_server.skeleton.cpp
 DbgServer_server.skeleton.cpp
 Gens/asm/main68k.asm
 Gens/asm/sub68k.asm
+Gensida/ida/paintform_moc.cpp
 Debug/
 Release/
 Release7/
