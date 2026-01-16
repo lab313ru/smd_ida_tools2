@@ -115,7 +115,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;__NT__;__IDP__;__EA64__;__X64__;DEBUG_68K;QT_CORE_LIB;QT_GUI_LIB;QT_NAMESPACE=QT;QT_THREAD_SUPPORT;QT_WIDGETS_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(IDA_SDK)\include\;$(SolutionDir)\;$(ProjectDir)\ida\;c:\dev\ida-sdk\src\build\qt-install\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(IDA_SDK)\include\;$(SolutionDir)\;$(ProjectDir)\ida\;$(IDA_SDK)\build\qt-install\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
@@ -161,7 +161,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;__NT__;__IDP__;__EA64__;__X64__;DEBUG_68K;QT_CORE_LIB;QT_GUI_LIB;QT_NAMESPACE=QT;QT_THREAD_SUPPORT;QT_WIDGETS_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(IDA_SDK)\include\;$(SolutionDir)\;$(ProjectDir)\ida\;c:\dev\ida-sdk\src\build\qt-install\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(IDA_SDK)\include\;$(SolutionDir)\;$(ProjectDir)\ida\;$(IDA_SDK)\build\qt-install\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpp20</LanguageStandard>
