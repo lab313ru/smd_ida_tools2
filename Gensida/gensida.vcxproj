@@ -253,11 +253,11 @@
     <ClInclude Include="ida\ida_registers.h" />
     <CustomBuild Include="ida\paintform.h">
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug90_68k|x64'">Compiling %(Identity)...</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug90_68k|x64'">c:\dev\ida-sdk\src\build\qt-install\bin\moc.exe %(FullPath) &gt; $(ProjectDir)\ida\%(Filename)_moc.cpp</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug90_68k|x64'">$(IDA_SDK)\build\qt-install\bin\moc.exe %(FullPath) &gt; $(ProjectDir)\ida\%(Filename)_moc.cpp</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug90_68k|x64'">$(ProjectDir)\ida\%(Filename)_moc.cpp;%(Outputs)</Outputs>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug90_z80|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release90_z80|x64'">true</ExcludedFromBuild>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release90_68k|x64'">c:\dev\ida-sdk\src\build\qt-install\bin\moc.exe %(FullPath) &gt; $(ProjectDir)\ida\%(Filename)_moc.cpp</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release90_68k|x64'">$(IDA_SDK)\build\qt-install\bin\moc.exe %(FullPath) &gt; $(ProjectDir)\ida\%(Filename)_moc.cpp</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release90_68k|x64'">Compiling %(Identity)...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release90_68k|x64'">$(ProjectDir)\ida\%(Filename)_moc.cpp;%(Outputs)</Outputs>
     </CustomBuild>
