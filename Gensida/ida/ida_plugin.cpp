@@ -961,6 +961,10 @@ ssize_t idaapi dis_listener_t::on_event(ssize_t code, va_list va)
 {
   switch (code)
   {
+  case processor_t::ev_create_func_frame: // fix for Granada crash
+  {
+    return 1;
+  } break;
   case processor_t::ev_ana_insn:
   {
     insn_t* out = va_arg(va, insn_t*);
