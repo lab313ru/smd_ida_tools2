@@ -1741,7 +1741,7 @@ int idaapi smd_output_mark_action_t::activate(action_activation_ctx_t* ctx)
     ea1 = ea2 = get_screen_ea();
   }
   else {
-    ea2 -= 1;
+    ea2 = get_item_head(ea2 - 1);
   }
 
   qstring prev_path;
