@@ -12,9 +12,6 @@
 #define VDP_TILE_H 8
 #define VDP_TILE_ZOOM 4
 
-#define VDP_TILES_IN_ROW (this->width() / (VDP_TILE_W * VDP_TILE_ZOOM))
-#define VDP_TILES_IN_COL (this->height() / (VDP_TILE_H * VDP_TILE_ZOOM))
-
 static const uint16_t pal_raw[16] = {
   0x0CCC, 0x0444, 0x0886, 0x0CAA, 0x0026, 0x022C, 0x026C, 0x02CC,
   0x0220, 0x0240, 0x0C86, 0x0420, 0x0A42, 0x0462, 0x08AC, 0x0000,
@@ -70,16 +67,23 @@ void PaintForm::scrollChanged(int value) {
 void PaintForm::paintEvent(QPaintEvent* event) {
   ea_t start = get_screen_ea();
 
-  if (start == BADADDR) {
+  if (start == BADADDR || !scroll || width() <= 0 || height() <= 0) {
     return;
   }
 
-  int full_tiles = getFullTiles();
-  int val = full_tiles / VDP_TILES_IN_ROW - VDP_TILES_IN_COL;
-  scroll->setMaximum(std::max(0, val));
+  const int tile_width = VDP_TILE_W * VDP_TILE_ZOOM;
+  const int tile_height = VDP_TILE_H * VDP_TILE_ZOOM;
+  // A narrow widget still displays one clipped column, never zero columns.
+  const int tiles_per_row = std::max(1, width() / tile_width);
+  const int full_rows = std::max(1, height() / tile_height);
+  const int visible_rows = height() / tile_height + (height() % tile_height != 0);
+  const int full_tiles = getFullTiles();
+  const int total_rows = full_tiles / tiles_per_row + (full_tiles % tiles_per_row != 0);
+  // Include the last incomplete row and allow it to scroll fully into view.
+  scroll->setMaximum(std::max(0, total_rows - full_rows));
+  scroll->setPageStep(full_rows);
 
   QPainter painter(this);
-  painter.begin(this);
 
   QPen myPen(Qt::red, VDP_TILE_ZOOM, Qt::SolidLine);
   painter.setPen(myPen);
@@ -94,12 +98,14 @@ void PaintForm::paintEvent(QPaintEvent* event) {
     palette[i] = QColor(r, g, b);
   }
 
-  int scroll_val = scroll->value() * VDP_TILES_IN_ROW;
-  for (int i = scroll_val; i < full_tiles; ++i) {
+  const int scroll_val = scroll->value() * tiles_per_row;
+  const int end_tile = int(std::min<int64>(full_tiles,
+    int64(scroll_val) + int64(visible_rows) * tiles_per_row));
+  for (int i = scroll_val; i < end_tile; ++i) {
     for (int y = 0; y < VDP_TILE_H; ++y) {
       for (int x = 0; x < (VDP_TILE_W / 2); ++x) {
-        int _x = ((i - scroll_val) % VDP_TILES_IN_ROW) * VDP_TILE_W + x * 2;
-        int _y = ((i - scroll_val) / VDP_TILES_IN_ROW) * VDP_TILE_H + y;
+        int _x = ((i - scroll_val) % tiles_per_row) * VDP_TILE_W + x * 2;
+        int _y = ((i - scroll_val) / tiles_per_row) * VDP_TILE_H + y;
 
         ea_t addr = start + i * 0x20 + y * (VDP_TILE_W / 2) + x;
         uint32 t = 0;

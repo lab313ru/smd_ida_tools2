@@ -8,7 +8,7 @@ class PaintForm : public QWidget {
   Q_OBJECT
 
   uint16_t pal[16];
-  QScrollBar* scroll;
+  QScrollBar* scroll = nullptr;
 
   int getFullTiles();
 public:

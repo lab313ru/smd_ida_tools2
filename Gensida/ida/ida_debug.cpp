@@ -1,6 +1,7 @@
 #include <thread>
 #include <vector>
 #include <atomic>
+#include <algorithm>
 
 #include <chrono>
 #include <memory>
@@ -603,7 +604,7 @@ public:
   }
 #endif
 
-  bool read_memory(uint32_t address, uint32_t size, uint8_t* _result) {
+  ssize_t read_memory(uint32_t address, uint32_t size, uint8_t* result, qstring *errbuf) {
     MemoryAS req;
     req.set_address(address);
     req.set_size(size);
@@ -615,12 +616,22 @@ public:
     Status status = stub_->read_memory(&context, req, &data);
 
     if (!status.ok()) {
-      //warning("%s\n", status.error_message().c_str());
-      return false;
+      if (errbuf)
+        errbuf->sprnt("Memory read failed: %s", status.error_message().c_str());
+      return 0;
     }
 
-    data.data().copy((char*)_result, data.data().size());
-    return true;
+    const size_t received = data.data().size();
+    if (received > size) {
+      if (errbuf)
+        *errbuf = "Emulator returned more memory bytes than requested";
+      return 0;
+    }
+    if (received != 0)
+      data.data().copy(reinterpret_cast<char*>(result), received);
+    if (received < size && errbuf)
+      *errbuf = "Emulator returned fewer memory bytes than requested";
+    return static_cast<ssize_t>(received);
   }
 
   bool write_memory(const uint8_t* data, uint32_t address, uint32_t size) {
@@ -1307,6 +1318,12 @@ static drc_t idaapi get_memory_info(meminfo_vec_t &areas, qstring *errbuf) {
   areas.push_back(info);
 #endif
 
+  if (areas.size() > 1) {
+    std::sort(areas.begin(), areas.end(), [](const memory_info_t &a, const memory_info_t &b) {
+      return a.start_ea < b.start_ea || (a.start_ea == b.start_ea && a.end_ea < b.end_ea);
+    });
+  }
+
   return DRC_OK;
 }
 
@@ -1316,7 +1333,23 @@ static drc_t idaapi get_memory_info(meminfo_vec_t &areas, qstring *errbuf) {
 // -1 means that the process does not exist anymore
 // This function is called from debthread
 static ssize_t idaapi read_memory(ea_t ea, void *buffer, size_t size, qstring *errbuf) {
-  return client && client->read_memory((uint32_t)ea, (uint32_t)size, (uint8_t*)buffer) ? size : 0;
+  if (errbuf)
+    errbuf->clear();
+  if (size == 0)
+    return 0;
+  // The RPC uses 32-bit addresses and lengths; never silently truncate IDA's
+  // 64-bit arguments or allow the emulator's address arithmetic to wrap.
+  if (ea > UINT32_MAX || size > UINT32_MAX || size > (uint64(1) << 32) - ea) {
+    if (errbuf)
+      *errbuf = "Memory read range exceeds the 32-bit debugger protocol";
+    return 0;
+  }
+  if (!buffer || !client) {
+    if (errbuf)
+      *errbuf = !client ? "Emulator is not connected" : "Memory read buffer is null";
+    return 0;
+  }
+  return client->read_memory(uint32_t(ea), uint32_t(size), static_cast<uint8_t*>(buffer), errbuf);
 }
 
 // Write process memory

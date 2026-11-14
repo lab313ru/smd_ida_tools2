@@ -2137,7 +2137,7 @@ ssize_t idaapi ui_listener_t::on_event(ssize_t code, va_list va)
       pal_addr->setValidator(hexVal);
       PaintForm* pf = new PaintForm();
 
-      QScrollBar* sb = new QScrollBar(Qt::Vertical, pf);
+      QScrollBar* sb = new QScrollBar(Qt::Vertical, (QWidget*)w);
       pf->setScrollBar(sb);
 
       QGridLayout* mainLayout = new QGridLayout();
@@ -2146,9 +2146,11 @@ ssize_t idaapi ui_listener_t::on_event(ssize_t code, va_list va)
       QGridLayout* lAddr = new QGridLayout();
       lAddr->addWidget(new QLabel("Palette Address:"), 0, 0);
       lAddr->addWidget(pal_addr, 0, 1);
-      mainLayout->addLayout(lAddr, 0, 0, 0, 2, Qt::AlignTop);
-      mainLayout->setRowStretch(0, 1);
-      mainLayout->setRowStretch(1, 30);
+      mainLayout->addLayout(lAddr, 0, 0, 1, 2);
+      mainLayout->setRowStretch(0, 0);
+      mainLayout->setRowStretch(1, 1);
+      mainLayout->setColumnStretch(0, 1);
+      mainLayout->setColumnStretch(1, 0);
       mainLayout->addWidget(pf, 1, 0);
       mainLayout->addWidget(sb, 1, 1);
       ((QWidget*)w)->setLayout(mainLayout);
