@@ -1906,6 +1906,14 @@ ssize_t idaapi plugin_ctx_t::handle_post_event(ssize_t code, int notification_co
 
       switch (op.type)
       {
+      case o_displ:
+      {
+        if (op.phrase == 0x5B && op.addr == 0 && (op.flags & OF_NO_BASE_DISP) && (op.specflag2 & 0x80)) { // (pc,Xn) with zero displacement
+          op.addr = out->ea + op.offb - 1;
+          op.flags &= ~OF_NO_BASE_DISP;
+          op.specflag2 &= ~0x80;
+        }
+      } break;
       case o_near:
       case o_mem:
       {
