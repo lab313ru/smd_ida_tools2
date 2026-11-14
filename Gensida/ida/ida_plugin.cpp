@@ -32,6 +32,7 @@
 #endif
 
 #include <regex>
+#include <limits>
 
 extern debugger_t debugger;
 
@@ -260,6 +261,7 @@ static ea_t last_not_unkn = BADADDR;
 static bool skip_unused = false;
 static bool dont_delete = false;
 static ea_t rom_end = BADADDR;
+static bool exporting_rom_source = false;
 
 static const std::regex re_check_ats("^((?:\\w*@+\\w*)+):");
 static const std::regex re_check_global("^[ \\t]+global[ \\t]+\\w+$");
@@ -325,7 +327,10 @@ static int path_create_dir(const qstring& path) {
     }
 
     qstring sub = path.substr(0, p);
-    qmkdir(sub.c_str(), 0777);
+    if (!sub.empty() && !qisdir(sub.c_str())
+        && qmkdir(sub.c_str(), 0777) != 0 && !qisdir(sub.c_str())) {
+      return 0;
+    }
 
     start = p + 1;
   }
@@ -342,16 +347,29 @@ static asm_out_state check_binclude(qstring& line, ea_t addr) {
 
   if (std::regex_match(line.c_str(), match, re_check_binclude) == true) {
     asize_t size = get_item_size(addr);
-
-    bin_end = addr + size;
-
-    uint8_t* tmp = (uint8_t*)malloc(size);
-    get_bytes(tmp, size, addr, 0);
-
     qstring path = match.str(1).c_str();
+
+    if (addr == BADADDR || size == 0 || size > BADADDR - addr
+        || size > asize_t((std::numeric_limits<ssize_t>::max)())) {
+      warning("Cannot export binary include '%s': invalid item range at %a.", path.c_str(), addr);
+      return asm_o_state;
+    }
+
+    uint8_t* tmp = (uint8_t*)qalloc(size);
+    if (tmp == nullptr) {
+      warning("Cannot export binary include '%s': unable to allocate memory.", path.c_str());
+      return asm_o_state;
+    }
+
+    if (get_bytes(tmp, ssize_t(size), addr, 0) != ssize_t(size)) {
+      qfree(tmp);
+      warning("Cannot export binary include '%s': could not read all bytes at %a.", path.c_str(), addr);
+      return asm_o_state;
+    }
 
     if (!path_create_dir(path)) {
       qfree(tmp);
+      warning("Cannot export binary include '%s': could not create its directory.", path.c_str());
       return asm_o_state;
     }
 
@@ -359,13 +377,22 @@ static asm_out_state check_binclude(qstring& line, ea_t addr) {
 
     if (f == nullptr) {
       qfree(tmp);
+      warning("Cannot export binary include '%s': could not open the output file.", path.c_str());
       return asm_o_state;
     }
 
-    qfwrite(f, tmp, size);
-    qfclose(f);
+    ssize_t written = qfwrite(f, tmp, size);
+    int close_result = qfclose(f);
 
     qfree(tmp);
+
+    if (written != ssize_t(size) || close_result != 0) {
+      warning("Failed to write binary include '%s'. The output file may be incomplete.", path.c_str());
+      return asm_o_state;
+    }
+
+    // Suppress the item's assembly only after its binary file is complete.
+    bin_end = addr + size;
 
     qstring name = get_name(addr);
     line.clear();
@@ -867,42 +894,70 @@ static void create_base_includes(FILE* fp) {
   print_line(fp, tmp_line);
 }
 
-static int idaapi disable_links(int field_id, form_actions_t& fa) {
-  fa.enable_field(2, false);
-  fa.enable_field(3, false);
-  fa.enable_field(4, false);
-  return 1;
-}
-
 static bool ask_assembler() {
-  ushort chosen_asm = 0, skip_delete = 0;
+  QDialog dialog(QApplication::activeWindow());
+  dialog.setWindowTitle("Choose output assembler");
+  auto* layout = new QVBoxLayout(&dialog);
+  auto* assembler_row = new QHBoxLayout;
+  auto* choices = new QButtonGroup(&dialog);
+  const char* labels[] = { "&AS assembler", "&VASM assembler", "ASM68&K assembler" };
+  const char* websites[] = { "AS Website", "VASM Website", "ASM68K Website" };
+  const char* urls[] = { ASM_AS_LINK, ASM_VASM_LINK, ASM_ASM68K_LINK };
+  auto* website_row = new QHBoxLayout;
+  for (int i = 0; i < 3; ++i) {
+    auto* choice = new QRadioButton(labels[i], &dialog);
+    choices->addButton(choice, i);
+    assembler_row->addWidget(choice);
+    choice->setChecked(i == 0);
 
-  const qstring link1 = ASM_AS_LINK;
-  const qstring link2 = ASM_VASM_LINK;
-  const qstring link3 = ASM_ASM68K_LINK;
-  auto res = ask_form("Choose output assembler\n\n%/"
-           "<~A~S assembler:R><|><~V~ASM assembler:R><|><ASM68~K~ assembler:R>1>\n"
-           "<~S~kip unused code/data output:C><|><~Ignore ~D~EL_START/_END tag:C>5>\n\n"
-           "<AS Website     :q2:0:::>\n"
-           "<VASM Website   :q3:0:::>\n"
-           "<ASM68K Website :q4:0:::>",
-           &disable_links,
-           &chosen_asm, &skip_delete, &link1, &link2, &link3);
+    auto* website = new QLabel(&dialog);
+    website->setTextFormat(Qt::RichText);
+    website->setText(QString("<a href=\"%1\">%2</a>")
+      .arg(QString::fromUtf8(urls[i]).toHtmlEscaped())
+      .arg(QString::fromUtf8(websites[i]).toHtmlEscaped()));
+    website->setTextInteractionFlags(Qt::LinksAccessibleByMouse | Qt::LinksAccessibleByKeyboard);
+    website->setFocusPolicy(Qt::StrongFocus);
+    website->setToolTip(QString::fromUtf8(urls[i]));
+    const char* url = urls[i];
+    QObject::connect(website, &QLabel::linkActivated, &dialog, [url](const QString&) { open_url(url); });
+    website_row->addWidget(website);
+  }
+  layout->addLayout(assembler_row);
 
-  if (res) {
-    skip_unused = skip_delete & 1;
-    dont_delete = skip_delete & 2;
-    assembler = (out_asm_t)chosen_asm;
+  auto* options_row = new QHBoxLayout;
+  auto* skip = new QCheckBox("&Skip unused code/data output", &dialog);
+  auto* ignore = new QCheckBox("Ignore &DEL_START/_END tag", &dialog);
+  options_row->addWidget(skip);
+  options_row->addWidget(ignore);
+  layout->addLayout(options_row);
+  layout->addLayout(website_row);
+
+  auto* buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
+  QObject::connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+  QObject::connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+  layout->addWidget(buttons);
+
+  bool accepted = dialog.exec() == QDialog::Accepted;
+  if (accepted) {
+    skip_unused = skip->isChecked();
+    dont_delete = ignore->isChecked();
+    assembler = (out_asm_t)choices->checkedId();
   }
   else {
     skip_unused = false;
     dont_delete = false;
   }
 
-  return res == 1;
+  return accepted;
 }
 
 ssize_t idaapi asm_listener_t::on_event(ssize_t code, va_list va) {
+  // Normal IDA LST/ASM generation must not use the ROM export callbacks.
+  // Keep this enabled for the nested OFILE_ASM pass made by line_output().
+  if (!exporting_rom_source) {
+    return 0;
+  }
+
   switch (code) {
   case processor_t::ev_gen_asm_or_lst: {
     bool starting = (bool)va_arg(va, int);
@@ -927,8 +982,6 @@ ssize_t idaapi asm_listener_t::on_event(ssize_t code, va_list va) {
       inc_path.clear();
       inc_listing.clear();
       last_not_unkn = BADADDR;
-      skip_unused = false;
-      dont_delete = false;
 
       ea_t start_ea = get_first_seg()->start_ea;
 
@@ -941,9 +994,7 @@ ssize_t idaapi asm_listener_t::on_event(ssize_t code, va_list va) {
       disable_hex_view();
       unhide_structures();
 
-      if (ask_assembler()) {
-        *outline = line_output;
-      }
+      *outline = line_output;
 
       asm_add_header(fp, start_ea);
       asm_o_state = asm_out_structs;
@@ -1558,6 +1609,33 @@ static const char data_as_tiles_name[] = "gensida:data_as_tiles";
 
 static const char smd_constant_name[] = "gensida:smd_constant";
 static const char smd_output_mark_name[] = "gensida:output_mark";
+static const char export_rom_source_name[] = "gensida:export_rom_source";
+
+struct export_rom_source_action_t : public action_handler_t
+{
+  virtual int idaapi activate(action_activation_ctx_t* ctx) override {
+    if (exporting_rom_source || get_first_seg() == nullptr) {
+      return 0;
+    }
+
+    struct export_scope_t {
+      export_scope_t() { exporting_rom_source = true; }
+      ~export_scope_t() { exporting_rom_source = false; }
+    } export_scope;
+
+    // Obtain export options before IDA opens or writes the output file.
+    if (!ask_assembler()) {
+      return 0;
+    }
+
+    // Reuse IDA's file dialog and listing generation, including our ASM hooks.
+    return process_ui_action("ProduceLst") ? 1 : 0;
+  }
+
+  virtual action_state_t idaapi update(action_update_ctx_t* ctx) override {
+    return !exporting_rom_source && get_first_seg() != nullptr ? AST_ENABLE : AST_DISABLE;
+  }
+};
 
 struct data_as_tiles_action_t : public action_handler_t
 {
@@ -1633,10 +1711,12 @@ struct plugin_ctx_t : public plugmod_t
   data_as_tiles_action_t data_as_tiles = data_as_tiles_action_t(*this);
   smd_constant_action_t smd_constant = smd_constant_action_t(*this);
   smd_output_mark_action_t smd_output_mark = smd_output_mark_action_t(*this);
+  export_rom_source_action_t export_rom_source;
 
   action_desc_t data_as_tiles_action = ACTION_DESC_LITERAL_PLUGMOD(data_as_tiles_name, "Paint data as tiles", &data_as_tiles, this, "Shift+D", NULL, -1);
   action_desc_t smd_constant_action = ACTION_DESC_LITERAL_PLUGMOD(smd_constant_name, "Identify SMD constant", &smd_constant, this, "J", NULL, -1);
   action_desc_t smd_output_mark_action = ACTION_DESC_LITERAL_PLUGMOD(smd_output_mark_name, "Mark ASM output", &smd_output_mark, this, "Shift+J", NULL, -1);
+  action_desc_t export_rom_source_action = ACTION_DESC_LITERAL_PLUGMOD(export_rom_source_name, "Export ROM source code...", &export_rom_source, this, nullptr, "Export ROM assembly source and binary includes", -1);
 #endif
 
   idd_listener_t idd_listener = idd_listener_t(*this);
@@ -1653,6 +1733,11 @@ struct plugin_ctx_t : public plugmod_t
     bool res = register_action(smd_constant_action);
     res = register_action(smd_output_mark_action);
     res = register_action(data_as_tiles_action);
+    if (register_action(export_rom_source_action)) {
+      if (!attach_action_to_menu("File/Produce file/Create LST file", export_rom_source_name, SETMENU_INS)) {
+        msg("Gensida: could not attach the Export ROM source code menu item.\n");
+      }
+    }
 
     register_post_event_visitor(HT_IDP, this, this);
 #endif
@@ -1670,6 +1755,7 @@ struct plugin_ctx_t : public plugmod_t
     unregister_action(smd_output_mark_name);
     unregister_action(smd_constant_name);
     unregister_action(data_as_tiles_name);
+    unregister_action(export_rom_source_name);
 
     g_tiles = nullptr;
 #endif
