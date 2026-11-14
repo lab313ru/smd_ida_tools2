@@ -14,6 +14,10 @@
 
 static gen_hdr _hdr;
 static gen_vect _vect;
+static constexpr unsigned int MAX_ROM_SIZE = 0x400000;
+static constexpr unsigned int ROM_HEADER_END = 0x200;
+static_assert(sizeof(gen_vect) == 0x100 && sizeof(gen_hdr) == 0x100,
+              "ROM header structures must match the on-disk layout");
 
 static const char* VECTOR_NAMES[] = {
   "SSP", "Reset", "BusErr", "AdrErr", "InvOpCode", "DivBy0", "Check", "TrapV", "GPF", "Trace", "Reserv0", "Reserv1", "Reserv2", "Reserv3",
@@ -45,7 +49,7 @@ static unsigned short READ_BE_WORD(unsigned char* addr) {
 }
 
 static unsigned int READ_BE_UINT(unsigned char* addr) {
-  return (READ_BE_WORD(&addr[0]) << 16) | READ_BE_WORD(&addr[2]); // Read BE unsigned int by pointer
+  return (unsigned(READ_BE_WORD(&addr[0])) << 16) | READ_BE_WORD(&addr[2]); // Read BE unsigned int by pointer
 }
 
 static const char M68K[] = "68000";
@@ -94,7 +98,8 @@ static void add_segment(ea_t start, ea_t end, const char* name, const char* clas
 
   int flags = ADDSEG_NOSREG | ADDSEG_NOTRUNC | ADDSEG_QUIET;
 
-  if (!add_segm_ex(&s, name, class_name, flags)) loader_failure();
+  if (!add_segm_ex(&s, name, class_name, flags))
+    loader_failure("Cannot create segment %s", name);
   segment_t* segm = getseg(start);
   set_segment_cmt(segm, cmnt, false);
   create_byte(start, 1);
@@ -114,7 +119,7 @@ static void make_array(ea_t addr, int datatype, const char *name, asize_t size) 
 }
 
 static void make_segments(size_t romsize) {
-  add_segment(0x00000000, qmin(romsize, 0x003FFFFF + 1), ROM, CODE, "ROM segment", SEGPERM_EXEC | SEGPERM_READ);
+  add_segment(0x00000000, romsize, ROM, CODE, "ROM segment", SEGPERM_EXEC | SEGPERM_READ);
 
   if (ASKBTN_YES == ask_yn(ASKBTN_NO, "Create Sega CD segment?"))
   add_segment(0x00400000, 0x007FFFFF + 1, EPA, DATA, "Expansion Port Area (used by the Sega CD)", SEGPERM_READ | SEGPERM_WRITE);
@@ -143,9 +148,21 @@ static void make_segments(size_t romsize) {
     unsigned int sram_s = READ_BE_UINT(&(_hdr.SramCode[4])); // read SRAM start addr
     unsigned int sram_e = READ_BE_UINT(&(_hdr.SramCode[8])); // read SRAM end addr
 
-    if ((sram_s >= 0x400000) && (sram_e <= 0x9FFFFF) && (sram_s < sram_e)) {
-      add_segment(sram_s, sram_e, SRAM, DATA, "SRAM memory", SEGPERM_READ | SEGPERM_WRITE);
+    if (sram_s > sram_e || sram_e > 0x9FFFFF) {
+      warning("Ignoring invalid SRAM range %08X..%08X", sram_s, sram_e);
+      return;
     }
+    // The header end is inclusive; IDA segment ends are exclusive.
+    const ea_t sram_end = ea_t(sram_e) + 1;
+    for (int i = 0; i < get_segm_qty(); ++i) {
+      const segment_t *existing = getnseg(i);
+      if (sram_s < existing->end_ea && existing->start_ea < sram_end) {
+        warning("Skipping SRAM range %08X..%08X: it overlaps an existing segment. "
+                "Bank-switched SRAM must be mapped manually.", sram_s, sram_e);
+        return;
+      }
+    }
+    add_segment(sram_s, sram_end, SRAM, DATA, "SRAM memory", SEGPERM_READ | SEGPERM_WRITE);
   }
 }
 
@@ -181,7 +198,16 @@ static void set_spec_register_names() {
   }
 }
 
+static bool valid_vector_target(unsigned int addr, unsigned int rom_size) {
+  // Only queue analysis for a complete, aligned instruction word in loaded ROM.
+  // RAM handlers and reserved vectors remain available as raw vector data.
+  return addr >= ROM_HEADER_END && (addr & 1) == 0
+      && addr < rom_size && rom_size - addr >= 2;
+}
+
 static void add_sub(unsigned int addr, const char* name, unsigned int max) {
+  if (!valid_vector_target(addr, max))
+    return;
   ea_t e_addr = addr;
   auto_make_proc(e_addr);
   set_name(e_addr, name);
@@ -234,6 +260,21 @@ static int idaapi accept_file(qstring* fileformatname, qstring* processor, linpu
 }
 
 static void idaapi load_file(linput_t* li, ushort neflags, const char* fileformatname) {
+  const int64 file_size = qlsize(li);
+  if (file_size < ROM_HEADER_END)
+    loader_failure("ROM is truncated: a complete 0x200-byte vector table and header are required");
+  if (file_size > MAX_ROM_SIZE)
+    loader_failure("ROM exceeds this loader's 4 MiB linear mapping. Banked or extended ROM mapping is not supported.");
+  const unsigned int size = static_cast<unsigned int>(file_size);
+
+  qlseek(li, 0, SEEK_SET);
+  if (qlread(li, &_vect, sizeof(_vect)) != sizeof(_vect)
+      || qlread(li, &_hdr, sizeof(_hdr)) != sizeof(_hdr))
+    loader_failure("Cannot read ROM vectors and header");
+  if (!strneq((const char*)_hdr.CopyRights, "SEGA", 4))
+    loader_failure("ROM header does not contain the SEGA signature");
+  get_vector_addrs(&_vect);
+
   processor_t& ph = PH;
   if (ph.id != PLFM_68K) {
     set_processor_type("68020", SETPROC_LOADER); // Motorola 68020
@@ -270,16 +311,10 @@ static void idaapi load_file(linput_t* li, ushort neflags, const char* fileforma
       );
   inf_set_af2(0);
 
-  unsigned int size = (unsigned int)qlsize(li); // size of rom
-
-  qlseek(li, 0, SEEK_SET);
-  if (qlread(li, &_vect, sizeof(_vect)) != sizeof(_vect)) loader_failure(); // trying to read rom vectors
-  if (qlread(li, &_hdr, sizeof(_hdr)) != sizeof(_hdr)) loader_failure(); // trying to read rom's header
-
-  file2base(li, 0, 0x0000000, size, FILEREG_PATCHABLE); // load rom to database
+  if (!file2base(li, 0, 0x0000000, size, FILEREG_PATCHABLE))
+    loader_failure("Failed to load ROM bytes into the database");
 
   make_segments(size); // create ROM, RAM, Z80 RAM and etc. segments
-  get_vector_addrs(&_vect); // convert addresses of vectors from LE to BE
   define_header(); // add definition of header struct
   set_spec_register_names(); // apply names for special addresses of registers
   add_vector_subs(&_vect, size); // mark vector subroutines as procedures
@@ -287,9 +322,13 @@ static void idaapi load_file(linput_t* li, ushort neflags, const char* fileforma
 
   inf_set_baseaddr(0);
   inf_set_start_cs(0);
-  inf_set_start_ip(_vect.Reset);
-  inf_set_start_ea(_vect.Reset);
-  inf_set_main(_vect.Reset);
+  const ea_t entry = valid_vector_target(_vect.Reset, size) ? ea_t(_vect.Reset) : BADADDR;
+  inf_set_start_ip(entry);
+  inf_set_start_ea(entry);
+  inf_set_main(entry);
+  if (entry == BADADDR)
+    warning("Reset vector %08X does not point to aligned code in loaded ROM. "
+            "ROM loaded without an entry point; select it manually.", _vect.Reset);
   inf_set_start_sp(_vect.SSP);
   inf_set_lowoff(0x200);
 
