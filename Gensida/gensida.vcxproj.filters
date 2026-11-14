@@ -15,19 +15,7 @@
     <ClCompile Include="ida\ida_plugin.cpp">
       <Filter>ida</Filter>
     </ClCompile>
-    <ClCompile Include="..\proto\debug_proto_68k.grpc.pb.cc">
-      <Filter>proto</Filter>
-    </ClCompile>
-    <ClCompile Include="..\proto\debug_proto_68k.pb.cc">
-      <Filter>proto</Filter>
-    </ClCompile>
-    <ClCompile Include="..\proto\debug_proto_z80.grpc.pb.cc">
-      <Filter>proto</Filter>
-    </ClCompile>
-    <ClCompile Include="..\proto\debug_proto_z80.pb.cc">
-      <Filter>proto</Filter>
-    </ClCompile>
-    <ClCompile Include="ida\paintform_moc.cpp">
+    <ClCompile Include="$(QtMocOutput)">
       <Filter>ida</Filter>
     </ClCompile>
     <ClCompile Include="ida\paintform.cpp">
@@ -61,8 +49,12 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="ida\paintform.h">
+    <ClInclude Include="ida\paintform.h">
       <Filter>ida</Filter>
-    </CustomBuild>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(ProtoOutputDir)debug_proto_$(ProtoCpu).pb.cc"><Filter>proto</Filter></ClCompile>
+    <ClCompile Include="$(ProtoOutputDir)debug_proto_$(ProtoCpu).grpc.pb.cc"><Filter>proto</Filter></ClCompile>
   </ItemGroup>
 </Project>

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug90_68k|x64">
@@ -68,6 +68,12 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release90_z80|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <PropertyGroup>
+    <!-- The host kit supplies headers/moc; IDA SDK supplies namespaced import libs. -->
+    <QtRoot Condition="'$(QtRoot)' == ''">$(QTDIR)</QtRoot>
+    <QtLibraryDir Condition="'$(QtLibraryDir)' == ''">$(IDA_SDK)\lib\x64_win_qt</QtLibraryDir>
+    <QtNamespace Condition="'$(QtNamespace)' == ''">QT</QtNamespace>
+  </PropertyGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug90_68k|x64'">
     <TargetName>$(ProjectName)</TargetName>
@@ -114,8 +120,8 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;__NT__;__IDP__;__EA64__;__X64__;DEBUG_68K;QT_CORE_LIB;QT_GUI_LIB;QT_NAMESPACE=QT;QT_THREAD_SUPPORT;QT_WIDGETS_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(IDA_SDK)\include\;$(SolutionDir)\;$(ProjectDir)\ida\;$(IDA_SDK)\build\qt-install\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_DEBUG;__NT__;__IDP__;__EA64__;__X64__;DEBUG_68K;QT_CORE_LIB;QT_GUI_LIB;QT_NAMESPACE=$(QtNamespace);QT_THREAD_SUPPORT;QT_WIDGETS_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IDA_SDK)\include\;$(SolutionDir)\;$(ProjectDir)\ida\;$(QtRoot)\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
@@ -125,7 +131,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(IDA_SDK)\lib\x64_win_64\;$(IDA_SDK)\lib\x64_win_qt\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(IDA_SDK)\lib\x64_win_64\;$(QtLibraryDir)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>ida.lib;ws2_32.lib;Crypt32.lib;Iphlpapi.lib;WinMM.lib;Qt6Core.lib;Qt6Gui.lib;Qt6Widgets.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent />
@@ -160,8 +166,8 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>NDEBUG;__NT__;__IDP__;__EA64__;__X64__;DEBUG_68K;QT_CORE_LIB;QT_GUI_LIB;QT_NAMESPACE=QT;QT_THREAD_SUPPORT;QT_WIDGETS_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(IDA_SDK)\include\;$(SolutionDir)\;$(ProjectDir)\ida\;$(IDA_SDK)\build\qt-install\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NDEBUG;__NT__;__IDP__;__EA64__;__X64__;DEBUG_68K;QT_CORE_LIB;QT_GUI_LIB;QT_NAMESPACE=$(QtNamespace);QT_THREAD_SUPPORT;QT_WIDGETS_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IDA_SDK)\include\;$(SolutionDir)\;$(ProjectDir)\ida\;$(QtRoot)\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -172,7 +178,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(IDA_SDK)\lib\x64_win_64\;$(IDA_SDK)\lib\x64_win_qt\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(IDA_SDK)\lib\x64_win_64\;$(QtLibraryDir)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>ida.lib;ws2_32.lib;Crypt32.lib;Iphlpapi.lib;WinMM.lib;Qt6Core.lib;Qt6Gui.lib;Qt6Widgets.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent />
@@ -203,22 +209,6 @@
     <PreBuildEvent />
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\proto\debug_proto_68k.grpc.pb.cc">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release90_z80|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug90_z80|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\proto\debug_proto_68k.pb.cc">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release90_z80|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug90_z80|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\proto\debug_proto_z80.grpc.pb.cc">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug90_68k|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release90_68k|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\proto\debug_proto_z80.pb.cc">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug90_68k|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release90_68k|x64'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="ida\ida_debug.cpp" />
     <ClCompile Include="ida\ida_plugin.cpp" />
     <ClCompile Include="ida\paintform.cpp">
@@ -251,18 +241,74 @@
     <ClInclude Include="ida\ida_debug.h" />
     <ClInclude Include="ida\ida_plugin.h" />
     <ClInclude Include="ida\ida_registers.h" />
-    <CustomBuild Include="ida\paintform.h">
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug90_68k|x64'">Compiling %(Identity)...</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug90_68k|x64'">$(IDA_SDK)\build\qt-install\bin\moc.exe %(FullPath) &gt; $(ProjectDir)\ida\%(Filename)_moc.cpp</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug90_68k|x64'">$(ProjectDir)\ida\%(Filename)_moc.cpp;%(Outputs)</Outputs>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug90_z80|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release90_z80|x64'">true</ExcludedFromBuild>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release90_68k|x64'">$(IDA_SDK)\build\qt-install\bin\moc.exe %(FullPath) &gt; $(ProjectDir)\ida\%(Filename)_moc.cpp</Command>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release90_68k|x64'">Compiling %(Identity)...</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release90_68k|x64'">$(ProjectDir)\ida\%(Filename)_moc.cpp;%(Outputs)</Outputs>
-    </CustomBuild>
+    <ClInclude Include="ida\paintform.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-  </ImportGroup>
+  <!-- Generation uses the project's final IntDir.
+       Resolve vcpkg tool paths at execution time, after all imports. -->
+  <PropertyGroup>
+    <!-- Always let MSBuild check schema/tool timestamps when building in VS. -->
+    <DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
+    <ProtoCpu Condition="$([System.String]::Copy('$(Configuration)').EndsWith('_68k'))">68k</ProtoCpu>
+    <ProtoCpu Condition="$([System.String]::Copy('$(Configuration)').EndsWith('_z80'))">z80</ProtoCpu>
+    <ProtoRoot>$(MSBuildThisFileDirectory)..\</ProtoRoot>
+    <ProtoGeneratedRoot Condition="!$([System.IO.Path]::IsPathRooted('$(IntDir)'))">$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\$(IntDir)generated\'))</ProtoGeneratedRoot>
+    <ProtoGeneratedRoot Condition="$([System.IO.Path]::IsPathRooted('$(IntDir)'))">$([System.IO.Path]::GetFullPath('$(IntDir)generated\'))</ProtoGeneratedRoot>
+    <ProtoOutputDir>$(ProtoGeneratedRoot)proto\</ProtoOutputDir>
+    <ProtoScript>$(ProtoRoot)build_proto_$(ProtoCpu).bat</ProtoScript>
+    <ProtoSchema>$(ProtoRoot)proto\debug_proto_$(ProtoCpu).proto</ProtoSchema>
+  </PropertyGroup>
+  <ItemGroup>
+    <ClCompile Remove="..\proto\debug_proto_68k.pb.cc;..\proto\debug_proto_68k.grpc.pb.cc;..\proto\debug_proto_z80.pb.cc;..\proto\debug_proto_z80.grpc.pb.cc" />
+    <ClCompile Include="$(ProtoOutputDir)debug_proto_$(ProtoCpu).pb.cc" />
+    <ClCompile Include="$(ProtoOutputDir)debug_proto_$(ProtoCpu).grpc.pb.cc" />
+  </ItemGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(ProtoGeneratedRoot);$(ProtoRoot);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <Target Name="ValidateProtoTools">
+    <CallTarget Targets="VcpkgInstallManifestDependencies" Condition="'$(VcpkgEnabled)' == 'true' and '$(VcpkgEnableManifest)' == 'true'" />
+    <PropertyGroup>
+      <ProtocExe Condition="'$(ProtocExe)' == ''">$(_ZVcpkgCurrentInstalledDir)tools\protobuf\protoc.exe</ProtocExe>
+      <ProtoHostTriplet Condition="'$(VcpkgHostTriplet)' != ''">$(VcpkgHostTriplet)</ProtoHostTriplet>
+      <ProtoHostTriplet Condition="'$(ProtoHostTriplet)' == ''">x64-windows</ProtoHostTriplet>
+      <GrpcPluginExe Condition="'$(GrpcPluginExe)' == '' and Exists('$(_ZVcpkgCurrentInstalledDir)tools\grpc\grpc_cpp_plugin.exe')">$(_ZVcpkgCurrentInstalledDir)tools\grpc\grpc_cpp_plugin.exe</GrpcPluginExe>
+      <GrpcPluginExe Condition="'$(GrpcPluginExe)' == ''">$(_ZVcpkgInstalledDir)$(ProtoHostTriplet)\tools\grpc\grpc_cpp_plugin.exe</GrpcPluginExe>
+    </PropertyGroup>
+    <Error Condition="'$(ProtoCpu)' == ''" Text="Cannot select protobuf schema for configuration $(Configuration)." />
+    <Error Condition="!Exists('$(ProtocExe)')" Text="protoc.exe not found: $(ProtocExe). Install vcpkg dependencies or set ProtocExe." />
+    <Error Condition="!Exists('$(GrpcPluginExe)')" Text="grpc_cpp_plugin.exe not found: $(GrpcPluginExe). Install vcpkg host tools or set GrpcPluginExe." />
+  </Target>
+  <Target Name="GenerateDebugProtocol" BeforeTargets="ClCompile" DependsOnTargets="ValidateProtoTools"
+          Inputs="$(ProtoSchema);$(ProtoScript);$(MSBuildThisFileFullPath);$(ProtocExe);$(GrpcPluginExe)"
+          Outputs="$(ProtoOutputDir)debug_proto_$(ProtoCpu).pb.cc;$(ProtoOutputDir)debug_proto_$(ProtoCpu).pb.h;$(ProtoOutputDir)debug_proto_$(ProtoCpu).grpc.pb.cc;$(ProtoOutputDir)debug_proto_$(ProtoCpu).grpc.pb.h">
+    <MakeDir Directories="$(ProtoOutputDir)" />
+    <Exec Command="call &quot;$(ProtoScript)&quot; &quot;$(ProtoOutputDir).&quot; &quot;$(ProtocExe)&quot; &quot;$(GrpcPluginExe)&quot;" />
+  </Target>
+  <Target Name="CleanDebugProtocol" BeforeTargets="CoreClean">
+    <Delete Files="$(ProtoOutputDir)debug_proto_$(ProtoCpu).pb.cc;$(ProtoOutputDir)debug_proto_$(ProtoCpu).pb.h;$(ProtoOutputDir)debug_proto_$(ProtoCpu).grpc.pb.cc;$(ProtoOutputDir)debug_proto_$(ProtoCpu).grpc.pb.h" />
+  </Target>
+  <PropertyGroup Condition="'$(ProtoCpu)' == '68k'">
+    <QtMocOutput>$(ProtoGeneratedRoot)paintform_moc.cpp</QtMocOutput>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(ProtoCpu)' == '68k'">
+    <ClCompile Remove="ida\paintform_moc.cpp" />
+    <ClCompile Include="$(QtMocOutput)" />
+  </ItemGroup>
+  <Target Name="ValidateHostQt" BeforeTargets="PrepareForBuild" Condition="'$(ProtoCpu)' == '68k'">
+    <Error Condition="'$(QtRoot)' == ''" Text="The 68k plugin needs host Qt headers and moc. Set QTDIR or /p:QtRoot to an MSVC x64 Qt kit matching IDA's Qt version. Import libraries come from the IDA SDK. Z80 does not require Qt." />
+    <Error Condition="!Exists('$(QtRoot)\bin\moc.exe') Or !Exists('$(QtRoot)\include\QtWidgets\QtWidgets')" Text="QtRoot=$(QtRoot) must contain bin\moc.exe and the Qt development headers." />
+    <Error Condition="!Exists('$(QtLibraryDir)\Qt6Widgets.lib') Or !Exists('$(QtLibraryDir)\Qt6Gui.lib') Or !Exists('$(QtLibraryDir)\Qt6Core.lib')" Text="IDA Qt import libraries are missing from $(QtLibraryDir). Update the IDA SDK or set QtLibraryDir to compatible namespaced import libraries." />
+  </Target>
+  <Target Name="GeneratePaintFormMoc" BeforeTargets="ClCompile" DependsOnTargets="ValidateHostQt" Condition="'$(ProtoCpu)' == '68k'"
+          Inputs="$(MSBuildProjectDirectory)\ida\paintform.h;$(QtRoot)\bin\moc.exe;$(MSBuildThisFileFullPath)"
+          Outputs="$(QtMocOutput)">
+    <MakeDir Directories="$(ProtoGeneratedRoot)" />
+    <Exec Command="&quot;$(QtRoot)\bin\moc.exe&quot; -DQT_NAMESPACE=$(QtNamespace) &quot;$(MSBuildProjectDirectory)\ida\paintform.h&quot; -o &quot;$(QtMocOutput)&quot;" />
+  </Target>
+  <Target Name="CleanPaintFormMoc" BeforeTargets="CoreClean" Condition="'$(ProtoCpu)' == '68k'">
+    <Delete Files="$(QtMocOutput)" />
+  </Target>
 </Project>

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug_68k|Win32">
@@ -317,22 +317,6 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\proto\debug_proto_68k.grpc.pb.cc">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_z80|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_z80|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\proto\debug_proto_68k.pb.cc">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_z80|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_z80|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\proto\debug_proto_z80.grpc.pb.cc">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_68k|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_68k|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\proto\debug_proto_z80.pb.cc">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_68k|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_68k|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="lua\src\lapi.c" />
     <ClCompile Include="lua\src\lauxlib.c" />
     <ClCompile Include="lua\src\lbaselib.c" />
@@ -553,6 +537,50 @@
     <Image Include="resource\sonic.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-  </ImportGroup>
+  <!-- Generation uses the project's final IntDir.
+       Resolve vcpkg tool paths at execution time, after all imports. -->
+  <PropertyGroup>
+    <!-- Always let MSBuild check schema/tool timestamps when building in VS. -->
+    <DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
+    <ProtoCpu Condition="$([System.String]::Copy('$(Configuration)').EndsWith('_68k'))">68k</ProtoCpu>
+    <ProtoCpu Condition="$([System.String]::Copy('$(Configuration)').EndsWith('_z80'))">z80</ProtoCpu>
+    <ProtoRoot>$(MSBuildThisFileDirectory)..\</ProtoRoot>
+    <ProtoGeneratedRoot Condition="!$([System.IO.Path]::IsPathRooted('$(IntDir)'))">$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\$(IntDir)generated\'))</ProtoGeneratedRoot>
+    <ProtoGeneratedRoot Condition="$([System.IO.Path]::IsPathRooted('$(IntDir)'))">$([System.IO.Path]::GetFullPath('$(IntDir)generated\'))</ProtoGeneratedRoot>
+    <ProtoOutputDir>$(ProtoGeneratedRoot)proto\</ProtoOutputDir>
+    <ProtoScript>$(ProtoRoot)build_proto_$(ProtoCpu).bat</ProtoScript>
+    <ProtoSchema>$(ProtoRoot)proto\debug_proto_$(ProtoCpu).proto</ProtoSchema>
+  </PropertyGroup>
+  <ItemGroup>
+    <ClCompile Remove="..\proto\debug_proto_68k.pb.cc;..\proto\debug_proto_68k.grpc.pb.cc;..\proto\debug_proto_z80.pb.cc;..\proto\debug_proto_z80.grpc.pb.cc" />
+    <ClCompile Include="$(ProtoOutputDir)debug_proto_$(ProtoCpu).pb.cc" />
+    <ClCompile Include="$(ProtoOutputDir)debug_proto_$(ProtoCpu).grpc.pb.cc" />
+  </ItemGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(ProtoGeneratedRoot);$(ProtoRoot);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <Target Name="ValidateProtoTools">
+    <CallTarget Targets="VcpkgInstallManifestDependencies" Condition="'$(VcpkgEnabled)' == 'true' and '$(VcpkgEnableManifest)' == 'true'" />
+    <PropertyGroup>
+      <ProtocExe Condition="'$(ProtocExe)' == ''">$(_ZVcpkgCurrentInstalledDir)tools\protobuf\protoc.exe</ProtocExe>
+      <ProtoHostTriplet Condition="'$(VcpkgHostTriplet)' != ''">$(VcpkgHostTriplet)</ProtoHostTriplet>
+      <ProtoHostTriplet Condition="'$(ProtoHostTriplet)' == ''">x64-windows</ProtoHostTriplet>
+      <GrpcPluginExe Condition="'$(GrpcPluginExe)' == '' and Exists('$(_ZVcpkgCurrentInstalledDir)tools\grpc\grpc_cpp_plugin.exe')">$(_ZVcpkgCurrentInstalledDir)tools\grpc\grpc_cpp_plugin.exe</GrpcPluginExe>
+      <GrpcPluginExe Condition="'$(GrpcPluginExe)' == ''">$(_ZVcpkgInstalledDir)$(ProtoHostTriplet)\tools\grpc\grpc_cpp_plugin.exe</GrpcPluginExe>
+    </PropertyGroup>
+    <Error Condition="'$(ProtoCpu)' == ''" Text="Cannot select protobuf schema for configuration $(Configuration)." />
+    <Error Condition="!Exists('$(ProtocExe)')" Text="protoc.exe not found: $(ProtocExe). Install vcpkg dependencies or set ProtocExe." />
+    <Error Condition="!Exists('$(GrpcPluginExe)')" Text="grpc_cpp_plugin.exe not found: $(GrpcPluginExe). Install vcpkg host tools or set GrpcPluginExe." />
+  </Target>
+  <Target Name="GenerateDebugProtocol" BeforeTargets="ClCompile" DependsOnTargets="ValidateProtoTools"
+          Inputs="$(ProtoSchema);$(ProtoScript);$(MSBuildThisFileFullPath);$(ProtocExe);$(GrpcPluginExe)"
+          Outputs="$(ProtoOutputDir)debug_proto_$(ProtoCpu).pb.cc;$(ProtoOutputDir)debug_proto_$(ProtoCpu).pb.h;$(ProtoOutputDir)debug_proto_$(ProtoCpu).grpc.pb.cc;$(ProtoOutputDir)debug_proto_$(ProtoCpu).grpc.pb.h">
+    <MakeDir Directories="$(ProtoOutputDir)" />
+    <Exec Command="call &quot;$(ProtoScript)&quot; &quot;$(ProtoOutputDir).&quot; &quot;$(ProtocExe)&quot; &quot;$(GrpcPluginExe)&quot;" />
+  </Target>
+  <Target Name="CleanDebugProtocol" BeforeTargets="CoreClean">
+    <Delete Files="$(ProtoOutputDir)debug_proto_$(ProtoCpu).pb.cc;$(ProtoOutputDir)debug_proto_$(ProtoCpu).pb.h;$(ProtoOutputDir)debug_proto_$(ProtoCpu).grpc.pb.cc;$(ProtoOutputDir)debug_proto_$(ProtoCpu).grpc.pb.h" />
+  </Target>
 </Project>

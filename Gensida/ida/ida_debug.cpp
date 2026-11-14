@@ -1,6 +1,11 @@
 #include <thread>
 #include <vector>
+#include <atomic>
 
+#include <chrono>
+#include <memory>
+#include <mutex>
+#include <string>
 #include <grpcpp/grpcpp.h>
 
 #ifdef DEBUG_68K
@@ -58,7 +63,7 @@ using google::protobuf::Map;
 typedef qvector<std::pair<uint32, bool>> codemap_t;
 static eventlist_t events;
 
-static std::unique_ptr<Server> server;
+static std::atomic<bool> server_stopping{true};
 
 #ifdef DEBUG_68K
 #define BREAKPOINTS_BASE 0x00D00000
@@ -228,36 +233,38 @@ public:
 static std::mutex apply_lock;
 static google::protobuf::Map<google::protobuf::uint32, google::protobuf::uint32> to_apply;
 
-static void call_apply() {
-  apply_codemap_req req(to_apply);
-  execute_sync(req, MFF_WRITE);
+// Called only from IDA's main-thread stop/termination callbacks.
+static void flush_codemap() {
+  Map<google::protobuf::uint32, google::protobuf::uint32> pending;
+  {
+    std::lock_guard<std::mutex> lock(apply_lock);
+    pending.swap(to_apply);
+  }
+  apply_codemap_req req(pending);
+  req.execute();
 }
 
 static void apply_codemap(const google::protobuf::Map<google::protobuf::uint32, google::protobuf::uint32>& changed) {
   if (changed.empty()) return;
 
-  apply_lock.lock();
-  to_apply = changed;
-
-  std::thread th1(call_apply);
-  th1.detach();
-
-  apply_lock.unlock();
+  std::lock_guard<std::mutex> lock(apply_lock);
+  for (const auto &entry : changed)
+    to_apply[entry.first] = entry.second;
 }
 
-void stop_server() {
-  server->Shutdown(); //std::chrono::system_clock::now() + std::chrono::milliseconds(100));
-}
+void stop_server();
 
 class cond_break_t : public exec_request_t {
     uint32 elang = 0;
-    const char* cond = nullptr;
+    qstring cond;
 public:
     cond_break_t() {};
     cond_break_t(uint32 _elang, const char* _cond) : elang(_elang), cond(_cond) {};
 
     ssize_t idaapi execute(void) override {
         extlang_object_t elng = find_extlang_by_index(elang);
+        if (!elng)
+            return 1;
 
         idc_value_t rv;
         qstring errbuf;
@@ -299,6 +306,39 @@ public:
         }
         return 1;
     }
+};
+
+struct condition_result_t {
+  std::mutex mutex;
+  std::condition_variable ready;
+  bool done = false;
+  ssize_t value = 1;
+};
+
+// Self-owned after scheduling, just like IDAPython's MFF_NOWAIT requests.
+struct condition_request_t : public exec_request_t {
+  cond_break_t condition;
+  std::shared_ptr<condition_result_t> result;
+  condition_request_t(const Condition &request,
+                      std::shared_ptr<condition_result_t> output)
+    : condition(request.elang(), request.condition().c_str()), result(output) {}
+  ssize_t idaapi execute() override {
+    auto output = result;
+    ssize_t value = 1;
+    if (!server_stopping) {
+      suspend_process();
+      value = condition.execute();
+      continue_process();
+    }
+    delete this;
+    {
+      std::lock_guard<std::mutex> lock(output->mutex);
+      output->value = value;
+      output->done = true;
+    }
+    output->ready.notify_all();
+    return value;
+  }
 };
 
 class DbgClientHandler final : public DbgClient::Service {
@@ -345,33 +385,90 @@ class DbgClientHandler final : public DbgClient::Service {
   }
 
   Status eval_condition(ServerContext* context, const Condition* request, BoolValue* response) override {
-      suspend_process();
-      cond_break_t cond(request->elang(), request->condition().c_str());
-      ssize_t res = execute_sync(cond, MFF_FAST);
-      response->set_value(res);
-      continue_process();
+      auto result = std::make_shared<condition_result_t>();
+      auto *req = new condition_request_t(*request, result);
+      const auto id = execute_sync(*req, MFF_FAST | MFF_NOWAIT);
+      if (id < 0) {
+        delete req;
+        return Status(grpc::StatusCode::CANCELLED, "IDA is shutting down");
+      }
+      std::unique_lock<std::mutex> lock(result->mutex);
+      while (!result->done) {
+        if (server_stopping || context->IsCancelled()) {
+          lock.unlock();
+          if (cancel_exec_request(int(id)))
+            delete req;
+          return Status(grpc::StatusCode::CANCELLED, "Condition evaluation cancelled");
+        }
+        result->ready.wait_for(lock, std::chrono::milliseconds(10));
+      }
+      response->set_value(result->value != 0);
       return Status::OK;
   }
 };
 
-static void IdaServerFunc(int portnum) {
-  qstring server_address("127.0.0.1:");
-  server_address.cat_sprnt("%d", portnum);
+namespace {
+// gRPC owns its worker threads; no detached thread is needed to call Wait().
+// Keep the service alive until all handlers have returned.
+class rpc_server_t {
+  std::mutex mutex_;
+  std::unique_ptr<DbgClientHandler> service_;
+  std::unique_ptr<grpc::Server> server_;
 
-  DbgClientHandler service;
+  void stop_locked() {
+    if (server_) {
+      server_->Shutdown(std::chrono::system_clock::now()
+                        + std::chrono::milliseconds(100));
+      server_->Wait();
+      server_.reset();
+    }
+    service_.reset();
+  }
 
-  ServerBuilder builder;
-  builder.AddListeningPort(server_address.c_str(), grpc::InsecureServerCredentials());
-  builder.RegisterService(&service);
+public:
+  ~rpc_server_t() { stop(); }
 
-  server = builder.BuildAndStart();
+  bool start(int port, int *bound_port = nullptr) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    stop_locked();
+    if (port < 0 || port > 65535 || (port == 0 && !bound_port))
+      return false;
+    service_.reset(new DbgClientHandler);
+    grpc::ServerBuilder builder;
+    builder.AddChannelArgument("grpc.so_reuseport", 0);
+    builder.AddListeningPort("127.0.0.1:" + std::to_string(port),
+                             grpc::InsecureServerCredentials(), bound_port);
+    builder.RegisterService(service_.get());
+    server_ = builder.BuildAndStart();
+    if (!server_)
+      service_.reset();
+    return server_ != nullptr;
+  }
 
-  server->Wait();
+  void stop() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    stop_locked();
+  }
+};
+
+} // namespace
+
+static rpc_server_t server;
+
+void stop_server() {
+  server_stopping = true;
+  server.stop();
 }
 
-static void init_ida_server(int portnum) {
-  std::thread t1(IdaServerFunc, portnum);
-  t1.detach();
+static bool init_ida_server(int portnum, qstring *errbuf) {
+  stop_server();
+  server_stopping = false;
+  if (server.start(portnum))
+    return true;
+  server_stopping = true;
+  if (errbuf)
+    errbuf->sprnt("Cannot listen on debugger callback port %d", portnum);
+  return false;
 }
 
 class DbgServerClient {
@@ -386,6 +483,7 @@ public:
     AnyRegValue value;
 
     ClientContext context;
+    context.set_deadline(std::chrono::system_clock::now() + std::chrono::seconds(5));
     Status status = stub_->get_gp_reg(&context, reg, &value);
 
     *_return = 0;
@@ -403,6 +501,7 @@ public:
     Empty req;
 
     ClientContext context;
+    context.set_deadline(std::chrono::system_clock::now() + std::chrono::seconds(5));
     Status status = stub_->get_gp_regs(&context, req, regs);
 
     if (!status.ok()) {
@@ -421,6 +520,7 @@ public:
     Empty resp;
 
     ClientContext context;
+    context.set_deadline(std::chrono::system_clock::now() + std::chrono::seconds(5));
     Status status = stub_->set_gp_reg(&context, regVal, &resp);
 
     if (!status.ok()) {
@@ -439,6 +539,7 @@ public:
     AnyRegValue value;
 
     ClientContext context;
+    context.set_deadline(std::chrono::system_clock::now() + std::chrono::seconds(5));
     Status status = stub_->get_vdp_reg(&context, reg, &value);
 
     *_return = 0;
@@ -456,6 +557,7 @@ public:
     Empty req;
 
     ClientContext context;
+    context.set_deadline(std::chrono::system_clock::now() + std::chrono::seconds(5));
     Status status = stub_->get_vdp_regs(&context, req, regs);
 
     if (!status.ok()) {
@@ -474,6 +576,7 @@ public:
     Empty resp;
 
     ClientContext context;
+    context.set_deadline(std::chrono::system_clock::now() + std::chrono::seconds(5));
     Status status = stub_->set_vdp_reg(&context, regVal, &resp);
 
     if (!status.ok()) {
@@ -488,6 +591,7 @@ public:
     Empty req;
 
     ClientContext context;
+    context.set_deadline(std::chrono::system_clock::now() + std::chrono::seconds(5));
     Status status = stub_->get_dma_info(&context, req, info);
 
     if (!status.ok()) {
@@ -507,6 +611,7 @@ public:
     MemData data;
 
     ClientContext context;
+    context.set_deadline(std::chrono::system_clock::now() + std::chrono::seconds(5));
     Status status = stub_->read_memory(&context, req, &data);
 
     if (!status.ok()) {
@@ -526,6 +631,7 @@ public:
     Empty resp;
 
     ClientContext context;
+    context.set_deadline(std::chrono::system_clock::now() + std::chrono::seconds(5));
     Status status = stub_->write_memory(&context, req, &resp);
 
     if (!status.ok()) {
@@ -542,6 +648,7 @@ public:
     DbgBreakpoints bpts;
 
     ClientContext context;
+    context.set_deadline(std::chrono::system_clock::now() + std::chrono::seconds(5));
     Status status = stub_->get_breakpoints(&context, req, &bpts);
 
     if (!status.ok()) {
@@ -562,6 +669,7 @@ public:
     Empty resp;
 
     ClientContext context;
+    context.set_deadline(std::chrono::system_clock::now() + std::chrono::seconds(5));
     Status status = stub_->add_breakpoint(&context, bpt, &resp);
 
     if (!status.ok()) {
@@ -576,6 +684,7 @@ public:
     Empty resp;
 
     ClientContext context;
+    context.set_deadline(std::chrono::system_clock::now() + std::chrono::seconds(5));
     Status status = stub_->toggle_breakpoint(&context, bpt, &resp);
 
     if (!status.ok()) {
@@ -590,6 +699,7 @@ public:
     Empty resp;
 
     ClientContext context;
+    context.set_deadline(std::chrono::system_clock::now() + std::chrono::seconds(5));
     Status status = stub_->update_breakpoint(&context, bpt, &resp);
 
     if (!status.ok()) {
@@ -604,6 +714,7 @@ public:
     Empty resp;
 
     ClientContext context;
+    context.set_deadline(std::chrono::system_clock::now() + std::chrono::seconds(5));
     Status status = stub_->del_breakpoint(&context, bpt, &resp);
 
     if (!status.ok()) {
@@ -619,6 +730,7 @@ public:
     Empty resp;
 
     ClientContext context;
+    context.set_deadline(std::chrono::system_clock::now() + std::chrono::seconds(5));
     Status status = stub_->clear_breakpoints(&context, req, &resp);
 
     if (!status.ok()) {
@@ -634,6 +746,7 @@ public:
     Empty resp;
 
     ClientContext context;
+    context.set_deadline(std::chrono::system_clock::now() + std::chrono::seconds(5));
     Status status = stub_->pause(&context, req, &resp);
 
     if (!status.ok()) {
@@ -649,6 +762,7 @@ public:
     Empty resp;
 
     ClientContext context;
+    context.set_deadline(std::chrono::system_clock::now() + std::chrono::seconds(5));
     Status status = stub_->resume(&context, req, &resp);
 
     if (!status.ok()) {
@@ -664,6 +778,7 @@ public:
     Empty resp;
 
     ClientContext context;
+    context.set_deadline(std::chrono::system_clock::now() + std::chrono::seconds(5));
     Status status = stub_->start_emulation(&context, req, &resp);
 
     if (!status.ok()) {
@@ -699,6 +814,7 @@ public:
     Empty resp;
 
     ClientContext context;
+    context.set_deadline(std::chrono::system_clock::now() + std::chrono::seconds(5));
     Status status = stub_->step_into(&context, req, &resp);
 
     if (!status.ok()) {
@@ -714,6 +830,7 @@ public:
     Empty resp;
 
     ClientContext context;
+    context.set_deadline(std::chrono::system_clock::now() + std::chrono::seconds(5));
     Status status = stub_->step_over(&context, req, &resp);
 
     if (!status.ok()) {
@@ -729,6 +846,7 @@ public:
     Callstack resp;
 
     ClientContext context;
+    context.set_deadline(std::chrono::system_clock::now() + std::chrono::seconds(5));
     Status status = stub_->get_callstack(&context, req, &resp);
 
     if (!status.ok()) {
@@ -750,6 +868,14 @@ private:
 };
 
 static std::unique_ptr<DbgServerClient> client;
+
+void shutdown_debugger() {
+  stop_server();
+  client.reset();
+  events.close();
+  std::lock_guard<std::mutex> lock(apply_lock);
+  to_apply.clear();
+}
 
 static bool pause_execution() {
   return client && client->pause();
@@ -784,9 +910,10 @@ static bool init_emu_client(int portnum) {
   while (channel->GetState(true) != GRPC_CHANNEL_READY) {
     if (user_cancelled()) {
       hide_wait_box();
-      server->Shutdown();
       return false;
     }
+    channel->WaitForStateChange(channel->GetState(false),
+      std::chrono::system_clock::now() + std::chrono::milliseconds(50));
   }
 
   hide_wait_box();
@@ -801,10 +928,15 @@ static bool init_emu_client(int portnum) {
 static drc_t idaapi init_debugger(const char* hostname, int portnum, const char* password, qstring *errbuf) {
 #ifdef DEBUG_68K
   set_processor_type("68020", SETPROC_LOADER); // reset proc to "M68020"
+#endif
+  if (portnum < 0 || portnum > 64535) {
+    if (errbuf)
+      *errbuf = "Debugger port must be between 1 and 64535 (0 selects 23946)";
+    return DRC_FAILED;
+  }
   netnode n;
   n.create("$ portnum");
   n.set_long(portnum == 0 ? 23946 : portnum);
-#endif
   return DRC_OK;
 }
 
@@ -813,7 +945,10 @@ static drc_t idaapi init_debugger(const char* hostname, int portnum, const char*
 // This function is called from the main thread
 static drc_t idaapi term_debugger(void) {
   finish_execution();
+  stop_server();
   client = nullptr;
+  flush_codemap();
+  events.close();
   return DRC_OK;
 }
 
@@ -842,12 +977,29 @@ static drc_t idaapi s_start_process(const char* path,
   const char* input_path,
   uint32 input_file_crc32,
   qstring* errbuf = NULL) {
-  events.clear();
+  stop_server();
+  client.reset();
+  events.reset();
+  {
+    std::lock_guard<std::mutex> lock(apply_lock);
+    to_apply.clear();
+  }
 
   netnode n("$ portnum");
   int port = (int)n.long_value();
-  init_ida_server(port+1000);
+  if (port < 1 || port > 64535) {
+    if (errbuf)
+      *errbuf = "Invalid debugger port; initialize the debugger before starting";
+    return DRC_FAILED;
+  }
+  if (!init_ida_server(port + 1000, errbuf))
+    return DRC_NETERR;
   if (!init_emu_client(port) || (client && !client->start())) {
+    stop_server();
+    client.reset();
+    events.close();
+    if (errbuf)
+      *errbuf = "Emulator connection cancelled or startup RPC failed";
     return DRC_NETERR;
   }
 
@@ -887,18 +1039,7 @@ static drc_t idaapi emul_exit_process(qstring *errbuf) {
 // This function will be called regularly by IDA.
 // This function is called from debthread
 static gdecode_t idaapi get_debug_event(debug_event_t *event, int timeout_ms) {
-  while (true) {
-    // are there any pending events?
-    if (events.retrieve(event)) {
-      return events.empty() ? GDE_ONE_EVENT : GDE_MANY_EVENTS;
-    }
-
-    if (events.empty()) {
-      break;
-    }
-  }
-
-  return GDE_NO_EVENT;
+  return events.retrieve(event, timeout_ms);
 }
 
 // Continue after handling the event
@@ -935,7 +1076,7 @@ static drc_t idaapi continue_after_event(const debug_event_t *event) {
 // names to the database.
 // This function pointer may be absent, i.e. NULL.
 // This function is called from the main thread
-static void idaapi stopped_at_debug_event(bool dlls_added) { }
+static void idaapi stopped_at_debug_event(bool dlls_added) { flush_codemap(); }
 
 // The following functions manipulate threads.
 // 1-ok, 0-failed, -1-network error
@@ -1552,12 +1693,12 @@ ssize_t idaapi idd_listener_t::on_event(ssize_t code, va_list va) {
   //}
   //break;
 
-  //case debugger_t::ev_suspended: {
-  //  bool dlls_added = va_argi(va, bool);
-  //  thread_name_vec_t* thr_names = va_arg(va, thread_name_vec_t*);
-  //  retcode = DRC_OK;
-  //}
-  //break;
+  case debugger_t::ev_suspended: {
+    bool dlls_added = va_arg(va, int) != 0;
+    stopped_at_debug_event(dlls_added);
+    retcode = DRC_OK;
+  }
+  break;
 
   case debugger_t::ev_thread_suspend: {
     thid_t tid = va_argi(va, thid_t);

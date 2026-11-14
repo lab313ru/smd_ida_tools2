@@ -5,6 +5,10 @@
 #undef min
 #undef max
 
+#include <chrono>
+#include <memory>
+#include <mutex>
+#include <string>
 #include <grpcpp/grpcpp.h>
 
 #ifdef DEBUG_68K
@@ -1454,6 +1458,7 @@ public:
     Empty resp;
 
     ClientContext context;
+    context.set_deadline(std::chrono::system_clock::now() + std::chrono::seconds(5));
     Status status = stub_->stop_event(&context, req, &resp);
 
     return status.ok();
@@ -1469,6 +1474,7 @@ public:
     Empty resp;
 
     ClientContext context;
+    context.set_deadline(std::chrono::system_clock::now() + std::chrono::seconds(5));
     Status status = stub_->pause_event(&context, req, &resp);
 
     return status.ok();
@@ -1479,6 +1485,7 @@ public:
     Empty resp;
 
     ClientContext context;
+    context.set_deadline(std::chrono::system_clock::now() + std::chrono::seconds(5));
     Status status = stub_->start_event(&context, req, &resp);
 
     return status.ok();
@@ -1492,6 +1499,7 @@ public:
       req.set_condition(condition);
 
       ClientContext context;
+      context.set_deadline(std::chrono::system_clock::now() + std::chrono::seconds(5));
       Status status = stub_->eval_condition(&context, req, &resp);
 
       return status.ok() && resp.value();
@@ -1519,7 +1527,10 @@ bool evaluate_condition(uint32 elang, const char* condition) {
     return (condition && condition[0] == 0) || client->eval_condition(elang, condition);
 }
 
+static void stop_server();
+
 void stop_client() {
+  stop_server();
   if (!client) {
     return;
   }
@@ -1531,21 +1542,23 @@ void stop_client() {
   client->stop_event(Z80DW.changed);
   Z80DW.changed.clear();
 #endif
+  client.reset();
 }
 
-static void init_ida_client(int portnum) {
+static bool init_ida_client(int portnum) {
   char tmp[256];
   snprintf(tmp, 256, "localhost:%d", portnum);
 
   auto channel = grpc::CreateChannel(tmp, grpc::InsecureChannelCredentials());
 
-  while (channel->GetState(true) != GRPC_CHANNEL_READY) {
-    Sleep(10);
-  }
+  if (!channel->WaitForConnected(std::chrono::system_clock::now()
+                                + std::chrono::seconds(5)))
+    return false;
 
   client = std::unique_ptr<DbgClientClient>(new DbgClientClient(channel));
 
-  atexit(stop_client);
+  static const bool registered = (atexit(stop_client), true);
+  return true;
 }
 
 static inline unsigned int mask(unsigned char bit_idx, unsigned char bits_cnt = 1) {
@@ -1575,6 +1588,57 @@ static void toggle_pause() {
 #endif
   }
 }
+
+#ifndef DEBUG_68K
+namespace {
+namespace z80_debug {
+enum class region { unsupported, ram, rom, work_ram };
+struct location { region area; uint32_t offset; };
+
+inline bool valid_range(uint32_t address, size_t size) {
+  return address < 0x10000 && size <= 0x10000 - address;
+}
+
+// Decode without executing memory-mapped I/O. Debugger inspection must not
+// acknowledge interrupts, consume VDP data, or write sound registers.
+inline location decode(uint32_t address, uint32_t bank, uint32_t rom_size) {
+  if (address < 0x4000)
+    return {region::ram, address & 0x1FFF};
+  if (address < 0x8000 || address > 0xFFFF)
+    return {region::unsupported, 0};
+  const uint32_t mapped = ((bank & 0xFF8000) + (address & 0x7FFF)) & 0xFFFFFF;
+  if (mapped >= 0xE00000)
+    return {region::work_ram, mapped & 0xFFFF};
+  if (mapped < 0x400000 && mapped < rom_size)
+    return {region::rom, mapped};
+  return {region::unsupported, 0};
+}
+}
+
+} // namespace
+
+static Status validate_z80_memory(uint32_t address, size_t size, uint32_t bank) {
+  if (!z80_debug::valid_range(address, size))
+    return Status(grpc::StatusCode::OUT_OF_RANGE, "Range exceeds Z80 address space");
+  for (size_t i = 0; i < size; ++i) {
+    if (z80_debug::decode(address + uint32_t(i), bank, Rom_Size).area
+        == z80_debug::region::unsupported)
+      return Status(grpc::StatusCode::OUT_OF_RANGE,
+                    "Debugger access to Z80 hardware or unmapped memory is unsupported");
+  }
+  return Status::OK;
+}
+
+static unsigned char *z80_debug_byte(uint32_t address, uint32_t bank) {
+  const auto loc = z80_debug::decode(address, bank, Rom_Size);
+  switch (loc.area) {
+  case z80_debug::region::ram: return &Ram_Z80[loc.offset];
+  case z80_debug::region::rom: return &Rom_Data[loc.offset ^ 1];
+  case z80_debug::region::work_ram: return &Ram_68k[loc.offset ^ 1];
+  default: return nullptr; // validated before either reading or writing
+  }
+}
+#endif
 
 class DbgServerHandler final : public DbgServer::Service {
   Status add_breakpoint(ServerContext* context, const DbgBreakpoint* request, Empty* response) override {
@@ -1648,7 +1712,8 @@ class DbgServerHandler final : public DbgServer::Service {
     client->stop_event(Z80DW.changed);
 #endif
 
-    SendMessageA(HWnd, WM_CLOSE, 0, 0);
+    // Do not wait for the UI: its shutdown waits for this RPC to return.
+    PostMessageA(HWnd, WM_CLOSE, 0, 0);
 
     return Status::OK;
   }
@@ -1984,6 +2049,12 @@ class DbgServerHandler final : public DbgServer::Service {
   }
 
   Status read_memory(ServerContext* context, const MemoryAS* request, MemData* response) override {
+#ifndef DEBUG_68K
+    const uint32_t bank = uint32_t(Bank_Z80);
+    const auto valid = validate_z80_memory(request->address(), request->size(), bank);
+    if (!valid.ok())
+      return valid;
+#endif
     std::string* _return = response->mutable_data();
     _return->clear();
 
@@ -2017,7 +2088,7 @@ class DbgServerHandler final : public DbgServer::Service {
         _return->push_back('\x00');
       }
 #else
-      _return->push_back(Ram_Z80[request->address() + i]);
+      _return->push_back(*z80_debug_byte(request->address() + i, bank));
 #endif
     }
 
@@ -2142,7 +2213,8 @@ class DbgServerHandler final : public DbgServer::Service {
 #endif
 
   Status start_emulation(ServerContext* context, const Empty* request, Empty* response) override {
-    init_ida_client(atoi(DebugPort) + 1000);
+    if (!init_ida_client(atoi(DebugPort) + 1000))
+      return Status(grpc::StatusCode::UNAVAILABLE, "Cannot connect to IDA callbacks");
 
     if (!client) {
       return Status::CANCELLED;
@@ -2231,6 +2303,13 @@ class DbgServerHandler final : public DbgServer::Service {
   }
 
   Status write_memory(ServerContext* context, const MemoryAD* request, Empty* response) override {
+#ifndef DEBUG_68K
+    const uint32_t bank = uint32_t(Bank_Z80);
+    // Validate the complete range before changing any bytes.
+    const auto valid = validate_z80_memory(request->address(), request->data().size(), bank);
+    if (!valid.ok())
+      return valid;
+#endif
     for (size_t i = 0; i < request->data().size(); ++i) {
 #ifdef DEBUG_68K
       if ((request->address() + i >= 0xA00000 && request->address() + i < 0xA10000) && IsHardwareAddressValid((uint32)(request->address() + i))) { // Z80
@@ -2252,7 +2331,7 @@ class DbgServerHandler final : public DbgServer::Service {
         ((UINT8*)VSRam)[(addr ^ 1) & 0xFF] = request->data()[i] & 0xFF;
       }
 #else
-      Ram_Z80[request->address() + i] = request->data()[i] & 0xFF;
+      *z80_debug_byte(request->address() + uint32_t(i), bank) = request->data()[i] & 0xFF;
 #endif
     }
 
@@ -2260,33 +2339,64 @@ class DbgServerHandler final : public DbgServer::Service {
   }
 };
 
-static std::unique_ptr<Server> server;
+namespace {
+// gRPC owns its worker threads; no detached thread is needed to call Wait().
+// Keep the service alive until all handlers have returned.
+class rpc_server_t {
+  std::mutex mutex_;
+  std::unique_ptr<DbgServerHandler> service_;
+  std::unique_ptr<grpc::Server> server_;
+
+  void stop_locked() {
+    if (server_) {
+      server_->Shutdown(std::chrono::system_clock::now()
+                        + std::chrono::milliseconds(100));
+      server_->Wait();
+      server_.reset();
+    }
+    service_.reset();
+  }
+
+public:
+  ~rpc_server_t() { stop(); }
+
+  bool start(int port, int *bound_port = nullptr) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    stop_locked();
+    if (port < 0 || port > 65535 || (port == 0 && !bound_port))
+      return false;
+    service_.reset(new DbgServerHandler);
+    grpc::ServerBuilder builder;
+    builder.AddChannelArgument("grpc.so_reuseport", 0);
+    builder.AddListeningPort("127.0.0.1:" + std::to_string(port),
+                             grpc::InsecureServerCredentials(), bound_port);
+    builder.RegisterService(service_.get());
+    server_ = builder.BuildAndStart();
+    if (!server_)
+      service_.reset();
+    return server_ != nullptr;
+  }
+
+  void stop() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    stop_locked();
+  }
+};
+
+} // namespace
+
+static rpc_server_t server;
 
 static void stop_server() {
-  server->Shutdown(std::chrono::system_clock::now() + std::chrono::milliseconds(100));
-}
-
-static void DbgServerFunc(int portnum) {
-  char tmp[256];
-  snprintf(tmp, 256, "127.0.0.1:%d", portnum);
-
-  std::string server_address(tmp);
-  DbgServerHandler service;
-
-  ServerBuilder builder;
-  builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
-  builder.RegisterService(&service);
-
-  server = builder.BuildAndStart();
-
-  server->Wait();
+  server.stop();
 }
 
 static void init_dbg_server(int portnum) {
-  std::thread t1(DbgServerFunc, portnum);
-  t1.detach();
-
-  atexit(stop_server);
+  stop_server();
+  if (portnum < 1 || portnum > 64535) {
+    MessageBoxA(HWnd, "Debugger port must be between 1 and 64535.", "Gens debugger", MB_OK | MB_ICONERROR);
+    return;
+  }
 
 #ifdef DEBUG_68K
   M68kDW.Breakpoints.clear();
@@ -2297,6 +2407,13 @@ static void init_dbg_server(int portnum) {
   Breakpoint b(bp_type::BP_PC, 0, 0, true, 0, "");
   Z80DW.Breakpoints.push_back(b);
 #endif
+
+  if (!server.start(portnum)) {
+    MessageBoxA(HWnd, "Cannot start debugger server. Check whether its port is already in use.",
+                "Gens debugger", MB_OK | MB_ICONERROR);
+    return;
+  }
+  static const bool registered = (atexit(stop_server), true);
 
   //Paused = 1;
   //Pause_Screen();

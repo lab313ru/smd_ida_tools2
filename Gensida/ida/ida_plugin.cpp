@@ -1616,7 +1616,10 @@ struct smd_output_mark_action_t : public action_handler_t
 };
 #endif
 
-struct plugin_ctx_t : public plugmod_t, public post_event_visitor_t
+struct plugin_ctx_t : public plugmod_t
+#ifdef DEBUG_68K
+  , public post_event_visitor_t
+#endif
 {
 #ifdef DEBUG_68K
   TWidget* g_tiles = nullptr;
@@ -1660,6 +1663,7 @@ struct plugin_ctx_t : public plugmod_t, public post_event_visitor_t
   }
   ~plugin_ctx_t()
   {
+    shutdown_debugger();
     clr_module_data(data_id);
 
 #ifdef DEBUG_68K
@@ -2224,11 +2228,7 @@ static plugmod_t* idaapi init(void)
     print_version();
 
     dbg = &debugger; // temporary workaround for a dbg pointer absence
-#ifdef DEBUG_68K
     return new plugin_ctx_t;
-#else
-    return PLUGIN_KEEP;
-#endif
   }
   return PLUGIN_SKIP;
 }

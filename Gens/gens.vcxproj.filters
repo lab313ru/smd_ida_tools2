@@ -287,18 +287,6 @@
     <ClCompile Include="src\ym2612_psg_debug.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\proto\debug_proto_68k.grpc.pb.cc">
-      <Filter>proto</Filter>
-    </ClCompile>
-    <ClCompile Include="..\proto\debug_proto_68k.pb.cc">
-      <Filter>proto</Filter>
-    </ClCompile>
-    <ClCompile Include="..\proto\debug_proto_z80.grpc.pb.cc">
-      <Filter>proto</Filter>
-    </ClCompile>
-    <ClCompile Include="..\proto\debug_proto_z80.pb.cc">
-      <Filter>proto</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lua\src\lapi.h">
@@ -587,5 +575,9 @@
     <Image Include="resource\sonic.ico">
       <Filter>resource</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(ProtoOutputDir)debug_proto_$(ProtoCpu).pb.cc"><Filter>proto</Filter></ClCompile>
+    <ClCompile Include="$(ProtoOutputDir)debug_proto_$(ProtoCpu).grpc.pb.cc"><Filter>proto</Filter></ClCompile>
   </ItemGroup>
 </Project>
