@@ -1977,6 +1977,38 @@ ssize_t idaapi plugin_ctx_t::handle_post_event(ssize_t code, int notification_co
       return 1;
     }
 
+    bool pc_offset = false;
+    if (insn->Op1.type == o_displ && insn->Op1.phrase == 0x5B && is_off(get_flags(insn->ea), 0)) {
+      refinfo_t ri;
+      ea_t target;
+      ea_t addr = dw_ea(insn->Op1.addr);
+      if (get_refinfo(&ri, insn->ea, 0) &&
+        calc_reference_data(&target, nullptr, insn->ea + insn->Op1.offb, ri, addr)) {
+        pc_offset = true;
+        if (target != addr) {
+          // Keep a reference to the raw address if another operand uses it.
+          bool shared = false;
+          for (int i = 1; i < UA_MAXOP; ++i) {
+            const op_t& op = insn->ops[i];
+            if ((op.type == o_mem || op.type == o_near || op.type == o_displ) && dw_ea(op.addr) == addr) {
+              shared = true;
+            }
+          }
+          if (!shared) {
+            xrefblk_t xb;
+            for (bool ok = xb.first_from(insn->ea, XREF_DATA); ok; ok = xb.next_from()) {
+              if (xb.to == addr && !xb.user) {
+                del_dref(insn->ea, addr);
+                break;
+              }
+            }
+          }
+        }
+        // Honor Ctrl+R's target, base and delta instead of the raw operand address.
+        add_refinfo_dref(*insn, insn->ea + insn->Op1.offb, ri, addr, dr_O, insn->Op1.offb);
+      }
+    }
+
     // lea table(pc),Ax; jsr func(pc); jmp label(pc), movea.l label(pc,; move.l label(pc,; move.w label(pc,;
     if ((insn->itype == 0x76 || insn->itype == 0x75 || insn->itype == 0x74 || insn->itype == 0x7F || insn->itype == 0x7D) &&
       insn->Op1.phrase == 0x5B && (insn->Op1.specflag1 >= 0x10 && insn->Op1.specflag1 <= 0x17))
@@ -1984,7 +2016,9 @@ ssize_t idaapi plugin_ctx_t::handle_post_event(ssize_t code, int notification_co
       short diff = dw_ea(insn->Op1.addr) - insn->ea;
       if (diff >= SHRT_MIN && diff <= SHRT_MAX)
       {
-        insn->add_dref(dw_ea(insn->Op1.addr), insn->Op1.offb, dr_O);
+        if (!pc_offset) {
+          insn->add_dref(dw_ea(insn->Op1.addr), insn->Op1.offb, dr_O);
+        }
 
         if (insn->itype != 0x74) {
           insn->add_cref(insn->ea + insn->size, 0, fl_F);
