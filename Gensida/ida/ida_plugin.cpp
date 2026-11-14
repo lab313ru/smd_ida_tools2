@@ -1064,6 +1064,10 @@ ssize_t idaapi dis_listener_t::on_event(ssize_t code, va_list va)
       return 1;
     }
   } break;
+  case processor_t::ev_out_data:
+  {
+    ASH.flag2 &= ~AS2_TERSESTR; // Always expand structure instances.
+  } break;
   case processor_t::ev_out_mnem:
   {
     outctx_t* outctx = va_arg(va, outctx_t*);
@@ -1725,6 +1729,8 @@ struct plugin_ctx_t : public plugmod_t
   plugin_ctx_t()
   {
 #ifdef DEBUG_68K
+    ASH.flag2 &= ~AS2_TERSESTR;
+
     hook_event_listener(HT_UI, &ui_listener);
     hook_event_listener(HT_IDP, &dis_listener);
     hook_event_listener(HT_IDP, &asm_listener);
