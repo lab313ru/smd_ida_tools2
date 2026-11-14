@@ -898,14 +898,15 @@ static bool ask_assembler() {
   QDialog dialog(QApplication::activeWindow());
   dialog.setWindowTitle("Choose output assembler");
   auto* layout = new QVBoxLayout(&dialog);
-  auto* assembler_row = new QHBoxLayout;
+  auto* assembler_box = new QGroupBox(&dialog);
+  auto* assembler_row = new QHBoxLayout(assembler_box);
   auto* choices = new QButtonGroup(&dialog);
   const char* labels[] = { "&AS assembler", "&VASM assembler", "ASM68&K assembler" };
   const char* websites[] = { "AS Website", "VASM Website", "ASM68K Website" };
   const char* urls[] = { ASM_AS_LINK, ASM_VASM_LINK, ASM_ASM68K_LINK };
   auto* website_row = new QHBoxLayout;
   for (int i = 0; i < 3; ++i) {
-    auto* choice = new QRadioButton(labels[i], &dialog);
+    auto* choice = new QRadioButton(labels[i], assembler_box);
     choices->addButton(choice, i);
     assembler_row->addWidget(choice);
     choice->setChecked(i == 0);
@@ -922,7 +923,7 @@ static bool ask_assembler() {
     QObject::connect(website, &QLabel::linkActivated, &dialog, [url](const QString&) { open_url(url); });
     website_row->addWidget(website);
   }
-  layout->addLayout(assembler_row);
+  layout->addWidget(assembler_box);
 
   auto* options_row = new QHBoxLayout;
   auto* skip = new QCheckBox("&Skip unused code/data output", &dialog);
