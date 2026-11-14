@@ -19,6 +19,7 @@
 #include <grpcpp/server_context.h>
 #include <grpcpp/impl/service_type.h>
 #include <grpcpp/support/sync_stream.h>
+#include <grpcpp/ports_def.inc>
 namespace idadebug {
 
 static const char* DbgServer_method_names[] = {
@@ -1026,4 +1027,5 @@ DbgClient::Service::~Service() {
 
 
 }  // namespace idadebug
+#include <grpcpp/ports_undef.inc>
 
