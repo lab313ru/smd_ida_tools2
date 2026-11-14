@@ -9,24 +9,18 @@ The IDA Pro tools for the Sega Genesis/MegaDrive romhackers
 ## How to compile on Windows
 1. Edit paths to your IDA/SDK installation according to your real paths (`IDA_DIR`, `IDA_SDK`)
 2. Install `vcpkg` as described in the [Tutorial: Install and use packages with MSBuild in Visual Studio](https://learn.microsoft.com/en-us/vcpkg/get_started/get-started-msbuild) step 1.
-3. Download and unpack IDA Pro QT distro: [qt-5.15.2-full-IDA83.tar.bz2](qt_ida_src_while_original_link_is_dead/qt-5.15.2-full-IDA83.tar.bz2)
-4. Install Perl from: https://strawberryperl.com/
-5. Edit `build.py` from IDA Pro QT distro. Add: `"-nomake", "examples",` after `"-nomake", "tests",`
-6. Install and add to PATH `jom` from: https://ftp.funet.fi/pub/mirrors/download.qt-project.org/official_releases/jom/jom_1_1_4.zip
-7. Build IDA Pro QT (using **Visual Studio Developement Command Prompt**): `python build.py -j 16 -v`
-8. Compile solution with **Visual Studio 2022** or newer
+3. `build_proto_68k.bat`
+4. `build_proto_z80.bat`
+5. Compile solution with **Visual Studio 2022** or newer
 
 ## How to compile on Linux
 1. Edit path to your SDK installation according to your real path `IDA_SDK`
-2. Download and unpack IDA Pro QT distro: [qt-5.15.2-full-IDA83.tar.bz2](qt_ida_src_while_original_link_is_dead/qt-5.15.2-full-IDA83.tar.bz2)
-3. Edit `build.py` from IDA Pro QT distro. Add: `"-nomake", "examples",` after `"-nomake", "tests",`
-4. Build IDA Pro QT: `python3 build.py -j 16 -v`
-5. `./build_proto_68k.sh`
-6. `./build_proto_z80.sh`
-7. `./compile_loaders.sh`
-8. `./compile_gensida.sh`
-9. `cp ./linux_loaders/* ~/ida-pro-9.x/loaders/`
-10. `cp ./linux_gensida/* ~/ida-pro-9.x/plugins/`
+2. `./build_proto_68k.sh`
+3. `./build_proto_z80.sh`
+4. `./compile_loaders.sh`
+5. `./compile_gensida.sh`
+6. `cp ./linux_loaders/* ~/ida-pro-9.x/loaders/`
+8. `cp ./linux_gensida/* ~/ida-pro-9.x/plugins/`
 
 ## How to use
 1. Put files from the `loaders` dir into the corresponding IDA folder
