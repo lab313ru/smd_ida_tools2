@@ -32,14 +32,14 @@ The IDA Pro tools for the Sega Genesis/MegaDrive romhackers
 7. Debug!
 
 ## Available assemblers
-![image](https://user-images.githubusercontent.com/7189309/214719964-66c90f66-fedc-4705-94af-d0fce28270b4.png)
+<img width="384" height="172" alt="Export config menu" src="https://github.com/user-attachments/assets/7f5f9ea3-2975-47a1-a973-44f7de41cd0c" />
 
 ## How to produce a compilable asm listing
 1. Press `Shift+J` to choose how to mark your data range. Or mark it by yourself using available methods (listed below)
 2. Press `File->Produce file->Create LST file...`. Save `.lst` listing file
 3. Use any of AS/VASM/ASM68K assemblers to compile your `.lst` file. You can also use `assemble_as.bat`, `assemble_vasm.bat` or `assemble_asm68k.bat` for that
 
-![image](https://user-images.githubusercontent.com/7189309/214720698-ba674d23-487e-4307-8594-d4b7b2618143.png)
+<img width="935" height="252" alt="Export menu location" src="https://github.com/user-attachments/assets/8f728535-ae67-464a-bd4f-44156e720c16" />
 
 ## Data marking methods
 All methods are specified like `START_TAG` - `END_TAG` (except `ORG` tag), where `START_TAG` must be specified using **Anterior comment** (`Ins`) at the first line of your data, and `END_TAG` must be inserted using **Posterior comment** (`Shift+Ins`).
